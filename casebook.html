@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Casebook — Detective Notebook</title>
+
+<style>
+/* ==========================================================================
+   1. DESIGN TOKENS
+   ========================================================================== */
+:root{
+  --page-w: 420px;
+  --page-h: 580px;
+  --persp:  2600px;
+  --turn:   820ms;
+  --ease:   cubic-bezier(.36,.06,.28,1);
+
+  --shift:  -25%;
+  --po:     50%;
+
+  --paper:  #e9dcbe;
+  --ink:    #2b2118;
+  --red:    #8e2b20;
+
+  --hand: 'Segoe Script','Bradley Hand ITC','Bradley Hand','Brush Script MT','Comic Sans MS',cursive;
+  --type: 'Courier New', Courier, monospace;
+}
+
+*{ box-sizing: border-box; }
+
+html, body{
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background:
+    radial-gradient(ellipse at 50% 25%, #3b3128 0%, #241d17 45%, #100c09 100%);
+  color: #cbbda1;
+  font-family: var(--type);
+  -webkit-tap-highlight-color: transparent;
+}
+
+
+/* ==========================================================================
+   2. SCENE
+   ========================================================================== */
+.scene{
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.holder{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.scaler{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--page-w) * 2);
+  height: var(--page-h);
+  transform-origin: top left;
+}
+
+.stage{
+  position: absolute;
+  inset: 0;
+  perspective: var(--persp);
+  perspective-origin: var(--po) 50%;
+}
+
+
+/* ==========================================================================
+   3. THE BOOK
+   ========================================================================== */
+.book{
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transform: translateX(var(--shift));
+  transition: transform var(--turn) var(--ease);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.book.open{
+  transform: translateX(0);
+}
+
+.book-shadow{
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  bottom: -52px;
+  height: 62px;
+  transform: translateZ(-80px);
+  background: radial-gradient(ellipse at 50% 40%,
+              rgba(0,0,0,.72) 0%,
+              rgba(0,0,0,.38) 45%,
+              rgba(0,0,0,0) 72%);
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.spine{
+  position: absolute;
+  left: 50%;
+  top: -5px;
+  bottom: -7px;
+  width: 17px;
+  transform: translateZ(-1px) translateX(-15px);
+  border-radius: 8px 0 0 8px;
+  background: linear-gradient(to right,
+      #150c05 0%, #3d2614 22%, #5a3a20 45%, #33200f 78%, #170e06 100%);
+  box-shadow: -4px 3px 10px rgba(0,0,0,.65);
+  opacity: 1;
+  transition: opacity .45s ease;
+  pointer-events: none;
+}
+.book.open .spine{ opacity: 0; }
+
+
+/* ==========================================================================
+   4. LEAVES
+   ========================================================================== */
+.leaf{
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transform: rotateY(0deg) translateZ(calc(var(--i, 0) * -3px));
+  transition: transform var(--turn) var(--ease);
+  will-change: transform;
+}
+
+.leaf.flipped{
+  transform: rotateY(-180deg) translateZ(calc(var(--i, 0) * -3px));
+}
+
+
+/* ==========================================================================
+   5. FACES
+   ========================================================================== */
+.face{
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 3px 7px 7px 3px;
+
+  background-color: #e9dcbe;
+  background-image:
+    repeating-linear-gradient(47deg,
+      rgba(120,95,55,.035) 0 1px,
+      rgba(255,255,255,0)  1px 3px),
+    repeating-linear-gradient(-43deg,
+      rgba(120,95,55,.028) 0 1px,
+      rgba(255,255,255,0)  1px 4px),
+    radial-gradient(circle at 12% 18%, rgba(150,110,60,.10) 0%, transparent 6%),
+    radial-gradient(circle at 84% 12%, rgba(160,120,70,.08) 0%, transparent 5%),
+    radial-gradient(circle at 22% 62%, rgba(150,110,60,.09) 0%, transparent 7%),
+    radial-gradient(circle at 68% 78%, rgba(160,120,70,.10) 0%, transparent 6%),
+    radial-gradient(circle at 45% 32%, rgba(140,100,55,.06) 0%, transparent 5%),
+    radial-gradient(circle at 90% 55%, rgba(150,110,60,.07) 0%, transparent 6%),
+    radial-gradient(circle at 8%  88%, rgba(160,120,70,.09) 0%, transparent 5%),
+    radial-gradient(circle at 58% 8%,  rgba(140,100,55,.06) 0%, transparent 5%),
+    radial-gradient(circle at 33% 92%, rgba(150,110,60,.07) 0%, transparent 6%),
+    radial-gradient(circle at 76% 42%, rgba(160,120,70,.05) 0%, transparent 5%),
+    radial-gradient(ellipse at 30% 20%,
+      #f4e9cd 0%, #eadcbb 45%, #ddcba4 85%, #d5c197 100%);
+
+  background-size:
+    100% 100%, 100% 100%,
+    100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%,
+    100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%,
+    100% 100%;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.face-back{
+  transform: rotateY(180deg);
+}
+
+.face::before{
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 4;
+}
+.face-front::before{
+  background: linear-gradient(to right,
+      rgba(70,45,16,.34) 0%,
+      rgba(70,45,16,.10) 8%,
+      rgba(0,0,0,0) 22%);
+}
+.face-back::before{
+  background: linear-gradient(to left,
+      rgba(70,45,16,.34) 0%,
+      rgba(70,45,16,.10) 8%,
+      rgba(0,0,0,0) 22%);
+}
+.leaf.cover .face::before{ display: none; }
+
+.face::after{
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .28s ease;
+  z-index: 5;
+  background: linear-gradient(90deg,
+      rgba(0,0,0,.22) 0%,
+      rgba(0,0,0,0) 32%,
+      rgba(0,0,0,0) 68%,
+      rgba(0,0,0,.22) 100%);
+}
+.leaf.turning .face::after{ opacity: 1; }
+
+
+.leaf.cover .face-front{
+  background-image:
+    url('Frontcover.png'),
+    linear-gradient(158deg, #4d2f19 0%, #2c1a0f 45%, #1b0f07 100%);
+  background-size: 100% 100%, 100% 100%;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.55),
+    inset 0 0 70px rgba(0,0,0,.55);
+}
+.leaf.cover .face-back{
+  background-image:
+    url('Insidefrontcover.png'),
+    linear-gradient(158deg, #3d2615 0%, #241509 60%, #170d05 100%);
+  background-size: 100% 100%, 100% 100%;
+}
+
+.base-back{
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 50%;
+  bottom: -8px;
+  right: -2px;
+  border-radius: 0 8px 8px 0;
+  background-image:
+    url('Insidebackcover.png'),
+    linear-gradient(158deg, #3d2615 0%, #241509 60%, #170d05 100%);
+  background-size: 100% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  transform: translateZ(-120px) scale(1.047);
+  box-shadow: inset 0 0 60px rgba(0,0,0,.6);
+  pointer-events: none;
+}
+
+
+/* ==========================================================================
+   6. PAGE CONTENT BUILDING BLOCKS
+   ========================================================================== */
+.page{
+  position: absolute;
+  inset: 0;
+  padding: 30px 32px 28px 32px;
+  color: var(--ink);
+  font-family: var(--type);
+  font-size: 14px;
+  line-height: 1.55;
+  overflow: hidden;
+}
+.page-inner{ position: relative; height: 100%; }
+
+.hand{ font-family: var(--hand); }
+.hand-title{
+  margin: 0 0 8px;
+  font-family: var(--hand);
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: 1px;
+  color: #1d1610;
+  transform: rotate(-1.6deg);
+  transform-origin: left center;
+  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+}
+.hand-title.sm{ font-size: 30px; }
+
+.typed{ font-family: var(--type); }
+.small{ font-size: 12.5px; line-height: 1.6; }
+
+.meta{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 4px 0;
+  border-top: 2px solid #3a2c1c;
+  border-bottom: 1px solid #3a2c1c;
+  font-size: 11.5px;
+  letter-spacing: 1px;
+  color: #3a2c1c;
+}
+.meta .status{ color: var(--red); font-weight: bold; }
+
+.photo{
+  position: relative;
+  margin: 0;
+  padding: 8px 8px 0;
+  background: #f7f0dd;
+  box-shadow:
+    0 6px 14px rgba(0,0,0,.38),
+    0 1px 0 rgba(255,255,255,.7) inset;
+  transform: rotate(-1.2deg);
+}
+.photo-img{
+  display: block;
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 28% 26%, rgba(255,255,255,.14), transparent 58%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,.045) 0 2px, transparent 2px 5px),
+    linear-gradient(165deg, #5c5c58 0%, #2b2b29 55%, #4b4945 100%);
+}
+.photo-img::after{
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 38%, transparent 28%, rgba(0,0,0,.6) 100%);
+}
+.photo figcaption{
+  padding: 5px 0 7px;
+  text-align: center;
+  font-family: var(--hand);
+  font-size: 12.5px;
+  color: #4a3a26;
+}
+
+.page-photo{
+  position: absolute;
+  display: block;
+  width: 200px;
+  height: auto;
+  box-shadow: 0 6px 14px rgba(0,0,0,.42);
+  border-radius: 1px;
+  pointer-events: none;
+  transform-origin: center center;
+}
+
+.tape{
+  position: absolute;
+  width: 76px;
+  height: 22px;
+  background: linear-gradient(180deg,
+      rgba(255,251,224,.82),
+      rgba(226,214,170,.62));
+  box-shadow: 0 2px 6px rgba(0,0,0,.22);
+  border-left: 1px dashed rgba(255,255,255,.55);
+  border-right: 1px dashed rgba(255,255,255,.55);
+  pointer-events: none;
+}
+.tape-tl{ top: -12px; left: -20px; transform: rotate(-27deg); }
+.tape-br{ bottom: -13px; right: -18px; transform: rotate(-23deg); }
+
+.card{
+  position: relative;
+  padding: 12px 14px;
+  background: #f3e8cb;
+  border: 1px solid #c9b78f;
+  box-shadow: 0 4px 10px rgba(0,0,0,.22);
+  font-family: var(--type);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.card::before{
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom,
+      transparent 0 19px, rgba(90,110,140,.28) 19px 20px);
+  pointer-events: none;
+}
+
+.stamp{
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 6px 12px;
+  border: 3px solid rgba(150,40,30,.72);
+  border-radius: 4px;
+  color: rgba(150,40,30,.78);
+  font-family: var(--type);
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  transform: rotate(-13deg);
+  opacity: .85;
+  text-transform: uppercase;
+}
+
+.note{
+  font-size: 14px;
+  line-height: 1.5;
+  color: #23324a;
+}
+.hl{
+  background: linear-gradient(to top, rgba(230,200,90,.65) 42%, transparent 42%);
+}
+.underline-red{
+  text-decoration: underline;
+  text-decoration-color: rgba(150,40,30,.8);
+  text-decoration-thickness: 2px;
+}
+.anno{
+  position: absolute;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.facts{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.facts b{
+  display: inline-block;
+  min-width: 62px;
+  color: #6a4a22;
+  letter-spacing: 1px;
+}
+
+.ev-label{
+  display: inline-block;
+  padding: 3px 9px;
+  background: #e7d9b4;
+  border: 1px solid #b9a276;
+  font-family: var(--type);
+  font-size: 10.5px;
+  letter-spacing: 1.5px;
+  color: #4a371d;
+  box-shadow: 0 2px 5px rgba(0,0,0,.18);
+}
+
+.fingerprint{
+  position: relative;
+  padding: 10px;
+  background: #f6efdb;
+  border: 1px solid #cbb992;
+  box-shadow: 0 4px 10px rgba(0,0,0,.2);
+}
+.fingerprint svg{ display: block; width: 100%; height: 68px; }
+.fingerprint .fp-label{
+  margin-top: 4px;
+  font-family: var(--type);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #5c4526;
+  text-align: center;
+}
+
+.clipping{
+  padding: 12px 14px;
+  background: #e6dcc0;
+  box-shadow: 0 5px 12px rgba(0,0,0,.28);
+  transform: rotate(.8deg);
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #2f2a20;
+}
+.clipping h3{
+  margin: 0 0 6px;
+  font-size: 19px;
+  line-height: 1.1;
+  letter-spacing: -.4px;
+}
+.clipping p{
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  column-count: 2;
+  column-gap: 12px;
+}
+
+
+/* ==========================================================================
+   7. CONTROLS / UI
+   ========================================================================== */
+.hint{
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #c2ab84;
+  opacity: 1;
+  transition: opacity .6s ease;
+  pointer-events: none;
+  animation: hintPulse 2.6s ease-in-out infinite;
+  white-space: nowrap;
+}
+@keyframes hintPulse{
+  0%, 100%{ opacity: .35; }
+  50%     { opacity: 1;   }
+}
+
+.controls{
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-bottom: 2px;
+}
+
+.ctl{
+  appearance: none;
+  border: 1px solid #6a5738;
+  border-radius: 3px;
+  padding: 9px 16px;
+  background: linear-gradient(180deg, #3a2f22 0%, #241c13 100%);
+  color: #d8c49a;
+  font-family: var(--type);
+  font-size: 11.5px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease, opacity .18s ease;
+  box-shadow: 0 2px 0 rgba(0,0,0,.5);
+}
+.ctl:hover:not(:disabled){
+  background: linear-gradient(180deg, #4c3e2c 0%, #302518 100%);
+  color: #f3e3bd;
+}
+.ctl:active:not(:disabled){ transform: translateY(1px); }
+.ctl:disabled{ opacity: .3; cursor: default; }
+
+.counter{
+  min-width: 128px;
+  text-align: center;
+  font-size: 11.5px;
+  letter-spacing: 2px;
+  color: #a8926a;
+}
+
+
+/* ==========================================================================
+   8. RESPONSIVE
+   ========================================================================== */
+body.single-page .book-shadow{
+  left: 48%;
+  right: -4%;
+}
+
+@media (max-width: 760px){
+  .controls{ gap: 8px; }
+  .ctl{ padding: 8px 11px; font-size: 10.5px; letter-spacing: 1px; }
+  .counter{ min-width: 96px; font-size: 10.5px; letter-spacing: 1px; }
+  .hint{ font-size: 9.5px; letter-spacing: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .leaf, .book{ transition-duration: 1ms !important; }
+  .hint{ animation: none; }
+}
+</style>
+</head>
+
+
+<body>
+
+<div class="scene" id="scene">
+
+  <div class="holder" id="holder">
+    <div class="scaler" id="scaler">
+      <div class="stage">
+
+        <div class="book" id="book">
+
+          <div class="book-shadow"></div>
+          <div class="spine"></div>
+          <div class="base-back"></div>
+
+
+          <!-- ============================================================
+               LEAF 0 — FRONT COVER
+               ============================================================ -->
+          <div class="leaf cover">
+            <div class="face face-front"></div>
+            <div class="face face-back"></div>
+          </div>
+
+
+          <!-- ============================================================
+               LEAF 1 — PAGE 1 : CASE FILE
+               ============================================================ -->
+          <div class="leaf">
+            <div class="face face-front page">
+              <div class="page-inner">
+
+                <h1 class="hand-title">Case File</h1>
+
+                <div class="meta">
+                  <span>CASE NO. 027</span>
+                  <span class="status">STATUS: ACTIVE</span>
+                </div>
+
+                <p class="typed small" style="margin:0 0 14px;">
+                  Tuesday, 14 March. Body recovered from the water beneath
+                  Blackmoor Pier at 04:12 hrs. Male, mid-forties. No wallet,
+                  no watch, no identification on the body.
+                </p>
+
+                <figure class="photo">
+                  <div class="photo-img"></div>
+                  <figcaption>Pier 4 — beneath the west span</figcaption>
+                  <span class="tape tape-tl"></span>
+                </figure>
+
+                <p class="hand note" style="margin:18px 0 0; transform:rotate(-.7deg);">
+                  No forced entry anywhere on the pier. Tide tables put the
+                  water at <span class="hl">low</span> by midnight — he never
+                  drifted in. Someone <u>put</u> him there.
+                </p>
+
+                <div class="stamp">Active</div>
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:360px; left:20px; width:130px;
+                            transform:rotate(5deg); z-index:3;">
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:390px; left:190px; width:130px;
+                            transform:rotate(-6deg); z-index:2;">
+
+              </div>
+            </div>
+          </div>
+
+
+          <!-- ============================================================
+               LEAF 2 — PAGE 2 : SUSPECT
+               ============================================================ -->
+          <div class="leaf">
+            <div class="face face-front page">
+              <div class="page-inner">
+
+                <h2 class="hand-title sm">Suspect</h2>
+
+                <div style="display:flex; gap:14px; align-items:flex-start; margin-top:6px;">
+
+                  <figure class="photo" style="flex:0 0 158px; margin:0;">
+                    <div class="photo-img" style="height:170px;"></div>
+                    <figcaption>M. VOSS — 12 Mar</figcaption>
+                    <span class="tape tape-tl"></span>
+                  </figure>
+
+                  <ul class="facts" style="flex:1 1 auto; padding-top:4px;">
+                    <li><b>NAME</b> Marcus Voss</li>
+                    <li><b>AGE</b> 47</li>
+                    <li><b>OCCUP.</b> Harbour pilot</li>
+                    <li><b>HEIGHT</b> 5′ 11″</li>
+                    <li><b>LAST SEEN</b> Blackmoor Pier, 23:40</li>
+                  </ul>
+
+                </div>
+
+                <div class="card" style="margin-top:22px; transform:rotate(.6deg);">
+                  <div style="font-size:10.5px; letter-spacing:2px; color:#7a5c2c; margin-bottom:4px;">
+                    PRIOR RECORD
+                  </div>
+                  Two counts of insurance fraud (2009, dismissed).
+                  Questioned in the Ardennes warehouse fire — never charged.
+                </div>
+
+                <p class="hand note" style="margin:16px 0 0; transform:rotate(-1deg);">
+                  He knew the victim. Three separate witnesses place them
+                  arguing outside the King's Head on the 9th.
+                </p>
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:360px; left:20px; width:130px;
+                            transform:rotate(5deg); z-index:3;">
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:390px; left:190px; width:130px;
+                            transform:rotate(-6deg); z-index:2;">
+
+              </div>
+            </div>
+          </div>
+
+
+          <!-- ============================================================
+               LEAF 3 — PAGE 3 : EVIDENCE
+               ============================================================ -->
+          <div class="leaf">
+            <div class="face face-front page">
+              <div class="page-inner">
+
+                <h2 class="hand-title sm">Evidence</h2>
+
+                <div class="fingerprint" style="margin-top:8px; transform:rotate(-.9deg);">
+                  <svg viewBox="0 0 200 68" preserveAspectRatio="none">
+                    <g fill="none" stroke="#3a3128" stroke-width="1.5" stroke-linecap="round">
+                      <ellipse cx="100" cy="34" rx="13" ry="20"/>
+                      <ellipse cx="100" cy="34" rx="20" ry="27"/>
+                      <ellipse cx="100" cy="34" rx="27" ry="33"/>
+                      <path d="M60 34 q40 -34 80 0"/>
+                      <path d="M52 40 q48 -40 96 0"/>
+                      <path d="M46 46 q54 -46 108 0"/>
+                      <path d="M100 14 v40"/>
+                      <path d="M78 18 q22 16 44 0"/>
+                      <path d="M70 26 q30 22 60 0"/>
+                    </g>
+                  </svg>
+                  <div class="fp-label">LATENT — PIER RAILING, 027-C</div>
+                  <span class="tape tape-br" style="width:60px; height:18px;"></span>
+                </div>
+
+                <div class="card" style="margin-top:20px; transform:rotate(1.1deg);">
+                  <div class="hand" style="font-size:14px; color:#23324a; line-height:1.55;">
+                    "Tide was low. Tell them I was already gone by eleven."
+                  </div>
+                  <div style="margin-top:8px;">
+                    <span class="ev-label">027-B — NOTE FROM VICTIM'S POCKET</span>
+                  </div>
+                </div>
+
+                <figure class="photo" style="margin-top:20px; width:186px; transform:rotate(-2deg);">
+                  <div class="photo-img" style="height:104px;"></div>
+                  <figcaption>Boot print — north jetty</figcaption>
+                </figure>
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:360px; left:20px; width:130px;
+                            transform:rotate(5deg); z-index:3;">
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:390px; left:190px; width:130px;
+                            transform:rotate(-6deg); z-index:2;">
+
+              </div>
+            </div>
+          </div>
+
+
+          <!-- ============================================================
+               LEAF 4 — PAGE 4 : DETECTIVE NOTES
+               ============================================================ -->
+          <div class="leaf">
+            <div class="face face-front page">
+              <div class="page-inner">
+
+                <h2 class="hand-title sm">Notes</h2>
+
+                <p class="hand note" style="margin:14px 0 0 0; font-size:15px; transform:rotate(-1.2deg);">
+                  Voss lied about the tide. He <span class="hl">knew</span> the
+                  water was low — he's been piloting that channel for
+                  nineteen years.
+                </p>
+
+                <svg class="anno" style="left:6px; top:44px; width:330px; height:74px;"
+                     viewBox="0 0 330 74">
+                  <ellipse cx="165" cy="37" rx="160" ry="30"
+                           fill="none" stroke="#a8322a" stroke-width="2.5"
+                           stroke-linecap="round" opacity=".8"/>
+                </svg>
+
+                <p class="hand note" style="margin:64px 0 0 0; font-size:15px; transform:rotate(.8deg);">
+                  Who called him out at 23:40? Pier log says
+                  <span class="underline-red">no vessels</span> after 22:00.
+                </p>
+
+                <div class="hand" style="font-size:30px; color:#8e2b20; margin:6px 0 0 26px; transform:rotate(8deg);">
+                  ↳
+                </div>
+
+                <p class="hand note" style="margin:2px 0 0 46px; font-size:15px; transform:rotate(-.6deg);">
+                  Lighthouse keeper changed his story <u>twice</u>.
+                  Get the full statement in writing.
+                </p>
+
+                <div style="margin-top:26px; display:flex; align-items:flex-end; gap:14px;">
+                  <svg width="118" height="76" viewBox="0 0 118 76">
+                    <path d="M8 68 L44 18 L68 52 L108 12"
+                          fill="none" stroke="#2b2118" stroke-width="2"
+                          stroke-linecap="round"/>
+                    <circle cx="44" cy="18" r="4.5" fill="#8e2b20"/>
+                    <circle cx="68" cy="52" r="4.5" fill="#8e2b20"/>
+                  </svg>
+                  <div class="hand" style="font-size:12.5px; color:#4a3a26; line-height:1.4;">
+                    route he claims<br>he took home
+                  </div>
+                </div>
+
+                <div class="stamp" style="bottom:10px; right:10px; font-size:12px; letter-spacing:2px;">
+                  Follow up
+                </div>
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:360px; left:20px; width:130px;
+                            transform:rotate(5deg); z-index:3;">
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:390px; left:190px; width:130px;
+                            transform:rotate(-6deg); z-index:2;">
+
+              </div>
+            </div>
+          </div>
+
+
+          <!-- ============================================================
+               LEAF 5 — PAGE 5 : TIMELINE
+               ============================================================ -->
+          <div class="leaf">
+            <div class="face face-front page">
+              <div class="page-inner">
+
+                <h2 class="hand-title sm">Timeline</h2>
+
+                <div style="margin-top:18px; border-left:2px solid #6a4a22; padding-left:16px;">
+
+                  <div style="margin-bottom:16px;">
+                    <div class="typed" style="font-size:11px; letter-spacing:2px; color:#8e2b20;">
+                      22:00 — PIER LOCKED
+                    </div>
+                    <div class="hand" style="font-size:13.5px; color:#23324a;">
+                      Gate log signed by night watchman, T. Reeve.
+                    </div>
+                  </div>
+
+                  <div style="margin-bottom:16px;">
+                    <div class="typed" style="font-size:11px; letter-spacing:2px; color:#8e2b20;">
+                      23:40 — LAST SIGHTING
+                    </div>
+                    <div class="hand" style="font-size:13.5px; color:#23324a;">
+                      Voss seen arguing with an unidentified man near Pier 4.
+                    </div>
+                  </div>
+
+                  <div style="margin-bottom:16px;">
+                    <div class="typed" style="font-size:11px; letter-spacing:2px; color:#8e2b20;">
+                      00:15 — TIDE LOW
+                    </div>
+                    <div class="hand" style="font-size:13.5px; color:#23324a;">
+                      Water below the jetty line for 40 minutes.
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="typed" style="font-size:11px; letter-spacing:2px; color:#8e2b20;">
+                      04:12 — BODY RECOVERED
+                    </div>
+                    <div class="hand" style="font-size:13.5px; color:#23324a;">
+                      Found by harbour patrol, face down beneath the west span.
+                    </div>
+                  </div>
+
+                </div>
+
+                <p class="hand note" style="margin-top:22px; font-size:14px; transform:rotate(-.9deg);">
+                  Three hours unaccounted for. <span class="hl">Three hours.</span>
+                </p>
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:360px; left:20px; width:130px;
+                            transform:rotate(5deg); z-index:3;">
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:390px; left:190px; width:130px;
+                            transform:rotate(-6deg); z-index:2;">
+
+              </div>
+            </div>
+          </div>
+
+
+          <!-- ============================================================
+               LEAF 6 — PAGE 6 : PRESS CLIPPING
+               ============================================================ -->
+          <div class="leaf">
+            <div class="face face-front page">
+              <div class="page-inner">
+
+                <h2 class="hand-title sm">Press</h2>
+
+                <div class="clipping" style="margin-top:14px;">
+                  <h3>PIER DEATH "NOT ACCIDENTAL", SAY POLICE</h3>
+                  <p>
+                    Detectives investigating the death of a man found beneath
+                    Blackmoor Pier have confirmed they are treating the case
+                    as suspicious. The victim, believed to be a local harbour
+                    worker, was discovered shortly after four o'clock on
+                    Tuesday morning by a routine patrol.
+                    <br><br>
+                    A police spokesperson declined to comment on reports that
+                    a second person was seen on the pier shortly before
+                    midnight. The pier remains closed to the public while
+                    forensic teams continue their examination.
+                  </p>
+                </div>
+
+                <div class="hand" style="margin-top:26px; font-size:15px; color:#23324a; transform:rotate(-1.4deg);">
+                  "A second person."<br>
+                  <span style="margin-left:22px;">Nobody told the press about that.</span>
+                </div>
+
+                <div class="stamp" style="bottom:8px; right:8px; font-size:11px; letter-spacing:2px;">
+                  Leak?
+                </div>
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:360px; left:20px; width:130px;
+                            transform:rotate(5deg); z-index:3;">
+
+                <img src="note1.png" class="page-photo" alt=""
+                     style="top:390px; left:190px; width:130px;
+                            transform:rotate(-6deg); z-index:2;">
+
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /.book -->
+      </div><!-- /.stage -->
+    </div><!-- /.scaler -->
+  </div><!-- /.holder -->
+
+  <div class="hint" id="hint">Open Casebook</div>
+
+</div><!-- /.scene -->
+
+
+<div class="controls">
+  <button class="ctl" id="btnPrev">← PREVIOUS</button>
+  <div class="counter" id="pageCounter">CLOSED</div>
+  <button class="ctl" id="btnNext">NEXT →</button>
+</div>
+
+
+<script>
+(function () {
+  'use strict';
+
+  var PAGE_W = 420;
+  var PAGE_H = 580;
+  var BOOK_W = PAGE_W * 2;
+  var BOOK_H = PAGE_H;
+  var TURN_MS = 820;
+  var SINGLE_PAGE_BREAKPOINT = 760;
+
+  var scene      = document.getElementById('scene');
+  var holder     = document.getElementById('holder');
+  var scaler     = document.getElementById('scaler');
+  var book       = document.getElementById('book');
+  var counterEl  = document.getElementById('pageCounter');
+  var btnPrev    = document.getElementById('btnPrev');
+  var btnNext    = document.getElementById('btnNext');
+  var hintEl     = document.getElementById('hint');
+
+  document.documentElement.style.setProperty('--turn', TURN_MS + 'ms');
+
+  var leaves = Array.prototype.slice.call(book.querySelectorAll('.leaf'));
+
+  leaves.forEach(function (leaf, i) {
+    leaf.style.setProperty('--i', i);
+
+    if (!leaf.querySelector('.face-back')) {
+      var back = document.createElement('div');
+      back.className = 'face face-back';
+      leaf.appendChild(back);
+    }
+  });
+
+  var TOTAL_PAGES = leaves.length - 1;
+  var MAX_TURN    = leaves.length;
+
+  var turned = 0;
+  var busy   = false;
+
+  function isSinglePageMode() {
+    return window.innerWidth < SINGLE_PAGE_BREAKPOINT;
+  }
+
+  function fit() {
+    var single = isSinglePageMode();
+
+    var sceneW = scene.clientWidth;
+    var sceneH = scene.clientHeight;
+    if (!sceneW || !sceneH) return;
+
+    var windowW = single ? PAGE_W : BOOK_W;
+    var windowH = PAGE_H;
+
+    var pad = 12;
+    var scale = Math.min(
+      (sceneW - pad) / windowW,
+      (sceneH - pad) / windowH
+    );
+
+    var offsetX = single ? -(PAGE_W * scale) : 0;
+
+    scaler.style.transform = 'translateX(' + offsetX + 'px) scale(' + scale + ')';
+
+    holder.style.width  = (windowW * scale) + 'px';
+    holder.style.height = (windowH * scale) + 'px';
+
+    document.body.classList.toggle('single-page', single);
+
+    document.documentElement.style.setProperty('--shift', single ? '0%' : '-25%');
+    document.documentElement.style.setProperty('--po', single ? '75%' : '50%');
+  }
+
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', function () {
+    setTimeout(fit, 120);
+  });
+
+  function render() {
+    leaves.forEach(function (leaf, i) {
+      leaf.classList.toggle('flipped', i < turned);
+    });
+
+    book.classList.toggle('open', turned > 0);
+
+    if (turned === 0) {
+      counterEl.textContent = 'CLOSED';
+    } else {
+      counterEl.textContent =
+        'PAGE ' + Math.min(turned, TOTAL_PAGES) + ' / ' + TOTAL_PAGES;
+    }
+
+    btnNext.disabled = turned >= MAX_TURN;
+
+    hintEl.style.opacity = turned > 0 ? '0' : '1';
+  }
+
+  var turnTimer = null;
+
+  function go(delta) {
+    if (busy) return;
+
+    var target = turned + delta;
+    if (target < 0) target = 0;
+    if (target > MAX_TURN) target = MAX_TURN;
+    if (target === turned) return;
+
+    busy = true;
+
+    var from = Math.min(turned, target);
+    var to   = Math.max(turned, target);
+    for (var i = from; i < to; i++) {
+      leaves[i].classList.add('turning');
+    }
+
+    turned = target;
+    render();
+
+    clearTimeout(turnTimer);
+    turnTimer = setTimeout(function () {
+      for (var j = from; j < to; j++) {
+        leaves[j].classList.remove('turning');
+      }
+      busy = false;
+    }, TURN_MS + 30);
+  }
+
+  btnNext.addEventListener('click', function () { go(1); });
+  btnPrev.addEventListener('click', function () { go(-1); });
+
+  var INTERACTIVE = 'a, button, input, textarea, select, label, [data-no-turn]';
+
+  book.addEventListener('click', function (e) {
+    if (e.target.closest(INTERACTIVE)) return;
+    if (busy) return;
+
+    if (turned === 0) { go(1); return; }
+
+    var rect = book.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+
+    if (x >= rect.width / 2) {
+      go(1);
+    } else {
+      go(-1);
+    }
+  });
+
+  var touchStartX = 0;
+  var touchStartY = 0;
+  var tracking = false;
+  var suppressClick = false;
+
+  book.addEventListener('touchstart', function (e) {
+    if (e.touches.length !== 1) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    tracking = true;
+  }, { passive: true });
+
+  book.addEventListener('touchend', function (e) {
+    if (!tracking) return;
+    tracking = false;
+
+    var t = e.changedTouches[0];
+    var dx = t.clientX - touchStartX;
+    var dy = t.clientY - touchStartY;
+
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+      suppressClick = true;
+      setTimeout(function () { suppressClick = false; }, 420);
+      go(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+
+  book.addEventListener('click', function (e) {
+    if (suppressClick) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, true);
+
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); go(-1); }
+  });
+
+  render();
+  fit();
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(fit);
+  }
+  window.addEventListener('load', fit);
+
+})();
+</script>
+
+</body>
+  </html>
