@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Image Layout</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  /* The background stage */
+  .stage {
+    --ar: 1.7778; /* updated automatically from Dback.jpg */
+    position: relative;
+    width: min(100vw, calc(100vh * var(--ar)));
+    aspect-ratio: var(--ar);
+    background: #222 center / 100% 100% no-repeat;
+    overflow: hidden;
+  }
+
+  /* This layer holds all images and moves/scales as a group */
+  .layer {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+
+  /* Each individual image */
+  .item {
+    position: absolute;
+    left: calc(var(--x) * 1%);
+    top:  calc(var(--y) * 1%);
+    width: calc(var(--w) * 1%);
+    height: auto;
+    transform: translate(-50%, -50%)
+               rotate(calc(var(--r) * 1deg))
+               scale(var(--s));
+    transform-origin: 50% 50%;
+    z-index: var(--z);            /* <-- stacking order */
+    pointer-events: none;         /* images are inert by default */
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  /* ...unless they have a link */
+  .item.clickable {
+    pointer-events: auto;
+    cursor: pointer;
+    transition: filter .22s ease;
+  }
+  .item.clickable:hover {
+    filter: brightness(1.15) drop-shadow(0 0 14px rgba(255, 224, 160, .7));
+  }
+  .item.clickable:active {
+    filter: brightness(1.25) drop-shadow(0 0 22px rgba(255, 224, 160, .9));
+  }
+</style>
+</head>
+<body>
+
+  <div class="stage">
+    <div class="layer" id="layer"></div>
+  </div>
+
+<script>
+/* ============================================================
+   EDIT EVERYTHING HERE
+   ------------------------------------------------------------
+   global.x     -> moves ALL images left/right  (% of width,  + = right)
+   global.y     -> moves ALL images up/down     (% of height, + = down)
+   global.scale -> scales ALL images            (1 = 100%)
+
+   images[].x   -> centre of that image, % of width  (0 = left, 100 = right)
+   images[].y   -> centre of that image, % of height (0 = top, 100 = bottom)
+   images[].w   -> width of that image, % of stage width
+   images[].z   -> STACKING ORDER. Bigger number = drawn on top.
+   images[].scale / rotation -> per-image tweaks
+
+   images[].link -> page to open when clicked.
+                    Leave it out (or omit the line) to make the
+                    image non-clickable.
+   ============================================================ */
+const CONFIG = {
+  background: 'Dback.jpg',
+
+  global: {
+    x: 0,
+    y: 0,
+    scale: 1
+  },
+
+  images: [
+    //                   x     y     w    z   scale  rotation   link
+    { file: 'D1.png',  x: 12,  y: 30,  w: 14, z: 1,  scale: 1.0, rotation: 0 },
+    { file: 'D2.png',  x: 33,  y: 55,  w: 14, z: 2,  scale: 1.0, rotation: 0 },
+    { file: 'D3.png',  x: 50,  y: 30,  w: 14, z: 3,  scale: 1.0, rotation: 0 },
+    { file: 'D4.png',  x: 22,  y: 78,  w: 14, z: 4,  scale: 1.0, rotation: 0, link: 'suspect.html' },
+    { file: 'D5.png',  x: 70,  y: 30,  w: 14, z: 5,  scale: 1.0, rotation: 0 },
+    { file: 'D6.png',  x: 88,  y: 55,  w: 14, z: 6,  scale: 1.0, rotation: 0 },
+    { file: 'D7.png',  x: 40,  y: 15,  w: 14, z: 7,  scale: 1.0, rotation: 0 },
+    { file: 'D8.png',  x: 60,  y: 78,  w: 14, z: 8,  scale: 1.0, rotation: 0 },
+    { file: 'D9.png',  x: 82,  y: 15,  w: 14, z: 9,  scale: 1.0, rotation: 0 },
+    { file: 'D10.png', x: 92,  y: 85,  w: 14, z: 10, scale: 1.0, rotation: 0, link: 'casebook.html' }
+  ]
+};
+/* ========================= END OF CONFIG ==================== */
+
+
+const stage = document.querySelector('.stage');
+const layer = document.getElementById('layer');
+
+/* Background + aspect ratio from Dback.jpg */
+stage.style.backgroundImage = `url("${CONFIG.background}")`;
+
+const bgProbe = new Image();
+bgProbe.onload = () => {
+  const ar = bgProbe.naturalWidth / bgProbe.naturalHeight;
+  stage.style.setProperty('--ar', ar);
+};
+bgProbe.src = CONFIG.background;
+
+/* Build the images */
+CONFIG.images.forEach(cfg => {
+  const img = document.createElement('img');
+  img.className = 'item';
+  img.src = cfg.file;
+  img.alt = cfg.link ? `Open ${cfg.link.replace('.html','')}` : '';
+  img.draggable = false;
+
+  img.style.setProperty('--x', cfg.x);
+  img.style.setProperty('--y', cfg.y);
+  img.style.setProperty('--w', cfg.w);
+  img.style.setProperty('--z', cfg.z ?? 1);      /* <-- pass z-index */
+  img.style.setProperty('--s', cfg.scale ?? 1);
+  img.style.setProperty('--r', cfg.rotation ?? 0);
+
+  /* Clickable? */
+  if (cfg.link) {
+    img.classList.add('clickable');
+    img.dataset.link = cfg.link;
+    img.setAttribute('role', 'link');
+    img.setAttribute('tabindex', '0');
+  }
+
+  layer.appendChild(img);
+});
+
+/* Apply the global group transform */
+(function applyGlobal() {
+  const g = CONFIG.global;
+  layer.style.transform = `translate(${g.x}%, ${g.y}%) scale(${g.scale})`;
+})();
+
+/* ------------------------------------------------------------
+   Click / keyboard handling for the clickable images
+   ------------------------------------------------------------ */
+function openLink(el) {
+  const url = el && el.dataset.link;
+  if (!url) return;
+
+  /* Small "press" feedback before navigating */
+  el.style.filter = 'brightness(1.4) drop-shadow(0 0 26px rgba(255,236,190,1))';
+
+  setTimeout(() => {
+    /* Fade the whole scene out for a smooth hand-off */
+    document.body.style.transition = 'opacity .22s ease';
+    document.body.style.opacity = '0';
+    setTimeout(() => { window.location.href = url; }, 200);
+  }, 90);
+}
+
+layer.addEventListener('click', (e) => {
+  const el = e.target.closest('.item.clickable');
+  if (el) openLink(el);
+});
+
+layer.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest('.item.clickable');
+  if (el) { e.preventDefault(); openLink(el); }
+});
+</script>
+</body>
+</html>
