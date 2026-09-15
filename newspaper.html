@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
+<title>The Whitby Chronicle</title>
+<style>
+/* ============================================================
+   GLOBAL RESET + PAGE SHELL
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body {
+  background: #0e0a07;
+  font-family: Georgia, 'Times New Roman', serif;
+  padding-bottom: 80px; /* room for nav bar */
+}
+
+.page-hidden { display: none !important; }
+
+/* ============================================================
+   NAV BAR (fixed, always visible)
+   ============================================================ */
+.nav-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 72px;
+  background: linear-gradient(180deg, rgba(30,22,14,0.96) 0%, rgba(15,10,6,0.98) 100%);
+  border-top: 2px solid #4a3a25;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  z-index: 9999;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.5);
+}
+.nav-btn {
+  padding: 12px 34px;
+  background: linear-gradient(180deg, #4a3a25 0%, #2a1f14 100%);
+  color: #e8d9b8;
+  border: 1px solid #8a6e42;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: all .18s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+  min-width: 130px;
+}
+.nav-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #6a5233 0%, #3a2a18 100%);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.nav-btn:active:not(:disabled) { transform: translateY(1px); }
+.nav-btn:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  .nav-bar { height: 64px; gap: 10px; }
+  .nav-btn { padding: 10px 18px; font-size: 12px; letter-spacing: 2px; min-width: 100px; }
+  body { padding-bottom: 70px; }
+}
+
+
+/* ============================================================
+   ============================================================
+   FRONT PAGE
+   ============================================================
+   ============================================================ */
+#frontPage {
+  background: #e8e0d5;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+}
+
+#frontPage .newspaper {
+  max-width: 1200px;
+  width: 100%;
+  background: #fcf8f0;
+  padding: 1.5rem 1.2rem 1.2rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  border: 1px solid #d6cdbc;
+  border-radius: 4px;
+  height: fit-content;
+}
+
+#frontPage .masthead {
+  border-bottom: 4px double #2c2c2c;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+#frontPage .masthead img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+
+#frontPage .columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.8rem;
+}
+#frontPage .column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+#frontPage .story {
+  border-bottom: 1px solid #d6cdbc;
+  padding-bottom: 1.2rem;
+}
+#frontPage .story:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+#frontPage .story h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #1a1a1a;
+  margin-bottom: 0.1rem;
+}
+#frontPage .story .byline {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #5a4f3e;
+  border-bottom: 1px dotted #c5b8a6;
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Arial', sans-serif;
+}
+#frontPage .story .byline strong {
+  font-weight: 700;
+  color: #2c2c2c;
+}
+#frontPage .story p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #25221c;
+  margin-bottom: 0.4rem;
+  text-align: justify;
+}
+#frontPage .story p:last-of-type { margin-bottom: 0; }
+
+#frontPage .story figure {
+  margin: 0.5rem 0 0.4rem;
+  border: 1px solid #d6cdbc;
+  background: #f3efe8;
+  padding: 0.3rem;
+  border-radius: 2px;
+}
+#frontPage .story figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 1px;
+  background: #e8e0d5;
+}
+#frontPage .story figcaption {
+  font-size: 0.7rem;
+  color: #4d4435;
+  padding-top: 0.2rem;
+  font-style: italic;
+  text-align: center;
+  font-family: 'Arial', sans-serif;
+  letter-spacing: 0.2px;
+}
+
+#frontPage .story.missing {
+  background: #f5eee4;
+  border: 3px double #2c2c2c;
+  padding: 0.8rem 1rem 1rem;
+  border-radius: 4px;
+}
+#frontPage .story.missing h2 {
+  font-size: 1.8rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #a32020;
+  text-align: center;
+  border-bottom: 2px solid #a32020;
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.4rem;
+}
+#frontPage .story.missing .byline {
+  border-bottom-color: #b8a68b;
+  text-align: center;
+}
+#frontPage .story.missing .highlight {
+  background: #fff3e0;
+  padding: 0.3rem 0.6rem;
+  border-left: 4px solid #a32020;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin: 0.4rem 0;
+}
+#frontPage .story.missing .contact {
+  font-weight: 700;
+  color: #1a1a1a;
+  background: #e8ddd0;
+  padding: 0.2rem 0.6rem;
+  display: inline-block;
+  border-radius: 2px;
+  margin-top: 0.2rem;
+}
+
+#frontPage .ad {
+  background: #f0e9de;
+  border: 2px solid #b8ad98;
+  padding: 0.8rem 1rem;
+  border-radius: 4px;
+  font-family: 'Arial', sans-serif;
+  margin-top: 0.2rem;
+}
+#frontPage .ad h3 {
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #1e1e1e;
+  border-bottom: 1px solid #b8ad98;
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.2rem;
+  font-family: 'Georgia', serif;
+}
+#frontPage .ad .tagline {
+  font-style: italic;
+  color: #3d3d3d;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}
+#frontPage .ad .offer {
+  font-weight: 700;
+  color: #a32020;
+  font-size: 0.95rem;
+}
+#frontPage .ad .address {
+  font-size: 0.8rem;
+  color: #2c2c2c;
+  margin-top: 0.1rem;
+}
+
+@media (max-width: 860px) {
+  #frontPage .newspaper { padding: 1rem; }
+  #frontPage .columns { gap: 1.2rem; }
+  #frontPage .story h2 { font-size: 1.3rem; }
+  #frontPage .story p { font-size: 0.88rem; }
+  #frontPage .story.missing h2 { font-size: 1.5rem; }
+}
+@media (max-width: 600px) {
+  #frontPage { padding: 0.6rem; }
+  #frontPage .newspaper { padding: 0.6rem; }
+  #frontPage .columns { gap: 0.8rem; }
+  #frontPage .story h2 { font-size: 1.1rem; }
+  #frontPage .story .byline { font-size: 0.6rem; }
+  #frontPage .story p { font-size: 0.8rem; line-height: 1.4; }
+  #frontPage .story figure { margin: 0.3rem 0 0.2rem; padding: 0.2rem; }
+  #frontPage .story figcaption { font-size: 0.6rem; }
+  #frontPage .story.missing { padding: 0.5rem; }
+  #frontPage .story.missing h2 { font-size: 1.2rem; }
+  #frontPage .story.missing .highlight { font-size: 0.8rem; padding: 0.2rem 0.4rem; }
+  #frontPage .ad { padding: 0.5rem; }
+  #frontPage .ad h3 { font-size: 1rem; }
+}
+@media (max-width: 450px) {
+  #frontPage .columns { gap: 0.5rem; }
+  #frontPage .column { gap: 1rem; }
+  #frontPage .story { padding-bottom: 0.8rem; }
+  #frontPage .story h2 { font-size: 1rem; }
+  #frontPage .story p { font-size: 0.75rem; }
+  #frontPage .story.missing h2 { font-size: 1rem; }
+}
+
+
+/* ============================================================
+   ============================================================
+   BACK PAGE
+   ============================================================
+   ============================================================ */
+#backPage {
+  background: #2c241f;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+}
+#backPage .newspaper-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+#backPage .back-page {
+  position: relative;
+  width: 100%;
+  backface-visibility: hidden;
+  background: #fff;
+  border-radius: 2px;
+}
+#backPage .newspaper {
+  width: 100%;
+  padding: 12px 10px;
+  border: 2px solid #111;
+  background: #fff;
+  font-family: "Times New Roman", serif;
+  color: #111;
+}
+#backPage .masthead {
+  border-bottom: 4px double #2c2c2c;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+#backPage .masthead img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+#backPage .columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+#backPage .column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+#backPage .puzzle-block {
+  border-bottom: 1px solid #d6cdbc;
+  padding-bottom: 1rem;
+}
+#backPage .puzzle-block:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+#backPage .puzzle-block .headline {
+  font-weight: 800;
+  font-size: 16px;
+  margin-bottom: 4px;
+  color: #1a1a1a;
+}
+#backPage .wordsearch { margin-top: 4px; overflow-x: auto; }
+#backPage .wordsearch table {
+  border-collapse: collapse;
+  width: 100%;
+  background: #fff;
+  cursor: pointer;
+}
+#backPage .wordsearch td {
+  border: 1px solid #111;
+  width: 32px; height: 32px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+  background-color: #fff;
+  transition: all 0.1s;
+  user-select: none;
+  cursor: pointer;
+}
+#backPage .wordsearch td.selected {
+  background-color: #f9e45b;
+  box-shadow: inset 0 0 0 2px #d4a017;
+}
+#backPage .wordsearch td.found {
+  background-color: #a5d6a5;
+  color: #2c5e2c;
+}
+#backPage .wordsearch-clues {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0 4px;
+  gap: 10px;
+}
+#backPage .wordsearch-clues-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+#backPage .wordsearch-clues-column p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  padding: 2px 0 2px 8px;
+  border-left: 2px solid #d4c9b6;
+  cursor: pointer;
+}
+#backPage .wordsearch-clues-column p.found-clue {
+  text-decoration: line-through;
+  color: #2e7d32;
+  border-left-color: #2e7d32;
+}
+#backPage .sudoku { margin: 6px 0 4px; overflow-x: auto; }
+#backPage .sudoku table {
+  border-collapse: collapse;
+  width: 100%;
+  background: #fff;
+}
+#backPage .sudoku td {
+  border: 1px solid #888;
+  width: 36px; height: 36px;
+  text-align: center;
+  padding: 0;
+}
+#backPage .sudoku td[data-col="2"],
+#backPage .sudoku td[data-col="5"],
+#backPage .sudoku td[data-col="8"] { border-right: 3px solid #111; }
+#backPage .sudoku td[data-row="2"],
+#backPage .sudoku td[data-row="5"],
+#backPage .sudoku td[data-row="8"] { border-bottom: 3px solid #111; }
+#backPage .sudoku input {
+  width: 100%; height: 100%;
+  text-align: center;
+  font-weight: bold;
+  font-size: 16px;
+  font-family: 'Courier New', monospace;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: #1e3c5c;
+}
+#backPage .sudoku input:focus { background-color: #fff3cf; }
+#backPage .sudoku .given-cell { background-color: #f0ede8; }
+#backPage .sudoku .given-cell input { font-weight: 800; color: #2c3e2f; }
+#backPage .sudoku td.error-cell { background-color: #ffe0e0; }
+#backPage .reset-btn {
+  margin-top: 4px;
+  background: #e0d6c6;
+  border: 1px solid #9b8e7c;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: system-ui;
+  align-self: flex-start;
+}
+
+#backPage .entertainment {
+  margin-top: 16px;
+  border-top: 2px solid #000;
+  padding-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  background: #fff;
+}
+#backPage .riddle-box,
+#backPage .joke-box {
+  background: #fff;
+  padding: 8px 6px 6px;
+  border-left: 3px solid #c7b27e;
+}
+#backPage .riddle-box h4,
+#backPage .joke-box h4 {
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: #3a2a1f;
+  border-bottom: 2px solid #e2d5bc;
+  display: inline-block;
+  padding-bottom: 3px;
+}
+#backPage .riddle-item,
+#backPage .joke-item { margin-bottom: 12px; }
+#backPage .riddle-question {
+  font-weight: 700;
+  font-size: 13px;
+  color: #2c5530;
+  margin-bottom: 3px;
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  display: inline-block;
+}
+#backPage .riddle-question:hover { text-decoration: underline; }
+#backPage .riddle-answer {
+  font-size: 12px;
+  color: #5a3e2e;
+  padding-left: 8px;
+  border-left: 2px solid #e8ddc4;
+  margin-top: 4px;
+  display: none;
+}
+#backPage .riddle-answer.revealed { display: block; }
+#backPage .joke-text {
+  font-size: 12px;
+  color: #2c3e2f;
+  line-height: 1.4;
+  font-weight: 500;
+}
+#backPage .joke-punchline {
+  font-weight: 700;
+  color: #b45f2b;
+  margin-top: 3px;
+  font-size: 11px;
+  padding-left: 6px;
+}
+#backPage hr.divider-light {
+  margin: 6px 0;
+  border: 0;
+  height: 1px;
+  background: #e2d5bc;
+}
+#backPage .tap-instruction {
+  text-align: center;
+  font-size: 10px;
+  color: #8b7355;
+  font-family: monospace;
+  margin-top: 12px;
+  padding: 4px;
+  background: #fef7e8;
+  border-radius: 20px;
+}
+#backPage .space-filler {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 6px;
+  color: #b8a77c;
+  font-family: monospace;
+  font-size: 12px;
+}
+#backPage .space-filler hr {
+  flex: 1;
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d4c5a8, transparent);
+}
+#backPage .space-filler span { font-size: 14px; letter-spacing: 2px; }
+#backPage .puzzle-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+  border-top: 2px solid #000;
+  padding-top: 12px;
+}
+#backPage .fact-item {
+  background: #fdfaf3;
+  padding: 8px;
+  border-left: 3px solid #a68a61;
+  font-size: 12px;
+  line-height: 1.4;
+}
+#backPage .fact-item strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: #3a2a1f;
+}
+#backPage .fact-riddle {
+  font-weight: 600;
+  color: #2c5530;
+  cursor: pointer;
+  display: inline-block;
+  border-bottom: 1px dashed #a68a61;
+}
+#backPage .fact-answer {
+  display: none;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #e8e0d5;
+  border-radius: 4px;
+  font-style: italic;
+}
+#backPage .fact-answer.revealed { display: block; }
+#backPage .cryptogram-container {
+  background: #fcf7e3;
+  border: 1px solid #c7b27e;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 4px;
+}
+#backPage .cryptogram-container h2 {
+  font-size: 18px;
+  border-bottom: 2px solid #000;
+  padding-bottom: 3px;
+  margin-bottom: 10px;
+}
+#backPage .cryptogram-container .encrypted {
+  font-size: 20px;
+  letter-spacing: 4px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  background: #fff;
+  padding: 10px;
+  border: 1px solid #aaa;
+  text-align: center;
+  word-break: break-all;
+}
+#backPage .cryptogram-container .key {
+  font-size: 15px;
+  font-family: 'Courier New', monospace;
+  background: #fff;
+  padding: 6px;
+  border: 1px solid #aaa;
+  margin: 8px 0;
+}
+
+@media (max-width: 860px) {
+  #backPage .newspaper { padding: 8px; }
+  #backPage .columns { gap: 0.8rem; }
+  #backPage .column { gap: 0.8rem; }
+  #backPage .wordsearch td { width: 26px; height: 26px; font-size: 13px; }
+  #backPage .sudoku td { width: 30px; height: 30px; }
+  #backPage .sudoku input { font-size: 13px; }
+  #backPage .entertainment { gap: 10px; }
+  #backPage .puzzle-facts { gap: 8px; }
+}
+@media (max-width: 600px) {
+  #backPage .newspaper { padding: 4px; border-width: 1px; }
+  #backPage .columns { gap: 0.4rem; }
+  #backPage .column { gap: 0.6rem; }
+  #backPage .puzzle-block { padding-bottom: 0.6rem; }
+  #backPage .puzzle-block .headline { font-size: 11px; margin-bottom: 2px; }
+  #backPage .wordsearch td { width: 18px; height: 18px; font-size: 9px; border-width: 1px; }
+  #backPage .wordsearch-clues { gap: 4px; flex-direction: row; flex-wrap: wrap; }
+  #backPage .wordsearch-clues-column p { font-size: 9px; padding: 1px 0 1px 4px; border-left-width: 1px; }
+  #backPage .sudoku td { width: 20px; height: 20px; border-width: 1px; }
+  #backPage .sudoku td[data-col="2"],
+  #backPage .sudoku td[data-col="5"],
+  #backPage .sudoku td[data-col="8"] { border-right-width: 2px; }
+  #backPage .sudoku td[data-row="2"],
+  #backPage .sudoku td[data-row="5"],
+  #backPage .sudoku td[data-row="8"] { border-bottom-width: 2px; }
+  #backPage .sudoku input { font-size: 9px; }
+  #backPage .reset-btn { font-size: 8px; padding: 2px 6px; }
+  #backPage .entertainment { gap: 4px; padding-top: 8px; margin-top: 10px; }
+  #backPage .riddle-box,
+  #backPage .joke-box { padding: 4px; border-left-width: 2px; }
+  #backPage .riddle-box h4,
+  #backPage .joke-box h4 { font-size: 11px; margin-bottom: 6px; }
+  #backPage .riddle-question { font-size: 10px; }
+  #backPage .riddle-answer { font-size: 9px; padding-left: 4px; }
+  #backPage .joke-text { font-size: 10px; }
+  #backPage .joke-punchline { font-size: 9px; }
+  #backPage .tap-instruction { font-size: 8px; padding: 2px; margin-top: 6px; }
+  #backPage hr.divider-light { margin: 4px 0; }
+  #backPage .space-filler { margin: 8px 0 4px; gap: 6px; font-size: 9px; }
+  #backPage .space-filler span { font-size: 10px; }
+  #backPage .puzzle-facts { gap: 4px; padding-top: 6px; margin-top: 6px; }
+  #backPage .fact-item { padding: 4px; font-size: 9px; border-left-width: 2px; }
+  #backPage .fact-item strong { font-size: 10px; }
+  #backPage .fact-riddle { font-size: 9px; }
+  #backPage .fact-answer { font-size: 9px; padding: 2px 4px; }
+  #backPage .cryptogram-container { padding: 6px; margin-top: 6px; }
+  #backPage .cryptogram-container h2 { font-size: 13px; }
+  #backPage .cryptogram-container .encrypted { font-size: 12px; letter-spacing: 2px; padding: 6px; }
+  #backPage .cryptogram-container .key { font-size: 10px; padding: 4px; }
+}
+@media (max-width: 450px) {
+  #backPage .columns { gap: 0.2rem; }
+  #backPage .column { gap: 0.4rem; }
+  #backPage .puzzle-block .headline { font-size: 9px; }
+  #backPage .wordsearch td { width: 14px; height: 14px; font-size: 7px; border-width: 0.5px; }
+  #backPage .wordsearch-clues-column p { font-size: 7px; padding: 1px 0 1px 3px; }
+  #backPage .sudoku td { width: 16px; height: 16px; border-width: 0.5px; }
+  #backPage .sudoku input { font-size: 7px; }
+  #backPage .reset-btn { font-size: 6px; padding: 1px 4px; }
+  #backPage .entertainment { gap: 2px; }
+  #backPage .riddle-box h4,
+  #backPage .joke-box h4 { font-size: 9px; }
+  #backPage .riddle-question { font-size: 8px; }
+  #backPage .riddle-answer { font-size: 8px; }
+  #backPage .joke-text { font-size: 8px; }
+  #backPage .joke-punchline { font-size: 8px; }
+  #backPage .puzzle-facts { gap: 2px; }
+  #backPage .fact-item { font-size: 7px; padding: 3px; }
+  #backPage .fact-item strong { font-size: 8px; }
+  #backPage .cryptogram-container .encrypted { font-size: 10px; letter-spacing: 1px; }
+  #backPage .cryptogram-container .key { font-size: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     FRONT PAGE
+     ============================================================ -->
+<div id="frontPage">
+  <div class="newspaper">
+
+    <header class="masthead">
+      <img src="newsbanner.png" alt="The Whitby Chronicle – Est. 1887, Tuesday 8 September 2026, Price 2d" />
+    </header>
+
+    <div class="columns">
+
+      <!-- ===== LEFT COLUMN ===== -->
+      <div class="column">
+
+        <article class="story">
+          <h2>Professor Arthur Vale Disappears in Whitby</h2>
+          <div class="byline"><strong>By Karla Censine</strong>, Senior Reporter</div>
+          <figure>
+            <img src="proarthur.png" alt="Professor Arthur Vale" />
+            <figcaption>Professor Arthur Vale, 58, vanished from his Whitby home.</figcaption>
+          </figure>
+          <p>Professor Arthur Vale, 58, has disappeared from his Whitby home. Colleagues say he recently found evidence of a hidden map in the town's archives. "He mentioned a mysterious figure called 'The Cartographer'," said Dr. Miriam Shaw. "He became secretive, then vanished."</p>
+          <p>Vale's study was ransacked. Rare documents are missing. Police are appealing for witnesses and treating the case as a high-priority investigation. Officers are conducting extensive searches across Whitby and surrounding coastal areas. Anyone with information should contact Whitby Police immediately.</p>
+        </article>
+
+        <article class="story">
+          <h2>Woman Caught Talking To Her Plants "They Refuse To Listen"</h2>
+          <div class="byline"><strong>By Paige Turner</strong>, Senior Features Writer</div>
+          <figure>
+            <img src="planttalk.png" alt="Woman talking to plants" />
+            <figcaption>A resident admitted to giving motivational speeches to her houseplants.</figcaption>
+          </figure>
+          <p>A resident admitted to giving motivational speeches to her houseplants. Neighbours reported they "remain stubbornly unmotivated," despite promises of water and fertilizer bribes.</p>
+        </article>
+
+        <article class="story">
+          <h2>Star Bakery Sees Late Night Delivery Spike</h2>
+          <div class="byline"><strong>By Bill Board</strong>, Advertising &amp; Media Reporter</div>
+          <figure>
+            <img src="starbakery.png" alt="Star Bakery late night" />
+            <figcaption>Star Bakery has become a late-night hotspot for shift workers.</figcaption>
+          </figure>
+          <p>A small bakery in Lincoln has unexpectedly become a late-night hotspot after extending its hours to serve shift workers and night owls. Owner Lila Grant said the idea came after noticing empty streets but growing online demand. "People wanted fresh pastries at odd hours," she explained.</p>
+          <p>Since then, Star Bakery has seen a strange spike in late-night deliveries that appear to arrive even when no orders were placed. Staff have begun joking that the bakery is "on star mode all night," with croissants allegedly disappearing faster than they can be counted.</p>
+          <p>Locals have praised the welcoming atmosphere, though some admit the bread now feels "suspiciously enthusiastic." City officials are monitoring the trend as staff continue insisting nothing unusual is happening, despite the ovens occasionally "working overtime on their own."</p>
+        </article>
+
+        <article class="story">
+          <h2>Local Chef Arrested for Triangular Pizza Experiment</h2>
+          <div class="byline"><strong>By Chris P. Bacon</strong>, Food &amp; Lifestyle Editor</div>
+          <figure>
+            <img src="trianglechef.png" alt="Triangular pizza chef" />
+            <figcaption>Head chef Marco Bellini's triangular pizza caused chaos.</figcaption>
+          </figure>
+          <p>A local chef has been arrested after a controversial triangular pizza experiment caused unexpected chaos in a city restaurant. Head chef Marco Bellini said the idea came from a "harmless attempt to challenge traditional pizza geometry," claiming customers were "ready for evolution."</p>
+          <p>Police were called after diners reported being served slices that did not fit on any standard plate and appeared to "reject circular reality entirely." Stone-based pizza described by one witness as "emotionally unsettling but weirdly tasty." The restaurant has since been closed for inspection, while officials investigate whether triangular food shapes pose a threat to public order or just to common sense.</p>
+        </article>
+
+        <article class="story">
+          <h2>Mysterious Lights Seen Over Quiet Village</h2>
+          <div class="byline"><strong>By Al Beback</strong>, Field Correspondent</div>
+          <figure>
+            <img src="skylight.png" alt="Mysterious lights over village" />
+            <figcaption>Residents reported strange lights appearing above the village late Tuesday evening.</figcaption>
+          </figure>
+          <p>Residents of a quiet Lincolnshire village were surprised after several bright lights appeared in the night sky. Witnesses described seeing three glowing objects moving slowly above the rooftops before suddenly disappearing. Local resident Daniel Moore said the lights were unlike anything he had seen before.</p>
+          <p>The unusual sight attracted dozens of curious residents, with several people capturing photographs and videos from their gardens. Local officials said there was currently no explanation for the incident. Experts are expected to examine the footage, while residents remain hopeful that the mysterious lights will return and reveal their secret.</p>
+          <figure>
+            <img src="vintagemap.png" alt="Vintage map of Lincolnshire" />
+            <figcaption>A vintage map of Lincolnshire, circa 1890 — found in the village archives.</figcaption>
+          </figure>
+        </article>
+
+      </div>
+
+      <!-- ===== RIGHT COLUMN ===== -->
+      <div class="column">
+
+        <article class="story">
+          <h2>Man Brings Ladder To Pub — Claims "Drinks Were On The House"</h2>
+          <div class="byline"><strong>By Justin Case</strong>, Breaking News Reporter</div>
+          <figure>
+            <img src="drinkladder.png" alt="Man with ladder at pub" />
+            <figcaption>"I heard the drinks were on the house," the man explained.</figcaption>
+          </figure>
+          <p>A local man caused confusion last night after arriving at a pub carrying a ladder. When questioned, he calmly explained he'd heard the drinks were "on the house" and didn't want to miss out. Staff asked him to leave shortly after he tried to climb behind the bar.</p>
+        </article>
+
+        <article class="story">
+          <h2>Scientists Confirm Round Objects Roll More Than Square Ones</h2>
+          <div class="byline"><strong>By Drew Peacock</strong>, Political Analyst</div>
+          <figure>
+            <img src="ballfaster.png" alt="Round objects rolling" />
+            <figcaption>Scientists tested apples, wheels, and a very confident dinner plate.</figcaption>
+          </figure>
+          <p>Scientists have confirmed that round objects roll more than square ones in what experts are calling the most expensive obvious discovery in modern science. The three-year study tested items including apples, wheels, and a very confident dinner plate that refused to cooperate on principle.</p>
+          <p>Lead researcher Dr Helen Moore said, "We suspected round things would roll, but we didn't expect them to show off about it." Square objects reportedly failed every test, with one cube described as "emotionally stable but physically disappointing." One assistant added that the wheels "kept rolling away mid-experiment like they had somewhere better to be."</p>
+          <p>USB measurements were used to confirm rolling consistency across all test objects. The findings have sparked public outrage over funding, while officials defended the research, stating it was important to confirm what everyone already knew before school.</p>
+        </article>
+
+        <article class="story missing">
+          <h2>MISSING: HAVE YOU SEEN BAILEY?</h2>
+          <div class="byline"><strong>By Anita Report</strong>, Investigative Journalist</div>
+          <figure>
+            <img src="lostdog.png" alt="Bailey the Border Collie" />
+            <figcaption>Bailey – 3-year-old Border Collie, black &amp; white, one blue eye.</figcaption>
+          </figure>
+          <p><strong>Bailey</strong> – 3-year-old Border Collie, black &amp; white, one blue eye. Went missing near Whitby Abbey on March 18. Very friendly, responds to name. Family is heartbroken.</p>
+          <div class="highlight">🏆 <strong>Reward £200</strong> for safe return.</div>
+          <p><strong>📞 Call Jess:</strong> 07700 123456 or Whitby Police.</p>
+          <p class="contact">Please share – last seen near the Old Coastguard path.</p>
+          <p style="margin-top:0.5rem; font-size:0.9rem;">A Labrador named Max has also amazed residents after traveling nearly 40 miles to reunite with his owner. The dog went missing during a camping trip but was later found waiting outside his owner's former home. Neighbours recognised Max and contacted local authorities, who scanned his microchip. Experts believe the dog followed familiar scents and landmarks. "It's incredible loyalty," said one volunteer. Max has since been safely returned and is recovering well, with his owner calling the reunion "nothing short of a miracle."</p>
+        </article>
+
+        <article class="story">
+          <h2>Students Build Solar Car from Scrap Materials</h2>
+          <div class="byline"><strong>By Al Beback</strong>, Field Correspondent</div>
+          <figure>
+            <img src="solarcar.png" alt="Solar car built from scrap" />
+            <figcaption>The student team's solar-powered car completed a 15-mile test drive.</figcaption>
+          </figure>
+          <p>A group of engineering students has built a fully functioning solar-powered car using mostly recycled materials. The project, completed over six months, aimed to highlight sustainable innovation on a budget. Team leader Aisha Khan said the biggest challenge was balancing efficiency with durability.</p>
+          <p>The car successfully completed a 15-mile test drive, impressing local sponsors and university staff. Plans are now underway to refine the design and enter it into a national competition. The team hopes their work will inspire others to explore green technology solutions.</p>
+        </article>
+
+        <div class="ad">
+          <h3>✦ Whitby Antiquarian Books ✦</h3>
+          <div class="tagline">Rare maps, forgotten journals &amp; peculiar curiosities.</div>
+          <div class="offer">20% off for Chronicle readers!</div>
+          <div class="address">📍 7 Church Street, Whitby &nbsp;|&nbsp; ☎ 01947 602341</div>
+          <div style="font-style:italic; font-size:0.8rem; color:#3d3d3d; margin-top:0.1rem;">"Where history hides in plain sight."</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="border-top:2px solid #2c2c2c; margin-top:1.5rem; padding-top:0.5rem; text-align:center; font-size:0.65rem; color:#5a4f3e; letter-spacing:0.5px; text-transform:uppercase; font-family:Arial,sans-serif;">
+      Printed in England &bull; All rights reserved &bull; 8 September 2026
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================================================
+     BACK PAGE
+     ============================================================ -->
+<div id="backPage" class="page-hidden">
+  <div class="newspaper-container">
+    <div class="back-page">
+      <div class="newspaper">
+
+        <div class="masthead">
+          <img src="backbanner.png" alt="The Whitby Chronicle – Back Page" />
+        </div>
+
+        <div class="columns">
+
+          <!-- ===== LEFT COLUMN ===== -->
+          <div class="column">
+
+            <div class="puzzle-block">
+              <div class="headline">🔍 Word Search 1 — Clues</div>
+              <div class="wordsearch-clues" id="ws1-clues-container"></div>
+            </div>
+
+            <div class="puzzle-block">
+              <div class="headline">Word Search 1 — Grid</div>
+              <div class="wordsearch" id="wordsearch1"></div>
+            </div>
+
+            <div class="puzzle-block">
+              <div class="headline">🧩 Sudoku Puzzle 1</div>
+              <div id="sudoku1" class="sudoku"></div>
+              <button class="reset-btn" id="resetSudoku1">⟳ Reset Sudoku 1</button>
+            </div>
+
+          </div>
+
+          <!-- ===== RIGHT COLUMN ===== -->
+          <div class="column">
+
+            <div class="puzzle-block">
+              <div class="headline">🔍 Word Search 2 — Clues</div>
+              <div class="wordsearch-clues" id="ws2-clues-container"></div>
+            </div>
+
+            <div class="puzzle-block">
+              <div class="headline">Word Search 2 — Grid</div>
+              <div class="wordsearch" id="wordsearch2"></div>
+            </div>
+
+            <div class="puzzle-block">
+              <div class="headline">🧩 Sudoku Puzzle 2</div>
+              <div id="sudoku2" class="sudoku"></div>
+              <button class="reset-btn" id="resetSudoku2">⟳ Reset Sudoku 2</button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="entertainment">
+          <div class="riddle-box">
+            <h4>📜 WEEKLY RIDDLES</h4>
+            <div class="riddle-item">
+              <div class="riddle-question">❓ I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?</div>
+              <div class="riddle-answer"><strong>Answer:</strong> An echo.</div>
+            </div>
+            <div class="riddle-item">
+              <div class="riddle-question">❓ The more you take, the more you leave behind. What are they?</div>
+              <div class="riddle-answer"><strong>Answer:</strong> Footsteps.</div>
+            </div>
+            <div class="riddle-item">
+              <div class="riddle-question">❓ I am always coming but never arrive. What am I?</div>
+              <div class="riddle-answer"><strong>Answer:</strong> Tomorrow.</div>
+            </div>
+            <div class="riddle-item">
+              <div class="riddle-question">❓ What has a face and two hands but no arms or legs?</div>
+              <div class="riddle-answer"><strong>Answer:</strong> A clock.</div>
+            </div>
+            <div class="riddle-item">
+              <div class="riddle-question">❓ I have keys but open no locks. I have space but no room. What am I?</div>
+              <div class="riddle-answer"><strong>Answer:</strong> A keyboard.</div>
+            </div>
+            <div class="tap-instruction">👆 Tap riddles to reveal answers!</div>
+          </div>
+
+          <div class="joke-box">
+            <h4>😆 DETECTIVE PUNS & JOKES</h4>
+            <div class="joke-item">
+              <div class="joke-text">Why did the detective bring a ladder to the crime scene?</div>
+              <div class="joke-punchline">He heard the case was "unsolved" and wanted to get to the next level.</div>
+            </div>
+            <hr class="divider-light">
+            <div class="joke-item">
+              <div class="joke-text">What do you call a detective who solves cases in the bakery?</div>
+              <div class="joke-punchline">Sherlock Doughmes.</div>
+            </div>
+            <hr class="divider-light">
+            <div class="joke-item">
+              <div class="joke-text">How does a detective solve a riddle?</div>
+              <div class="joke-punchline">He follows the "clue"prints.</div>
+            </div>
+            <hr class="divider-light">
+            <div class="joke-item">
+              <div class="joke-text">Why did the private eye always carry a pencil?</div>
+              <div class="joke-punchline">In case he needed to draw his own conclusions.</div>
+            </div>
+            <hr class="divider-light">
+            <div class="joke-item">
+              <div class="joke-text">What's a detective's favorite type of music?</div>
+              <div class="joke-punchline">Rhythm &amp; Clues.</div>
+            </div>
+            <hr class="divider-light">
+            <div class="joke-item">
+              <div class="joke-text">Why did the detective go to art school?</div>
+              <div class="joke-punchline">To learn how to draw a conclusion.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-filler">
+          <hr><span>✦  PUZZLE CORNER  ✦</span><hr>
+        </div>
+
+        <div class="puzzle-facts">
+          <div class="fact-item">
+            <strong>🧩 Riddle of the Day</strong>
+            <span class="fact-riddle" id="dailyRiddle">What has keys but can't open locks, and space but no room?</span>
+            <div class="fact-answer" id="riddleAnswer">A keyboard (or a piano)!</div>
+          </div>
+          <div class="fact-item">
+            <strong>📖 Puzzle Facts</strong>
+            The first crossword puzzle was published in the <em>New York World</em> newspaper on December 21, 1913. It was called a "word-cross".
+            <p style="margin-top:4px;">There are more Rubik’s Cube combinations than atoms in your body. Around 43 quintillion combinations—far beyond human-scale counting.</p>
+          </div>
+          <div class="fact-item">
+            <strong>🧩 Spot The Liar Puzzle</strong>
+            <div class="riddle-item">
+              <div class="riddle-question">
+                I wrote down a number and showed it to Alice, Ben, Charlotte and Daniel.<br>
+                Clue: Go through each person assuming they are the liar. If their lie causes another person to be a liar, they can’t be the original sole liar.<br>
+                Alice: “It’s not 150”.<br>
+                Ben: “It has exactly two digits”.<br>
+                Charlotte: “It goes evenly into 150”.<br>
+                Daniel: “It’s divisible by 25”.<br>
+                Exactly one of them is lying. Who is the liar?
+              </div>
+              <div class="riddle-answer">
+                <strong>Answer:</strong> Daniel. The number is 30 – only Daniel’s statement is false.
+              </div>
+            </div>
+          </div>
+          <div class="fact-item">
+            <strong>🔢 Sudoku Facts</strong>
+            The modern Sudoku was popularized in Japan in 1986, but number puzzles similar to it appeared in French newspapers as early as 1895.
+            <p style="margin-top:4px;">The world’s hardest Sudoku took over 6 hours to solve. Some expert-level Sudoku puzzles are so complex they require advanced techniques and extreme patience—even for professionals.</p>
+          </div>
+        </div>
+
+        <div class="cryptogram-container">
+          <h2>🔐 CRYPTOGRAM</h2>
+          <p class="encrypted">
+            19 3 8 5 20 5 14 3 5 / 15 18 4 5 18 / 8 9 4 5 19 / 20 8 5 / 20 18 21 20 8
+          </p>
+          <h3 style="margin-top:10px; font-size:14px;">📌 DECODE KEY</h3>
+          <p class="key">
+            A=1  B=?  C=3  D=?  E=5  F=?  G=?  H=8  I=?  J=?  
+            K=?  L=12  M=?  N=14  O=?  P=?  Q=?  R=18  
+            S=?  T=20  U=?  V=?  W=?  X=24  Y=?  Z=26
+          </p>
+          <h3 style="margin-top:10px; font-size:14px;">🧩 INSTRUCTIONS</h3>
+          <p style="font-size:13px;">Decode the message using the incomplete key.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     NAV BAR
+     ============================================================ -->
+<div class="nav-bar">
+  <button class="nav-btn" id="backBtn" disabled>← BACK</button>
+  <button class="nav-btn" id="nextBtn">NEXT →</button>
+</div>
+
+
+<script>
+/* ============================================================
+   PAGE NAVIGATION
+   ============================================================ */
+(function () {
+  var frontPage = document.getElementById('frontPage');
+  var backPage  = document.getElementById('backPage');
+  var backBtn   = document.getElementById('backBtn');
+  var nextBtn   = document.getElementById('nextBtn');
+
+  function showPage(n) {
+    if (n === 1) {
+      frontPage.classList.remove('page-hidden');
+      backPage.classList.add('page-hidden');
+      backBtn.disabled = true;
+      nextBtn.disabled = false;
+    } else {
+      frontPage.classList.add('page-hidden');
+      backPage.classList.remove('page-hidden');
+      backBtn.disabled = false;
+      nextBtn.disabled = true;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  backBtn.addEventListener('click', function () { showPage(1); });
+  nextBtn.addEventListener('click', function () { showPage(2); });
+})();
+
+
+/* ============================================================
+   BACK PAGE PUZZLES (unchanged logic, scoped to backPage)
+   ============================================================ */
+(function(){
+  function initRiddles(){
+    document.querySelectorAll('#backPage .riddle-question').forEach(q => {
+      let a = q.nextElementSibling;
+      if (a && a.classList.contains('riddle-answer')) {
+        q.addEventListener('click', e => {
+          e.stopPropagation();
+          a.classList.toggle('revealed');
+        });
+      }
+    });
+    const r = document.getElementById('dailyRiddle');
+    const a = document.getElementById('riddleAnswer');
+    if (r && a) r.addEventListener('click', () => a.classList.toggle('revealed'));
+  }
+
+  const ws1Grid = [
+    ['T','S','I','E','H','Y'],
+    ['M','A','P','S','B','N'],
+    ['C','Z','K','T','K','I'],
+    ['Y','L','I','S','N','G'],
+    ['Q','H','U','J','A','H'],
+    ['W','S','M','E','B','T']
+  ];
+  const ws1Words = ['BANK','CLUE','MAP','NIGHT','HEIST','WHITBY'];
+
+  const ws2Grid = [
+    ['A','U','K','R','A','M'],
+    ['P','L','C','O','P','O'],
+    ['T','N','I','R','P','T'],
+    ['C','B','O','B','S','I'],
+    ['A','O','A','U','I','V'],
+    ['F','J','D','L','B','E']
+  ];
+  const ws2Words = ['ALIBI','COP','DUST','LAB','MARK','PRINT','PROOF','FACT','MOTIVE'];
+
+  let ws1State = { selectedCells: new Set(), foundCells: new Set(), foundWords: new Set() };
+  let ws2State = { selectedCells: new Set(), foundCells: new Set(), foundWords: new Set() };
+
+  function cellKey(r, c) { return r + ',' + c; }
+
+  function checkWord(grid, selected, words, foundWords, foundCells, cluesId) {
+    if (selected.size < 2) return false;
+    let arr = Array.from(selected).map(k => {
+      let [r, c] = k.split(',').map(Number);
+      return { r, c };
+    });
+    for (let w of words) {
+      if (foundWords.has(w) || w.length !== arr.length) continue;
+      let dr = arr[1].r - arr[0].r;
+      let dc = arr[1].c - arr[0].c;
+      let sr = dr === 0 ? 0 : (dr > 0 ? 1 : -1);
+      let sc = dc === 0 ? 0 : (dc > 0 ? 1 : -1);
+      let line = true;
+      for (let i = 1; i < arr.length; i++) {
+        if (arr[i].r !== arr[0].r + sr * i || arr[i].c !== arr[0].c + sc * i) {
+          line = false; break;
+        }
+      }
+      if (!line) continue;
+      let fwd = true, rev = true;
+      for (let i = 0; i < w.length; i++) {
+        if (grid[arr[i].r][arr[i].c] !== w[i]) fwd = false;
+        if (grid[arr[arr.length - 1 - i].r][arr[arr.length - 1 - i].c] !== w[i]) rev = false;
+        if (!fwd && !rev) break;
+      }
+      if (fwd || rev) {
+        arr.forEach(cell => foundCells.add(cellKey(cell.r, cell.c)));
+        foundWords.add(w);
+        document.getElementById(cluesId).querySelectorAll('p').forEach(p => {
+          if (p.innerText === w) p.classList.add('found-clue');
+        });
+        selected.clear();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function renderWS(grid, containerId, state, cluesId, isWS2) {
+    const cont = document.getElementById(containerId);
+    let html = '<table>';
+    for (let r = 0; r < grid.length; r++) {
+      html += '<tr>';
+      for (let c = 0; c < grid[0].length; c++) {
+        let key = cellKey(r, c);
+        let cls = '';
+        if (state.foundCells.has(key)) cls = 'found';
+        if (state.selectedCells.has(key)) cls += ' selected';
+        html += '<td class="' + cls.trim() + '" data-row="' + r + '" data-col="' + c + '">' + grid[r][c] + '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</table>';
+    cont.innerHTML = html;
+    cont.querySelectorAll('td').forEach(td => {
+      td.addEventListener('click', e => {
+        e.stopPropagation();
+        let r = parseInt(td.dataset.row);
+        let c = parseInt(td.dataset.col);
+        let key = cellKey(r, c);
+        if (state.selectedCells.has(key)) state.selectedCells.delete(key);
+        else state.selectedCells.add(key);
+        let words = isWS2 ? ws2Words : ws1Words;
+        let gridData = isWS2 ? ws2Grid : ws1Grid;
+        checkWord(gridData, state.selectedCells, words, state.foundWords, state.foundCells, cluesId);
+        renderWS(grid, containerId, state, cluesId, isWS2);
+      });
+    });
+  }
+
+  function renderClues(words, found, containerId) {
+    let cont = document.getElementById(containerId);
+    let col1 = [], col2 = [];
+    let mid = Math.ceil(words.length / 2);
+    words.forEach((w, i) => {
+      let cls = found.has(w) ? 'found-clue' : '';
+      let p = '<p class="' + cls + '">' + w + '</p>';
+      if (i < mid) col1.push(p);
+      else col2.push(p);
+    });
+    cont.innerHTML = '<div class="wordsearch-clues-column">' + col1.join('') + '</div><div class="wordsearch-clues-column">' + col2.join('') + '</div>';
+  }
+
+  function initWS(grid, words, gridId, cluesId, isWS2) {
+    let state = isWS2 ? ws2State : ws1State;
+    renderWS(grid, gridId, state, cluesId, isWS2);
+    renderClues(words, state.foundWords, cluesId);
+  }
+
+  const sudoku1Init = [
+    [5,0,3,0,7,0,0,0,0],
+    [6,0,0,1,9,5,0,0,0],
+    [0,9,8,0,0,0,0,6,0],
+    [8,0,0,0,6,0,0,0,3],
+    [4,0,0,8,0,3,0,0,1],
+    [7,0,0,0,2,0,0,0,6],
+    [0,6,0,0,0,0,2,8,0],
+    [0,0,0,4,1,9,0,0,5],
+    [0,0,0,0,8,0,0,7,9]
+  ];
+  const sudoku2Init = [
+    [1,0,0,4,0,0,5,0,0],
+    [0,3,0,0,5,0,0,2,0],
+    [0,0,6,0,0,2,0,0,7],
+    [7,0,0,2,0,0,0,0,5],
+    [0,5,0,0,3,0,0,6,0],
+    [4,0,0,0,0,6,0,0,8],
+    [0,0,2,0,5,8,0,0,0],
+    [0,7,0,0,8,0,0,4,0],
+    [0,0,0,0,7,0,0,3,0]
+  ];
+
+  function buildSudoku(containerId, initBoard, resetId) {
+    let board = initBoard.map(r => [...r]);
+    const cont = document.getElementById(containerId);
+
+    function markErr(r, c, err) {
+      let td = cont.querySelector('td[data-row="' + r + '"][data-col="' + c + '"]');
+      if (td) err ? td.classList.add('error-cell') : td.classList.remove('error-cell');
+    }
+
+    function validate(r, c) {
+      let v = board[r][c];
+      if (v === 0) return true;
+      for (let i = 0; i < 9; i++) {
+        if (i !== c && board[r][i] === v) { markErr(r, c, true); return false; }
+        if (i !== r && board[i][c] === v) { markErr(r, c, true); return false; }
+      }
+      let br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          let rr = br + i, cc = bc + j;
+          if ((rr !== r || cc !== c) && board[rr][cc] === v) { markErr(r, c, true); return false; }
+        }
+      }
+      markErr(r, c, false);
+      return true;
+    }
+
+    function render() {
+      let html = '<table>';
+      for (let i = 0; i < 9; i++) {
+        html += '<tr>';
+        for (let j = 0; j < 9; j++) {
+          let val = board[i][j];
+          let given = initBoard[i][j] !== 0;
+          html += '<td class="' + (given ? 'given-cell' : '') + '" data-row="' + i + '" data-col="' + j + '">';
+          if (given) html += '<input type="text" maxlength="1" value="' + (val || '') + '" readonly>';
+          else html += '<input type="text" maxlength="1" value="' + (val || '') + '">';
+          html += '</td>';
+        }
+        html += '</tr>';
+      }
+      html += '</table>';
+      cont.innerHTML = html;
+      cont.querySelectorAll('input:not([readonly])').forEach(inp => {
+        inp.addEventListener('input', e => {
+          let v = e.target.value.trim();
+          if (v === '') v = 0;
+          else { let n = parseInt(v); if (isNaN(n) || n < 1 || n > 9) v = 0; else v = n; }
+          let td = inp.parentElement;
+          let r = parseInt(td.dataset.row);
+          let c = parseInt(td.dataset.col);
+          board[r][c] = v;
+          e.target.value = v || '';
+          validate(r, c);
+        });
+      });
+    }
+
+    function reset() {
+      for (let i = 0; i < 9; i++) for (let j = 0; j < 9; j++) board[i][j] = initBoard[i][j];
+      render();
+    }
+
+    render();
+    document.getElementById(resetId).onclick = reset;
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    initWS(ws1Grid, ws1Words, 'wordsearch1', 'ws1-clues-container', false);
+    initWS(ws2Grid, ws2Words, 'wordsearch2', 'ws2-clues-container', true);
+    buildSudoku('sudoku1', sudoku1Init, 'resetSudoku1');
+    buildSudoku('sudoku2', sudoku2Init, 'resetSudoku2');
+    initRiddles();
+  });
+})();
+</script>
+</body>
+  </html>
