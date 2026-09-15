@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
+    <title>📜 The Bragger's Note – UV Puzzle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+        /* ─── RESET & BASE ─── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a1a2a;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            color: #ece3d0;
+        }
+
+        /* ---- Back-to-hub button ---- */
+        .back-to-hub {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            padding: 10px 22px;
+            background: rgba(15, 12, 8, 0.88);
+            color: #eace9f;
+            border: 1px solid #8a6e42;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: .78rem;
+            font-weight: bold;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            text-decoration: none;
+            z-index: 6000;
+            transition: all .18s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,.55);
+        }
+        .back-to-hub:hover {
+            background: rgba(60, 40, 15, .95);
+            color: #fff;
+            border-color: #d8ab6a;
+            transform: translateY(-1px);
+        }
+
+        .puzzle-wrapper {
+            max-width: 720px;
+            width: 100%;
+            background-color: #fbf3e0;
+            background-image: url('paper.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 8px 20px 20px 8px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 2px #b5986b inset,
+                0 0 0 4px #e5d2b5 inset, 0 0 0 8px #fbf3e0 inset, -5px 0 8px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem 1.8rem 2rem;
+            border-left: 10px solid #8b6b42;
+            margin: 10px auto;
+            position: relative;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        body.uv-active .puzzle-wrapper {
+            background: #0c0c1a !important;
+            background-image: none !important;
+            box-shadow: 0 20px 40px black, 0 0 0 1px #1a1a2a inset, 0 0 0 3px #2a2a3a inset;
+            border-left: 10px solid #1a1a2a;
+        }
+        body.uv-active .letter { color: #2a2a3a; text-shadow: none; }
+        body.uv-active .hidden-letter { color: #2a2a3a; }
+        body.uv-active .salutation,
+        body.uv-active .first-paragraph,
+        body.uv-active .third-paragraph { display: none; }
+        body.uv-active .middle-scrollable {
+            overflow: hidden !important;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            margin: 1rem 0;
+            padding: 0.5rem 0;
+        }
+        body.uv-active .middle-scrollable p:not(#hidden-paragraph) { display: none; }
+        body.uv-active #hidden-paragraph { margin: 1.5rem 1rem; color: #2a2a3a; }
+        body.uv-active .control-panel {
+            background: rgba(26, 26, 42, 0.9);
+            box-shadow: 0 8px 0 #0a0a1a;
+            border-bottom: 2px solid #4a3b22;
+            margin-top: 0;
+            border-radius: 40px 40px 0 0;
+            backdrop-filter: blur(4px);
+        }
+        body.uv-active .detective-btn {
+            background: #4a70a0;
+            color: #fff;
+            border: 1px solid #c0d8ff;
+            box-shadow: 0 5px 0 #1a3a5a;
+        }
+        body.uv-active #shopGuess { background: #fff5e0; border: 2px solid #c09050; }
+        body.uv-active #submitGuess {
+            background: #b0784a;
+            color: #fff;
+            border: 1px solid #f0c090;
+            box-shadow: 0 6px 0 #5a3a20;
+        }
+        body.uv-active .result-message { color: #b8a787; }
+        body.uv-active .case-note { color: #6a6a8a; }
+        body.uv-active .uv-overlay { display: block; }
+        body.uv-active .uv-spot { display: block; }
+
+        .letter {
+            color: #2a241c;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            text-shadow: 0 1px 0 rgba(255, 250, 240, 0.8);
+        }
+        .letter .salutation {
+            font-weight: 600;
+            margin-bottom: 1.8rem;
+            border-bottom: 1px dashed rgba(0, 0, 0, 0.15);
+            padding-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+        .letter p { margin-bottom: 1.5rem; }
+
+        .hidden-letter { color: inherit; transition: color 0.2s; }
+        .uv-spotlight {
+            color: #ffffcc !important;
+            font-weight: 700;
+            text-shadow: 0 0 12px #ffffaa, 0 0 22px #ffff88;
+        }
+
+        .middle-scrollable { flex: 1; overflow-y: auto; }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(2px);
+            border-radius: 40px 40px 20px 20px;
+            padding: 1.5rem 1.2rem;
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.08), 0 12px 24px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 2rem;
+            transition: background 0.3s, box-shadow 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+        }
+        .button-row { display: flex; justify-content: center; margin-bottom: 1.2rem; }
+        .detective-btn {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #1a1a2a;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 0.9rem 2rem;
+            border-radius: 50px;
+            letter-spacing: 1.5px;
+            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.08s linear;
+            width: 100%;
+            backdrop-filter: blur(4px);
+        }
+        .detective-btn:active { transform: translateY(5px); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1); }
+
+        .input-area { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        #shopGuess {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 16px 20px;
+            font-size: 1.2rem;
+            border-radius: 60px;
+            font-family: monospace;
+            font-weight: bold;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+            outline: none;
+            color: #1a1a2a;
+            backdrop-filter: blur(4px);
+            transition: background 0.3s, border-color 0.3s;
+        }
+        #shopGuess:focus { border-color: rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.95); }
+        #submitGuess {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #1a1a2a;
+            font-size: 1.5rem;
+            padding: 14px 20px;
+            border-radius: 60px;
+            font-weight: bold;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.05s linear;
+            backdrop-filter: blur(4px);
+        }
+        #submitGuess:active { transform: translateY(6px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1); }
+
+        .result-message {
+            text-align: center;
+            color: #1a140e;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            font-weight: 600;
+            min-height: 2.8rem;
+            padding: 6px 12px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(2px);
+        }
+        .result-message.correct { color: #1f6e43; }
+        .result-message.wrong { color: #a13d3d; }
+
+        .case-note {
+            color: rgba(0, 0, 0, 0.25);
+            text-align: right;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            font-style: italic;
+            border-top: 1px dashed rgba(0, 0, 0, 0.1);
+            padding-top: 10px;
+            transition: color 0.3s;
+        }
+
+        .uv-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 5, 20, 0.8);
+            mix-blend-mode: multiply;
+            pointer-events: none;
+            z-index: 200;
+            display: none;
+        }
+        .uv-spot {
+            position: fixed;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(80, 140, 255, 0.3) 0%, rgba(50, 100, 220, 0.2) 30%,
+                    rgba(20, 60, 180, 0.1) 70%, transparent 95%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 250;
+            display: none;
+            filter: blur(5px);
+            mix-blend-mode: screen;
+            box-shadow: 0 0 18px 6px rgba(60, 120, 255, 0.3);
+        }
+        .uv-spot.flicker { animation: flickerBlue 0.6s ease-out forwards; }
+        @keyframes flickerBlue {
+            0% { opacity: 0.2; transform: translate(-50%, -50%) scale(0.9); }
+            20% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.1); }
+            40% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.95); }
+            60% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
+            80% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.9); }
+            100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @media (max-width: 500px) {
+            .puzzle-wrapper { padding: 1.5rem 1rem 1.5rem; border-left-width: 6px; }
+            .letter { font-size: 1rem; }
+            .detective-btn { font-size: 1rem; padding: 0.7rem 1.2rem; }
+            #submitGuess { font-size: 1.2rem; padding: 12px 16px; }
+            #shopGuess { font-size: 1rem; padding: 12px 16px; }
+            .control-panel { padding: 1rem 0.8rem; }
+            .back-to-hub { font-size: .68rem; padding: 8px 14px; letter-spacing: .18em; }
+        }
+
+        .success-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(6px);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .success-card {
+            background: linear-gradient(145deg, #1e3d4a, #0f2a3f);
+            border: 3px solid #eace9f;
+            border-radius: 48px;
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            color: #f5e7c8;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+        .success-card h2 { font-size: 2rem; color: #eace9f; margin-bottom: 16px; }
+        .success-card p { font-size: 1.1rem; margin-bottom: 24px; line-height: 1.5; }
+        .success-card .badge {
+            display: inline-block;
+            background: #1f6e43;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+        .success-card button {
+            background: #b68b5c;
+            border: none;
+            color: #0b1e2b;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 12px 32px;
+            border-radius: 60px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 4px 0 #6b4f3c;
+            transition: 0.05s linear;
+        }
+        .success-card button:active { transform: translateY(4px); box-shadow: 0 1px 0 #6b4f3c; }
+    </style>
+</head>
+<body>
+
+    <a class="back-to-hub" href="puzzles.html">← Puzzles</a>
+
+    <div class="puzzle-wrapper" id="puzzleWrapper">
+
+        <div class="letter">
+
+            <div class="salutation">Detective,</div>
+
+            <p class="first-paragraph">
+                You're always too late, detective. By the time you arrive, the scene is cold, the trail is gone,
+                and I'm already somewhere new. You follow rules, procedures, and paperwork – I follow instinct,
+                precision, and opportunity. While you hesitate, I act. While you search, I take. Every move you
+                make is predictable, every step I take is flawless.
+            </p>
+
+            <div class="middle-scrollable" id="middleScrollable">
+                <p id="hidden-paragraph">
+                    Its to easy
+                    <span class="hidden-letter" data-index="0">w</span>hen police
+                    <span class="hidden-letter" data-index="1">a</span>re lazy, du
+                    <span class="hidden-letter" data-index="2">l</span>l wicked dor
+                    <span class="hidden-letter" data-index="3">k</span>s. I watch
+                    <span class="hidden-letter" data-index="4">e</span>very move, you
+                    <span class="hidden-letter" data-index="5">r</span> deceptive
+                    <span class="hidden-letter" data-index="6">j</span>ustice, hop
+                    <span class="hidden-letter" data-index="7">e</span>less. I have
+                    <span class="hidden-letter" data-index="8">w</span>on already.
+                    <span class="hidden-letter" data-index="9">E</span>very alarm,
+                    <span class="hidden-letter" data-index="10">l</span>ock , a safe, I
+                    <span class="hidden-letter" data-index="11">l</span>oot with pl
+                    <span class="hidden-letter" data-index="12">e</span>asure. A sca
+                    <span class="hidden-letter" data-index="13">r</span>ed DCI? Ever
+                    <span class="hidden-letter" data-index="14">y</span>one pitys a
+                    <span class="hidden-letter" data-index="15">s</span>tupid fool,
+                    <span class="hidden-letter" data-index="16">t</span>he harder y
+                    <span class="hidden-letter" data-index="17">o</span>u try the ha
+                    <span class="hidden-letter" data-index="18">r</span>der it will
+                    <span class="hidden-letter" data-index="19">e</span>mpty your spirit and soul.
+                </p>
+
+                <p class="third-paragraph">
+                    You read everything, detective… yet you never stop to count. Patterns repeat, over and over,
+                    in perfect order – something you always seem to miss. Perhaps I'll make it easier for you...
+                    count carefully. The last job took me ten minutes — in, out, untouched. Precision like that
+                    doesn't happen by accident. Order matters more than you realise. If you can't see the pattern
+                    in that… then maybe you're not as clever as you think.
+                </p>
+            </div>
+
+            <div class="control-panel">
+                <div class="button-row">
+                    <button class="detective-btn" id="uvBtn">🔦 UV TORCH</button>
+                </div>
+
+                <div class="input-area">
+                    <input type="text" id="shopGuess" placeholder="enter shop name…" autocomplete="off" />
+                    <button id="submitGuess">➡️ SUBMIT</button>
+                </div>
+
+                <div class="result-message" id="resultMsg"></div>
+            </div>
+
+        </div>
+
+        <div class="case-note">— Move the spotlight to reveal hidden letters —</div>
+    </div>
+
+    <div class="uv-overlay" id="uvOverlay"></div>
+    <div class="uv-spot" id="uvSpot"></div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            const CORRECT_ANSWER = "walker jewellery store";
+            const SPOT_RADIUS = 30;
+
+            const wrapper = document.getElementById('puzzleWrapper');
+            const hiddenSpans = document.querySelectorAll('.hidden-letter');
+            const uvBtn = document.getElementById('uvBtn');
+            const uvOverlay = document.getElementById('uvOverlay');
+            const uvSpot = document.getElementById('uvSpot');
+            const submitBtn = document.getElementById('submitGuess');
+            const guessInput = document.getElementById('shopGuess');
+            const resultMsg = document.getElementById('resultMsg');
+            const body = document.body;
+
+            let uvActive = false;
+            let flickerTimeout = null;
+            let solved = false;
+
+            function updateHighlights(centerX, centerY) {
+                hiddenSpans.forEach(span => {
+                    const rect = span.getBoundingClientRect();
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+                    const dx = cx - centerX;
+                    const dy = cy - centerY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist <= SPOT_RADIUS + 8) {
+                        span.classList.add('uv-spotlight');
+                    } else {
+                        span.classList.remove('uv-spotlight');
+                    }
+                });
+            }
+
+            function moveSpotlight(e) {
+                if (!uvActive) return;
+                let clientX, clientY, isTouch = false;
+                if (e.touches) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                    isTouch = true;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                const offsetY = isTouch ? -SPOT_RADIUS : 0;
+                uvSpot.style.left = clientX + 'px';
+                uvSpot.style.top = (clientY + offsetY) + 'px';
+                updateHighlights(clientX, clientY + offsetY);
+            }
+
+            function deactivateUV() {
+                uvActive = false;
+                body.classList.remove('uv-active');
+                body.style.overflow = '';
+                document.removeEventListener('mousemove', moveSpotlight);
+                document.removeEventListener('touchmove', moveSpotlight);
+                document.removeEventListener('touchstart', moveSpotlight);
+                uvSpot.classList.remove('flicker');
+                if (flickerTimeout) clearTimeout(flickerTimeout);
+                wrapper.style.overflow = '';
+                hiddenSpans.forEach(s => s.classList.remove('uv-spotlight'));
+            }
+
+            function activateUV() {
+                if (solved) return;
+                uvActive = true;
+                body.classList.add('uv-active');
+                body.style.overflow = 'hidden';
+                wrapper.style.overflow = 'hidden';
+                uvSpot.classList.add('flicker');
+                flickerTimeout = setTimeout(() => uvSpot.classList.remove('flicker'), 600);
+
+                const cx = window.innerWidth / 2;
+                const cy = 150;
+                uvSpot.style.left = cx + 'px';
+                uvSpot.style.top = cy + 'px';
+                updateHighlights(cx, cy);
+
+                document.addEventListener('mousemove', moveSpotlight);
+                document.addEventListener('touchmove', moveSpotlight, { passive: true });
+                document.addEventListener('touchstart', moveSpotlight, { passive: true });
+            }
+
+            uvBtn.addEventListener('click', () => {
+                if (solved) return;
+                uvActive ? deactivateUV() : activateUV();
+            });
+
+            function normalize(str) {
+                return str.trim().toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
+            }
+
+            function showSuccess() {
+                solved = true;
+                deactivateUV();
+
+                resultMsg.textContent = '✅ CORRECT! Well done, detective.';
+                resultMsg.className = 'result-message correct';
+
+                uvBtn.disabled = true;
+                uvBtn.style.opacity = '0.5';
+                uvBtn.style.cursor = 'not-allowed';
+
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+                submitBtn.style.cursor = 'not-allowed';
+                guessInput.disabled = true;
+
+                const overlay = document.createElement('div');
+                overlay.className = 'success-overlay';
+                overlay.innerHTML = `
+                    <div class="success-card">
+                        <div class="badge">🧩 PUZZLE SOLVED</div>
+                        <h2>📜 THE BRAGGER'S NOTE</h2>
+                        <p>The UV light revealed the hidden message:<br />
+                        <strong style="color:#eace9f; font-size:1.4rem;">WALKER JEWELLERY STORE</strong></p>
+                        <p style="font-size:0.95rem; color:#cdba92;">The thief's next target has been identified.<br />
+                        Add this clue to your case file.</p>
+                        <button id="closeSuccessBtn">✅ CONTINUE</button>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                document.getElementById('closeSuccessBtn').addEventListener('click', () => {
+                    overlay.remove();
+                });
+            }
+
+            submitBtn.addEventListener('click', () => {
+                if (solved) return;
+                const guess = normalize(guessInput.value);
+                const correct = normalize(CORRECT_ANSWER);
+                if (guess === correct || guess === "walkerjewellerystore") {
+                    showSuccess();
+                } else {
+                    resultMsg.textContent = '❌ NOT YET… KEEP INVESTIGATING';
+                    resultMsg.className = 'result-message wrong';
+                    resultMsg.style.animation = 'none';
+                    requestAnimationFrame(() => {
+                        resultMsg.style.animation = 'shake 0.3s ease';
+                    });
+                    setTimeout(() => {
+                        if (!solved) {
+                            resultMsg.textContent = '';
+                            resultMsg.className = 'result-message';
+                        }
+                    }, 2000);
+                }
+            });
+
+            guessInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitBtn.click();
+            });
+
+            const styleShake = document.createElement('style');
+            styleShake.textContent = `
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    20% { transform: translateX(-10px); }
+                    40% { transform: translateX(10px); }
+                    60% { transform: translateX(-6px); }
+                    80% { transform: translateX(6px); }
+                }
+            `;
+            document.head.appendChild(styleShake);
+
+            window.addEventListener('beforeunload', () => {
+                deactivateUV();
+            });
+
+        })();
+    </script>
+
+</body>
+</html>
