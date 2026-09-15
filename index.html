@@ -15,9 +15,8 @@
     font-family: system-ui, -apple-system, sans-serif;
   }
 
-  /* The background stage */
   .stage {
-    --ar: 1.7778; /* updated automatically from Dback.jpg */
+    --ar: 1.7778;
     position: relative;
     width: min(100vw, calc(100vh * var(--ar)));
     aspect-ratio: var(--ar);
@@ -25,7 +24,6 @@
     overflow: hidden;
   }
 
-  /* This layer holds all images and moves/scales as a group */
   .layer {
     position: absolute;
     inset: 0;
@@ -33,7 +31,6 @@
     will-change: transform;
   }
 
-  /* Each individual image */
   .item {
     position: absolute;
     left: calc(var(--x) * 1%);
@@ -44,13 +41,12 @@
                rotate(calc(var(--r) * 1deg))
                scale(var(--s));
     transform-origin: 50% 50%;
-    z-index: var(--z);            /* <-- stacking order */
-    pointer-events: none;         /* images are inert by default */
+    z-index: var(--z);
+    pointer-events: none;
     user-select: none;
     -webkit-user-drag: none;
   }
 
-  /* ...unless they have a link */
   .item.clickable {
     pointer-events: auto;
     cursor: pointer;
@@ -73,20 +69,6 @@
 <script>
 /* ============================================================
    EDIT EVERYTHING HERE
-   ------------------------------------------------------------
-   global.x     -> moves ALL images left/right  (% of width,  + = right)
-   global.y     -> moves ALL images up/down     (% of height, + = down)
-   global.scale -> scales ALL images            (1 = 100%)
-
-   images[].x   -> centre of that image, % of width  (0 = left, 100 = right)
-   images[].y   -> centre of that image, % of height (0 = top, 100 = bottom)
-   images[].w   -> width of that image, % of stage width
-   images[].z   -> STACKING ORDER. Bigger number = drawn on top.
-   images[].scale / rotation -> per-image tweaks
-
-   images[].link -> page to open when clicked.
-                    Leave it out (or omit the line) to make the
-                    image non-clickable.
    ============================================================ */
 const CONFIG = {
   background: 'Dback.jpg',
@@ -99,16 +81,16 @@ const CONFIG = {
 
   images: [
     //                   x     y     w    z   scale  rotation   link
-    { file: 'D1.png',  x: 23,  y: 93.5,  w: 14, z: 1,  scale: 1.2, rotation: 0 },
-    { file: 'D2.png',  x: 9.4,  y: 80,  w: 14, z: 4,  scale: 1.5, rotation: 0 },
-    { file: 'D3.png',  x: 55,  y: 74,  w: 14, z: 3,  scale: 3.0, rotation: 0 },
-    { file: 'D4.png',  x: 12.5,  y: 62,  w: 14, z: 2,  scale: 2.1, rotation: 0, link: 'suspect.html' },
-    { file: 'D5.png',  x: 52,  y: 82,  w: 14, z: 5,  scale: 4.2, rotation: 0 },
-    { file: 'D6.png',  x: 82.5,  y: 21.5,  w: 14, z: 6,  scale: 2.45, rotation: 0 },
-    { file: 'D7.png',  x: 51,  y: 53.1,  w: 14, z: 7,  scale: 3.36, rotation: 0 },
-    { file: 'D8.png',  x: 88,  y: 63,  w: 14, z: 8,  scale: 1.8, rotation: 0 },
-    { file: 'D9.png',  x: 50.5,  y: 28,  w: 14, z: 9,  scale: 1.8, rotation: 0 },
-    { file: 'D10.png', x: 82,  y: 95,  w: 14, z: 10, scale: 2.3, rotation: 0, link: 'casebook.html' }
+    { file: 'D1.png',  x: 23,    y: 93.5, w: 14, z: 1,  scale: 1.2,  rotation: 0, link: 'interrogation.html' },
+    { file: 'D2.png',  x: 9.4,   y: 80,   w: 14, z: 4,  scale: 1.5,  rotation: 0 },
+    { file: 'D3.png',  x: 55,    y: 74,   w: 14, z: 3,  scale: 3.0,  rotation: 0 },
+    { file: 'D4.png',  x: 12.5,  y: 62,   w: 14, z: 2,  scale: 2.1,  rotation: 0, link: 'suspect.html' },
+    { file: 'D5.png',  x: 52,    y: 82,   w: 14, z: 5,  scale: 4.2,  rotation: 0 },
+    { file: 'D6.png',  x: 82.5,  y: 21.5, w: 14, z: 6,  scale: 2.45, rotation: 0 },
+    { file: 'D7.png',  x: 51,    y: 53.1, w: 14, z: 7,  scale: 3.36, rotation: 0 },
+    { file: 'D8.png',  x: 88,    y: 63,   w: 14, z: 8,  scale: 1.8,  rotation: 0 },
+    { file: 'D9.png',  x: 50.5,  y: 28,   w: 14, z: 9,  scale: 1.8,  rotation: 0 },
+    { file: 'D10.png', x: 82,    y: 95,   w: 14, z: 10, scale: 2.3,  rotation: 0, link: 'casebook.html' }
   ]
 };
 /* ========================= END OF CONFIG ==================== */
@@ -117,7 +99,6 @@ const CONFIG = {
 const stage = document.querySelector('.stage');
 const layer = document.getElementById('layer');
 
-/* Background + aspect ratio from Dback.jpg */
 stage.style.backgroundImage = `url("${CONFIG.background}")`;
 
 const bgProbe = new Image();
@@ -127,7 +108,6 @@ bgProbe.onload = () => {
 };
 bgProbe.src = CONFIG.background;
 
-/* Build the images */
 CONFIG.images.forEach(cfg => {
   const img = document.createElement('img');
   img.className = 'item';
@@ -138,11 +118,10 @@ CONFIG.images.forEach(cfg => {
   img.style.setProperty('--x', cfg.x);
   img.style.setProperty('--y', cfg.y);
   img.style.setProperty('--w', cfg.w);
-  img.style.setProperty('--z', cfg.z ?? 1);      /* <-- pass z-index */
+  img.style.setProperty('--z', cfg.z ?? 1);
   img.style.setProperty('--s', cfg.scale ?? 1);
   img.style.setProperty('--r', cfg.rotation ?? 0);
 
-  /* Clickable? */
   if (cfg.link) {
     img.classList.add('clickable');
     img.dataset.link = cfg.link;
@@ -153,24 +132,18 @@ CONFIG.images.forEach(cfg => {
   layer.appendChild(img);
 });
 
-/* Apply the global group transform */
 (function applyGlobal() {
   const g = CONFIG.global;
   layer.style.transform = `translate(${g.x}%, ${g.y}%) scale(${g.scale})`;
 })();
 
-/* ------------------------------------------------------------
-   Click / keyboard handling for the clickable images
-   ------------------------------------------------------------ */
 function openLink(el) {
   const url = el && el.dataset.link;
   if (!url) return;
 
-  /* Small "press" feedback before navigating */
   el.style.filter = 'brightness(1.4) drop-shadow(0 0 26px rgba(255,236,190,1))';
 
   setTimeout(() => {
-    /* Fade the whole scene out for a smooth hand-off */
     document.body.style.transition = 'opacity .22s ease';
     document.body.style.opacity = '0';
     setTimeout(() => { window.location.href = url; }, 200);
