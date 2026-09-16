@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bookshelf – four puzzles (Box 3 reveals Morse photos)</title>
+    <link rel="preload" as="image" href="sbackground.jpg">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            background-color: #2c1a12;
+        }
+        body {
+            opacity: 0;
+            transition: opacity .4s ease;
+        }
+        body.ready { opacity: 1; }
+
+        #app {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            align-items: stretch;
+            justify-content: center;
+            background-color: #2c1a12;
+        }
+        .scene {
+            position: relative;
+            width: 100vw;
+            min-height: 100vh;
+            height: auto;
+            background-image: url('sbackground.jpg');
+            background-size: cover;
+            background-position: center bottom;
+            background-repeat: no-repeat;
+            background-color: #2c1a12;
+            flex-shrink: 0;
+        }
+        .decor-container {
+            display: none;
+            flex: 1 1 0;
+            overflow: hidden;
+            background-color: #2c1a12;
+            align-items: center;
+            justify-content: center;
+        }
+        .decor-container img {
+            height: 100%;
+            width: auto;
+            flex-shrink: 0;
+        }
+        .picture-item {
+            position: absolute;
+            pointer-events: none;
+            transform-origin: top left;
+            z-index: 5;
+            opacity: 0.9;
+        }
+        .picture-item img {
+            display: block;
+            pointer-events: none;
+            width: 100%;
+            height: auto;
+        }
+        .book-item {
+            position: absolute;
+            pointer-events: auto;
+            cursor: grab;
+            transform-origin: top left;
+            z-index: 10;
+        }
+        .book-item img {
+            display: block;
+            pointer-events: none;
+        }
+        .book-item.sortable-chosen {
+            opacity: 0.7;
+            outline: 2px solid #ffd700;
+            z-index: 100;
+        }
+        .book-item.sortable-ghost {
+            opacity: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+            width: auto !important;
+            height: auto !important;
+            display: block !important;
+            visibility: visible !important;
+        }
+        .box-item {
+            position: absolute;
+            pointer-events: auto;
+            cursor: pointer;
+            transform-origin: top left;
+            z-index: 20;
+            transition: left 0.2s, top 0.2s, transform 0.2s;
+        }
+        .box-item img {
+            display: block;
+            pointer-events: none;
+        }
+        .box-item.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(2);
+            font-size: 40px;
+            pointer-events: none;
+            z-index: 30;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+        .photo-item {
+            position: absolute;
+            pointer-events: auto;
+            transform-origin: top left;
+            z-index: 100;
+            display: none;
+            cursor: pointer;
+        }
+        .photo-item img {
+            display: block;
+            pointer-events: none;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+        }
+        .photo-item .close-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 30px;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            font-size: 20px;
+            line-height: 26px;
+            text-align: center;
+            cursor: pointer;
+            pointer-events: auto;
+            font-weight: bold;
+            transition: 0.2s;
+            z-index: 101;
+        }
+        .photo-item .close-btn:hover {
+            background: #ff4444;
+            transform: scale(1.1);
+        }
+        #smallfront,
+        #smallstone,
+        #smallmorse {
+            z-index: 50;
+            cursor: pointer;
+            display: none;
+        }
+        #smallfront img,
+        #smallstone img,
+        #smallmorse img {
+            border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+        }
+        #frontphoto,
+        #backphoto,
+        #stonephoto,
+        #morsephoto {
+            z-index: 200;
+            cursor: pointer;
+        }
+        @media (min-width: 1024px) {
+            html,
+            body {
+                overflow: hidden;
+                height: 100%;
+            }
+            #app {
+                min-height: 0;
+                height: 100vh;
+                flex-direction: row;
+            }
+            .scene {
+                max-width: 1300px;
+                height: 100vh;
+                min-height: 0;
+                background-size: contain;
+                background-position: center;
+                flex: 1 1 0;
+                width: 100%;
+            }
+            .decor-container {
+                display: flex;
+                flex: 1 1 0;
+            }
+        }
+
+        /* === Back to desk === */
+        .back-to-desk {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            padding: 9px 20px;
+            background: rgba(15, 42, 63, 0.85);
+            border: 1px solid rgba(182, 139, 92, 0.4);
+            border-radius: 40px;
+            color: #eace9f;
+            font-family: 'Courier New', monospace;
+            font-size: .72rem;
+            font-weight: bold;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            text-decoration: none;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9999;
+            transition: background .18s ease, border-color .18s ease;
+        }
+        .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+    </style>
+</head>
+<body>
+
+    <a class="back-to-desk" href="index.html">← Desk</a>
+
+    <div id="app">
+        <div id="decor-left" class="decor-container"></div>
+        <div class="scene" id="bookshelfContainer"></div>
+        <div id="decor-right" class="decor-container"></div>
+    </div>
+
+    <script>
+        const PC = {
+            books: [
+                { src: "book1.png", x: 84, y: 29, scale: 0.22 },
+                { src: "book2.png", x: 100, y: 28.5, scale: 0.22 },
+                { src: "book3.png", x: 113, y: 46, scale: 0.19 },
+                { src: "book4.png", x: 193, y: 41.5, scale: 0.20 },
+                { src: "book5.png", x: 138, y: 58.8, scale: 0.17 },
+                { src: "book6.png", x: 153, y: 58, scale: 0.17 },
+                { src: "book7.png", x: 168, y: 52, scale: 0.18 },
+                { src: "book8.png", x: 183, y: 46.5, scale: 0.19 },
+                { src: "book9.png", x: 128, y: 47, scale: 0.19 },
+                { src: "book10.png", x: 213, y: 35, scale: 0.21 },
+                { src: "book11.png", x: 227.5, y: 28.5, scale: 0.22 },
+                { src: "book12.png", x: 84, y: 202, scale: 0.21 },
+                { src: "book13.png", x: 98, y: 202, scale: 0.21 },
+                { src: "book14.png", x: 115, y: 197, scale: 0.22 },
+                { src: "book15.png", x: 128, y: 197, scale: 0.22 },
+                { src: "book16.png", x: 138, y: 197, scale: 0.22 },
+                { src: "book17.png", x: 153, y: 197, scale: 0.22 },
+                { src: "book18.png", x: 168, y: 197, scale: 0.22 },
+                { src: "book19.png", x: 183, y: 208, scale: 0.20 },
+                { src: "book20.png", x: 193, y: 211, scale: 0.20 },
+                { src: "book21.png", x: 213, y: 187, scale: 0.22 },
+                { src: "book22.png", x: 227, y: 193, scale: 0.21 },
+                { src: "book23.png", x: 84, y: 325, scale: 0.25 },
+                { src: "book24.png", x: 98, y: 325, scale: 0.25 },
+                { src: "book25.png", x: 115, y: 325, scale: 0.25 },
+                { src: "book26.png", x: 128, y: 325, scale: 0.25 },
+                { src: "book27.png", x: 138, y: 355, scale: 0.20 },
+                { src: "book28.png", x: 153, y: 325, scale: 0.25 },
+                { src: "book29.png", x: 168, y: 355, scale: 0.21 },
+                { src: "book30.png", x: 183, y: 338, scale: 0.25 },
+                { src: "book31.png", x: 193, y: 325, scale: 0.25 },
+                { src: "book32.png", x: 213, y: 355, scale: 0.20 },
+                { src: "book33.png", x: 227, y: 350, scale: 0.25 },
+                { src: "1brownbook.png", x: 84, y: 600, scale: 0.25 },
+                { src: "1redbook.png", x: 98, y: 650, scale: 0.25 },
+                { src: "2redbook.png", x: 115, y: 700, scale: 0.25 },
+                { src: "1bluebook.png", x: 128, y: 750, scale: 0.25 },
+                { src: "2bluebook.png", x: 138, y: 500, scale: 0.25 },
+                { src: "3bluebook.png", x: 153, y: 500, scale: 0.25 },
+                { src: "1greenbook.png", x: 168, y: 500, scale: 0.25 },
+                { src: "2greenbook.png", x: 183, y: 500, scale: 0.25 },
+                { src: "3greenbook.png", x: 193, y: 500, scale: 0.25 },
+                { src: "1blackbook.png", x: 213, y: 500, scale: 0.25 },
+                { src: "2blackbook.png", x: 227, y: 500, scale: 0.25 },
+            ],
+            boxes: [
+                { id: 1, closedImg: "boxclosed1.png", openImg: "boxopen1.png", closedX: 400, closedY: 120,
+                    closedScale: 0.1, openX: 400, openY: 120, openScale: 0.1 },
+                { id: 2, closedImg: "boxclosed2.png", openImg: "boxopen2.png", closedX: 400, closedY: 299,
+                    closedScale: 0.1, openX: 400, openY: 299, openScale: 0.1 },
+                { id: 3, closedImg: "boxclosed3.png", openImg: "boxopen3.png", closedX: 400, closedY: 470,
+                    closedScale: 0.1, openX: 400, openY: 470, openScale: 0.1 },
+                { id: 4, closedImg: "boxclosed4.png", openImg: "boxopen4.png", closedX: 400, closedY: 640,
+                    closedScale: 0.1, openX: 400, openY: 625.8, openScale: 0.085 },
+            ],
+            colourPictures: [
+                { src: "book1colour.jpg", x: 150, y: 70, scale: 0.025 },
+                { src: "book2colour.jpg", x: 180, y: 70, scale: 0.025 },
+                { src: "book3colour.jpg", x: 210, y: 70, scale: 0.025 },
+                { src: "book4colour.jpg", x: 240, y: 70, scale: 0.025 },
+                { src: "book5colour.jpg", x: 120, y: 70, scale: 0.025 },
+                { src: "book6colour.jpg", x: 270, y: 70, scale: 0.025 },
+                { src: "book7colour.jpg", x: 300, y: 70, scale: 0.025 },
+                { src: "book8colour.jpg", x: 330, y: 70, scale: 0.025 },
+                { src: "book9colour.jpg", x: 360, y: 70, scale: 0.025 },
+                { src: "book10colour.jpg", x: 390, y: 70, scale: 0.025 },
+                { src: "book11colour.jpg", x: 420, y: 70, scale: 0.025 },
+            ],
+            photos: {
+                small: { src: "smallfront.jpg", x: 350, y: 200, scale: 0.3 },
+                front: { src: "frontphoto.jpg", x: 150, y: 100, scale: 0.7 },
+                back: { src: "backphoto.jpg", x: 150, y: 100, scale: 0.7 },
+                stoneSmall: { src: "stonesmall.png", x: 280, y: 200, scale: 0.35 },
+                stoneLarge: { src: "stone.png", x: 100, y: 80, scale: 0.6 },
+                morseSmall: { src: "smallmorsephoto.png", x: 320, y: 380, scale: 0.3 },
+                morseLarge: { src: "morsephoto.png", x: 120, y: 280, scale: 0.6 }
+            },
+            decor: { leftImage: "decor-left.png", rightImage: "decor-right.png", scale: 1.0,
+                leftOffsetX: 0, leftOffsetY: 0, rightOffsetX: 0, rightOffsetY: 0 },
+        };
+
+        const MOBILE = {
+            books: [
+                { src: "book1.png", x: 14, y: 28.7, scale: 0.25 },
+                { src: "book2.png", x: 30, y: 28, scale: 0.25 },
+                { src: "book3.png", x: 41, y: 45.5, scale: 0.22 },
+                { src: "book4.png", x: 58, y: 41.5, scale: 0.23 },
+                { src: "book8.png", x: 78, y: 58.4, scale: 0.20 },
+                { src: "book5.png", x: 93, y: 46, scale: 0.22 },
+                { src: "book7.png", x: 108, y: 51, scale: 0.21 },
+                { src: "book6.png", x: 123, y: 47, scale: 0.22 },
+                { src: "book9.png", x: 133, y: 48, scale: 0.22 },
+                { src: "book10.png", x: 143, y: 35, scale: 0.24 },
+                { src: "book11.png", x: 158, y: 28, scale: 0.25 },
+                { src: "book12.png", x: 14, y: 219, scale: 0.24 },
+                { src: "book13.png", x: 26, y: 223, scale: 0.23 },
+                { src: "book14.png", x: 43, y: 229, scale: 0.22 },
+                { src: "book15.png", x: 58, y: 212, scale: 0.25 },
+                { src: "book16.png", x: 73, y: 212, scale: 0.25 },
+                { src: "book17.png", x: 88, y: 212, scale: 0.25 },
+                { src: "book18.png", x: 103, y: 212, scale: 0.25 },
+                { src: "book19.png", x: 118, y: 223, scale: 0.23 },
+                { src: "book20.png", x: 128, y: 232, scale: 0.22 },
+                { src: "book21.png", x: 144, y: 200, scale: 0.25 },
+                { src: "book22.png", x: 158, y: 207, scale: 0.24 },
+                { src: "book23.png", x: 14, y: 380, scale: 0.24 },
+                { src: "book24.png", x: 26, y: 406, scale: 0.20 },
+                { src: "book25.png", x: 40, y: 386, scale: 0.23 },
+                { src: "book26.png", x: 55, y: 404, scale: 0.20 },
+                { src: "book27.png", x: 70, y: 429, scale: 0.16 },
+                { src: "book28.png", x: 80, y: 428.5, scale: 0.16 },
+                { src: "book29.png", x: 95, y: 414.8, scale: 0.183 },
+                { src: "book30.png", x: 115, y: 427, scale: 0.18 },
+                { src: "book31.png", x: 130, y: 395, scale: 0.215 },
+                { src: "book32.png", x: 150, y: 379, scale: 0.24 },
+                { src: "book33.png", x: 165, y: 425, scale: 0.20 },
+                { src: "1redbook.png", x: 14, y: 700, scale: 0.25 },
+                { src: "1brownbook.png", x: 26, y: 700, scale: 0.25 },
+                { src: "1bluebook.png", x: 40, y: 700, scale: 0.25 },
+                { src: "1blackbook.png", x: 55, y: 700, scale: 0.25 },
+                { src: "1greenbook.png", x: 70, y: 700, scale: 0.25 },
+                { src: "2redbook.png", x: 80, y: 700, scale: 0.25 },
+                { src: "2bluebook.png", x: 95, y: 700, scale: 0.25 },
+                { src: "2greenbook.png", x: 115, y: 700, scale: 0.25 },
+                { src: "3bluebook.png", x: 130, y: 700, scale: 0.25 },
+                { src: "2blackbook.png", x: 145, y: 700, scale: 0.25 },
+                { src: "3greenbook.png", x: 155, y: 700, scale: 0.25 },
+            ],
+            boxes: [
+                { id: 1, closedImg: "boxclosed1.png", openImg: "boxopen1.png", closedX: 255, closedY: 120,
+                    closedScale: 0.1, openX: 255, openY: 120, openScale: 0.1 },
+                { id: 2, closedImg: "boxclosed2.png", openImg: "boxopen2.png", closedX: 255, closedY: 299,
+                    closedScale: 0.1, openX: 255, openY: 299, openScale: 0.1 },
+                { id: 3, closedImg: "boxclosed3.png", openImg: "boxopen3.png", closedX: 255, closedY: 470,
+                    closedScale: 0.1, openX: 255, openY: 470, openScale: 0.1 },
+                { id: 4, closedImg: "boxclosed4.png", openImg: "boxopen4.png", closedX: 255, closedY: 640,
+                    closedScale: 0.1, openX: 255, openY: 625.8, openScale: 0.087 },
+            ],
+            colourPictures: [
+                { src: "book1colour.jpg", x: 64, y: 69, scale: 0.025 },
+                { src: "book2colour.jpg", x: 102, y: 69, scale: 0.025 },
+                { src: "book3colour.jpg", x: 160, y: 69, scale: 0.025 },
+                { src: "book4colour.jpg", x: 52, y: 69, scale: 0.025 },
+                { src: "book5colour.jpg", x: 16, y: 69, scale: 0.025 },
+                { src: "book6colour.jpg", x: 121, y: 69, scale: 0.025 },
+                { src: "book7colour.jpg", x: 145, y: 69, scale: 0.025 },
+                { src: "book8colour.jpg", x: 136, y: 69, scale: 0.025 },
+                { src: "book9colour.jpg", x: 39, y: 69, scale: 0.025 },
+                { src: "book10colour.jpg", x: 175, y: 69, scale: 0.025 },
+                { src: "book11colour.jpg", x: 30, y: 69, scale: 0.025 },
+            ],
+            photos: {
+                small: { src: "smallfront.jpg", x: 285, y: 137, scale: 0.20 },
+                front: { src: "frontphoto.jpg", x: 40, y: 60, scale: 0.5 },
+                back: { src: "backphoto.jpg", x: 40, y: 60, scale: 0.5 },
+                stoneSmall: { src: "stonesmall.png", x: 280, y: 318, scale: 0.25 },
+                stoneLarge: { src: "stone.png", x: 40, y: 60, scale: 0.5 },
+                morseSmall: { src: "smallmorsephoto.png", x: 285, y: 492, scale: 0.22 },
+                morseLarge: { src: "morsephoto.png", x: 40, y: 280, scale: 0.5 }
+            },
+        };
+
+        const PC_BREAKPOINT = 1024;
+        const isPC = window.innerWidth > PC_BREAKPOINT;
+        const CONFIG = isPC ? PC : MOBILE;
+
+        const rawBooks = CONFIG.books;
+        const boxesData = CONFIG.boxes;
+        const colourPictures = CONFIG.colourPictures;
+        const PHOTOS = CONFIG.photos;
+        const DECOR = isPC ? PC.decor : null;
+
+        const SHELF_Y_MAP = [28, 212, 370, 550];
+
+        function getShelfIndex(y) {
+            let minDist = Infinity, idx = 0;
+            SHELF_Y_MAP.forEach((sy, i) => {
+                const d = Math.abs(y - sy);
+                if (d < minDist) { minDist = d; idx = i; }
+            });
+            return idx;
+        }
+
+        const booksData = rawBooks.map((book, index) => {
+            const shelf = getShelfIndex(book.y);
+            return { ...book, shelf, order: index };
+        });
+        booksData.sort((a, b) => a.shelf - b.shelf || a.order - b.order);
+
+        const container = document.getElementById('bookshelfContainer');
+        const imageSizes = {};
+
+        let box1Unlocked = false;
+        let box2Unlocked = false;
+        let box3Unlocked = false;
+        let box4Unlocked = false;
+        let largePhotoVisible = false;
+        let stoneVisible = false;
+        let morseVisible = false;
+
+        const letterMap = {
+            "book12.png": "B",
+            "book20.png": "O",
+            "book22.png": "O",
+            "book14.png": "K",
+            "book15.png": "S",
+            "book18.png": "H",
+            "book17.png": "E",
+            "book19.png": "E",
+            "book16.png": "L",
+            "book13.png": "V",
+            "book21.png": "S"
+        };
+        const TARGET_WORD = "BOOKSHELVES";
+
+        const CORRECT_SEQUENCE_1 = [
+            'book5.png', 'book11.png', 'book9.png', 'book4.png',
+            'book1.png', 'book2.png', 'book6.png', 'book8.png',
+            'book7.png', 'book3.png', 'book10.png'
+        ];
+        const CORRECT_SEQUENCE_3 = [
+            'book28.png', 'book30.png', 'book24.png', 'book27.png',
+            'book33.png', 'book26.png', 'book29.png', 'book23.png',
+            'book31.png', 'book25.png', 'book32.png'
+        ];
+        const CORRECT_SEQUENCE_4 = [
+            '1brownbook.png',
+            '1redbook.png',
+            '2redbook.png',
+            '1bluebook.png',
+            '2bluebook.png',
+            '3bluebook.png',
+            '1greenbook.png',
+            '2greenbook.png',
+            '3greenbook.png',
+            '1blackbook.png',
+            '2blackbook.png'
+        ];
+
+        function checkPuzzle4() {
+            const shelfBooks = booksData.filter(b => b.shelf === 3).sort((a, b) => a.order - b.order);
+            if (shelfBooks.length !== 11) return false;
+
+            function getColor(src) {
+                if (src.includes('brown')) return 'brown';
+                if (src.includes('red')) return 'red';
+                if (src.includes('blue')) return 'blue';
+                if (src.includes('green')) return 'green';
+                if (src.includes('black')) return 'black';
+                return null;
+            }
+
+            const colorSeq = shelfBooks.map(b => getColor(b.src));
+            if (colorSeq.some(c => c === null)) return false;
+
+            const groups = [];
+            let curColor = colorSeq[0];
+            let curCount = 1;
+            for (let i = 1; i < colorSeq.length; i++) {
+                if (colorSeq[i] === curColor) {
+                    curCount++;
+                } else {
+                    groups.push({ color: curColor, count: curCount });
+                    curColor = colorSeq[i];
+                    curCount = 1;
+                }
+            }
+            groups.push({ color: curColor, count: curCount });
+
+            const expected = [
+                { color: 'brown', count: 1 },
+                { color: 'red', count: 2 },
+                { color: 'blue', count: 3 },
+                { color: 'green', count: 3 },
+                { color: 'black', count: 2 }
+            ];
+
+            if (groups.length !== expected.length) return false;
+            for (let i = 0; i < groups.length; i++) {
+                if (groups[i].color !== expected[i].color) return false;
+                if (groups[i].count !== expected[i].count) return false;
+            }
+            return true;
+        }
+
+        function checkPuzzle1() {
+            const shelfBooks = booksData.filter(b => b.shelf === 0).sort((a, b) => a.order - b.order);
+            const order = shelfBooks.map(b => b.src);
+            let i = 0;
+            for (const src of order) {
+                if (src === CORRECT_SEQUENCE_1[i]) { i++; if (i === CORRECT_SEQUENCE_1.length) return true; }
+            }
+            return false;
+        }
+
+        function checkPuzzle2() {
+            const shelfBooks = booksData.filter(b => b.shelf === 1).sort((a, b) => a.order - b.order);
+            if (shelfBooks.length !== 11) return false;
+            const word = shelfBooks.map(b => letterMap[b.src] || '').join('');
+            return word === TARGET_WORD;
+        }
+
+        function checkPuzzle3() {
+            const shelfBooks = booksData.filter(b => b.shelf === 2).sort((a, b) => a.order - b.order);
+            const order = shelfBooks.map(b => b.src);
+            let i = 0;
+            for (const src of order) {
+                if (src === CORRECT_SEQUENCE_3[i]) { i++; if (i === CORRECT_SEQUENCE_3.length) return true; }
+            }
+            return false;
+        }
+
+        function showSmallFront() {
+            const el = document.getElementById('smallfront');
+            if (el) el.style.display = 'block';
+        }
+
+        function showSmallStone() {
+            const el = document.getElementById('smallstone');
+            if (el) el.style.display = 'block';
+        }
+
+        function showSmallMorse() {
+            const el = document.getElementById('smallmorse');
+            if (el) el.style.display = 'block';
+        }
+
+        function showLargePhoto(type) {
+            const front = document.getElementById('frontphoto');
+            const back = document.getElementById('backphoto');
+            if (type === 'front') {
+                front.style.display = 'block';
+                back.style.display = 'none';
+                largePhotoVisible = true;
+            } else {
+                back.style.display = 'block';
+                front.style.display = 'none';
+                largePhotoVisible = true;
+            }
+        }
+
+        function hideLargePhotos() {
+            document.getElementById('frontphoto').style.display = 'none';
+            document.getElementById('backphoto').style.display = 'none';
+            largePhotoVisible = false;
+        }
+
+        function toggleLargePhoto() {
+            const front = document.getElementById('frontphoto');
+            const back = document.getElementById('backphoto');
+            if (front.style.display === 'block') showLargePhoto('back');
+            else if (back.style.display === 'block') showLargePhoto('front');
+        }
+
+        function showStoneLarge() {
+            const el = document.getElementById('stonephoto');
+            if (el) el.style.display = 'block';
+            stoneVisible = true;
+        }
+
+        function hideStoneLarge() {
+            document.getElementById('stonephoto').style.display = 'none';
+            stoneVisible = false;
+        }
+
+        function showMorseLarge() {
+            const el = document.getElementById('morsephoto');
+            if (el) el.style.display = 'block';
+            morseVisible = true;
+        }
+
+        function hideMorseLarge() {
+            document.getElementById('morsephoto').style.display = 'none';
+            morseVisible = false;
+        }
+
+        function createPhotoElements() {
+            const small = document.createElement('div');
+            small.id = 'smallfront';
+            small.className = 'photo-item';
+            small.style.left = PHOTOS.small.x + 'px';
+            small.style.top = PHOTOS.small.y + 'px';
+            small.style.transform = `scale(${PHOTOS.small.scale})`;
+            small.style.transformOrigin = 'top left';
+            small.style.display = 'none';
+            const smallImg = document.createElement('img');
+            smallImg.src = PHOTOS.small.src;
+            smallImg.alt = 'small front';
+            smallImg.onerror = function() { this.style.backgroundColor = '#886644';
+                this.width = 100;
+                this.height = 100; };
+            small.appendChild(smallImg);
+            small.addEventListener('click', function(e) { e.stopPropagation();
+                showLargePhoto('front'); });
+            container.appendChild(small);
+
+            const front = document.createElement('div');
+            front.id = 'frontphoto';
+            front.className = 'photo-item';
+            front.style.left = PHOTOS.front.x + 'px';
+            front.style.top = PHOTOS.front.y + 'px';
+            front.style.transform = `scale(${PHOTOS.front.scale})`;
+            front.style.transformOrigin = 'top left';
+            front.style.display = 'none';
+            const frontImg = document.createElement('img');
+            frontImg.src = PHOTOS.front.src;
+            frontImg.alt = 'front photo';
+            frontImg.onerror = function() { this.style.backgroundColor = '#886644';
+                this.width = 300;
+                this.height = 400; };
+            front.appendChild(frontImg);
+            const closeFront = document.createElement('div');
+            closeFront.className = 'close-btn';
+            closeFront.textContent = '✕';
+            closeFront.addEventListener('click', function(e) { e.stopPropagation();
+                hideLargePhotos(); });
+            front.appendChild(closeFront);
+            front.addEventListener('click', function(e) { if (e.target === closeFront || closeFront.contains(e.target))
+                    return;
+                toggleLargePhoto(); });
+            container.appendChild(front);
+
+            const back = document.createElement('div');
+            back.id = 'backphoto';
+            back.className = 'photo-item';
+            back.style.left = PHOTOS.back.x + 'px';
+            back.style.top = PHOTOS.back.y + 'px';
+            back.style.transform = `scale(${PHOTOS.back.scale})`;
+            back.style.transformOrigin = 'top left';
+            back.style.display = 'none';
+            const backImg = document.createElement('img');
+            backImg.src = PHOTOS.back.src;
+            backImg.alt = 'back photo';
+            backImg.onerror = function() { this.style.backgroundColor = '#886644';
+                this.width = 300;
+                this.height = 400; };
+            back.appendChild(backImg);
+            const closeBack = document.createElement('div');
+            closeBack.className = 'close-btn';
+            closeBack.textContent = '✕';
+            closeBack.addEventListener('click', function(e) { e.stopPropagation();
+                hideLargePhotos(); });
+            back.appendChild(closeBack);
+            back.addEventListener('click', function(e) { if (e.target === closeBack || closeBack.contains(e.target))
+                    return;
+                toggleLargePhoto(); });
+            container.appendChild(back);
+
+            const stoneSmall = document.createElement('div');
+            stoneSmall.id = 'smallstone';
+            stoneSmall.className = 'photo-item';
+            stoneSmall.style.left = PHOTOS.stoneSmall.x + 'px';
+            stoneSmall.style.top = PHOTOS.stoneSmall.y + 'px';
+            stoneSmall.style.transform = `scale(${PHOTOS.stoneSmall.scale})`;
+            stoneSmall.style.transformOrigin = 'top left';
+            stoneSmall.style.display = 'none';
+            const stoneSmallImg = document.createElement('img');
+            stoneSmallImg.src = PHOTOS.stoneSmall.src;
+            stoneSmallImg.alt = 'small stone';
+            stoneSmallImg.onerror = function() { this.style.backgroundColor = '#886644';
+                this.width = 80;
+                this.height = 80; };
+            stoneSmall.appendChild(stoneSmallImg);
+            stoneSmall.addEventListener('click', function(e) { e.stopPropagation();
+                showStoneLarge(); });
+            container.appendChild(stoneSmall);
+
+            const stoneLarge = document.createElement('div');
+            stoneLarge.id = 'stonephoto';
+            stoneLarge.className = 'photo-item';
+            stoneLarge.style.left = PHOTOS.stoneLarge.x + 'px';
+            stoneLarge.style.top = PHOTOS.stoneLarge.y + 'px';
+            stoneLarge.style.transform = `scale(${PHOTOS.stoneLarge.scale})`;
+            stoneLarge.style.transformOrigin = 'top left';
+            stoneLarge.style.display = 'none';
+            const stoneLargeImg = document.createElement('img');
+            stoneLargeImg.src = PHOTOS.stoneLarge.src;
+            stoneLargeImg.alt = 'stone';
+            stoneLargeImg.onerror = function() { this.style.backgroundColor = '#886644';
+                this.width = 300;
+                this.height = 300; };
+            stoneLarge.appendChild(stoneLargeImg);
+            const closeStone = document.createElement('div');
+            closeStone.className = 'close-btn';
+            closeStone.textContent = '✕';
+            closeStone.addEventListener('click', function(e) { e.stopPropagation();
+                hideStoneLarge(); });
+            stoneLarge.appendChild(closeStone);
+            stoneLarge.addEventListener('click', function(e) { if (e.target === closeStone || closeStone.contains(e.target))
+                    return; });
+            container.appendChild(stoneLarge);
+
+            const morseSmall = document.createElement('div');
+            morseSmall.id = 'smallmorse';
+            morseSmall.className = 'photo-item';
+            morseSmall.style.left = PHOTOS.morseSmall.x + 'px';
+            morseSmall.style.top = PHOTOS.morseSmall.y + 'px';
+            morseSmall.style.transform = `scale(${PHOTOS.morseSmall.scale})`;
+            morseSmall.style.transformOrigin = 'top left';
+            morseSmall.style.display = 'none';
+            const morseSmallImg = document.createElement('img');
+            morseSmallImg.src = PHOTOS.morseSmall.src;
+            morseSmallImg.alt = 'small morse';
+            morseSmallImg.onerror = function() { this.style.backgroundColor = '#886644';
+                this.width = 80;
+                this.height = 80; };
+            morseSmall.appendChild(morseSmallImg);
+            morseSmall.addEventListener('click', function(e) { e.stopPropagation();
+                showMorseLarge(); });
+            container.appendChild(morseSmall);
+
+            const morseLarge = document.createElement('div');
+            morseLarge.id = 'morsephoto';
+            morseLarge.className = 'photo-item';
+            morseLarge.style.left = PHOTOS.morseLarge.x + 'px';
+            morseLarge.style.top = PHOTOS.morseLarge.y + 'px';
+            morseLarge.style.transform = `scale(${PHOTOS.morseLarge.scale})`;
+            morseLarge.style.transformOrigin = 'top left';
+            morseLarge.style.display = 'none';
+            const morseLargeImg = document.createElement('img');
+            morseLargeImg.src = PHOTOS.morseLarge.src;
+            morseLargeImg.alt = 'morse';
+            morseLargeImg.onerror = function() { this.style.backgroundColor = '#886644';
+                this.width = 300;
+                this.height = 300; };
+            morseLarge.appendChild(morseLargeImg);
+            const closeMorse = document.createElement('div');
+            closeMorse.className = 'close-btn';
+            closeMorse.textContent = '✕';
+            closeMorse.addEventListener('click', function(e) { e.stopPropagation();
+                hideMorseLarge(); });
+            morseLarge.appendChild(closeMorse);
+            morseLarge.addEventListener('click', function(e) { if (e.target === closeMorse || closeMorse.contains(e.target))
+                    return; });
+            container.appendChild(morseLarge);
+        }
+
+        function renderPictures() {
+            container.querySelectorAll('.picture-item').forEach(el => el.remove());
+            colourPictures.forEach(pic => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'picture-item';
+                wrapper.style.left = pic.x + 'px';
+                wrapper.style.top = pic.y + 'px';
+                wrapper.style.transform = `scale(${pic.scale})`;
+                wrapper.style.transformOrigin = 'top left';
+                wrapper.style.width = '300px';
+                wrapper.style.height = 'auto';
+                const img = document.createElement('img');
+                img.src = pic.src;
+                img.alt = pic.src;
+                img.style.width = '100%';
+                img.style.height = 'auto';
+                img.onerror = function() { this.style.backgroundColor = '#885533';
+                    this.style.width = '100%';
+                    this.style.height = '200px';
+                    this.alt = 'missing'; };
+                wrapper.appendChild(img);
+                container.appendChild(wrapper);
+            });
+        }
+
+        function renderBooks() {
+            container.querySelectorAll('.book-item').forEach(el => el.remove());
+
+            const groups = {};
+            booksData.forEach(book => {
+                if (!groups[book.shelf]) groups[book.shelf] = [];
+                groups[book.shelf].push(book);
+            });
+
+            const shelfKeys = Object.keys(groups).sort((a, b) => a - b);
+            shelfKeys.forEach(shelfIdx => {
+                const books = groups[shelfIdx];
+                books.sort((a, b) => a.order - b.order);
+                let currentX = 10;
+                books.forEach(book => {
+                    const size = imageSizes[book.src] || { width: 50, height: 50 };
+                    const scaledW = size.width * book.scale;
+                    const scaledH = size.height * book.scale;
+                    const item = document.createElement('div');
+                    item.className = 'book-item';
+                    item.dataset.src = book.src;
+                    item.style.left = currentX + 'px';
+
+                    if (book.shelf === 3) {
+                        item.style.top = (book.y - scaledH) + 'px';
+                    } else {
+                        item.style.top = book.y + 'px';
+                    }
+
+                    const img = document.createElement('img');
+                    img.src = book.src;
+                    img.alt = book.src;
+                    img.style.width = scaledW + 'px';
+                    img.style.height = scaledH + 'px';
+                    item.appendChild(img);
+                    container.appendChild(item);
+                    currentX += scaledW;
+                });
+            });
+
+            if (window.sortableInstance) window.sortableInstance.destroy();
+
+            window.sortableInstance = new Sortable(container, {
+                group: 'books',
+                animation: 200,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                draggable: '.book-item',
+                filter: '.box-item, .picture-item, .photo-item',
+                preventOnFilter: false,
+                onMove: function(evt) {
+                    const dragged = evt.dragged;
+                    const related = evt.related;
+                    if (!dragged || !related) return true;
+                    const draggedSrc = dragged.dataset.src;
+                    const relatedSrc = related.dataset.src;
+                    const draggedBook = booksData.find(b => b.src === draggedSrc);
+                    const relatedBook = booksData.find(b => b.src === relatedSrc);
+                    if (!draggedBook || !relatedBook) return true;
+                    return draggedBook.shelf === relatedBook.shelf;
+                },
+                onEnd: function(evt) {
+                    const src = evt.item.dataset.src;
+                    const book = booksData.find(b => b.src === src);
+                    if (!book) return;
+
+                    const items = container.querySelectorAll('.book-item');
+                    const orderMap = {};
+                    items.forEach((el, idx) => {
+                        const s = el.dataset.src;
+                        orderMap[s] = idx;
+                    });
+                    booksData.forEach(b => {
+                        if (orderMap[b.src] !== undefined) b.order = orderMap[b.src];
+                    });
+                    booksData.sort((a, b) => a.shelf - b.shelf || a.order - b.order);
+
+                    let puzzle1Solved = false,
+                        puzzle2Solved = false,
+                        puzzle3Solved = false,
+                        puzzle4Solved = false;
+                    if (!box1Unlocked && checkPuzzle1()) { box1Unlocked = true; puzzle1Solved = true; }
+                    if (!box2Unlocked && checkPuzzle2()) { box2Unlocked = true; puzzle2Solved = true; }
+                    if (!box3Unlocked && checkPuzzle3()) { box3Unlocked = true; puzzle3Solved = true; }
+                    if (!box4Unlocked && checkPuzzle4()) { box4Unlocked = true; puzzle4Solved = true; }
+
+                    renderBooks();
+                    renderBoxes();
+
+                    if (puzzle1Solved) showSmallFront();
+                    if (puzzle2Solved) showSmallStone();
+                    if (puzzle3Solved) showSmallMorse();
+                }
+            });
+
+            ['1', '2', '3', '4'].forEach(id => {
+                const boxEl = container.querySelector(`.box-item[data-box-id="${id}"]`);
+                if (boxEl) {
+                    const unlocked = (id === '1' ? box1Unlocked : (id === '2' ? box2Unlocked : (id === '3' ?
+                        box3Unlocked : box4Unlocked)));
+                    if (!unlocked) boxEl.classList.add('locked');
+                    else boxEl.classList.remove('locked');
+                }
+            });
+        }
+
+        function renderBoxes() {
+            container.querySelectorAll('.box-item').forEach(el => el.remove());
+            boxesData.forEach(box => {
+                const item = document.createElement('div');
+                item.className = 'box-item';
+                item.dataset.boxId = box.id;
+
+                let isOpen = false;
+                if (box.id === 1) isOpen = box1Unlocked;
+                else if (box.id === 2) isOpen = box2Unlocked;
+                else if (box.id === 3) isOpen = box3Unlocked;
+                else if (box.id === 4) isOpen = box4Unlocked;
+
+                const imgSrc = isOpen ? box.openImg : box.closedImg;
+                const xPos = isOpen ? box.openX : box.closedX;
+                const yPos = isOpen ? box.openY : box.closedY;
+                const scale = isOpen ? box.openScale : box.closedScale;
+
+                item.style.left = xPos + 'px';
+                item.style.top = yPos + 'px';
+                item.style.transform = `scale(${scale})`;
+                item.style.transformOrigin = 'top left';
+
+                const img = document.createElement('img');
+                img.src = imgSrc;
+                img.alt = `Box ${box.id}`;
+                img.dataset.closedImg = box.closedImg;
+                img.dataset.openImg = box.openImg;
+                img.dataset.isOpen = isOpen ? 'true' : 'false';
+                img.onerror = function() { this.style.backgroundColor = '#ff0000';
+                    this.style.width = '100px';
+                    this.style.height = '100px';
+                    this.alt = 'Image missing'; };
+
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const boxId = parseInt(this.dataset.boxId, 10);
+                    console.log(`Box ${boxId} is permanently open.`);
+                });
+
+                item.appendChild(img);
+                container.appendChild(item);
+            });
+
+            ['1', '2', '3', '4'].forEach(id => {
+                const boxEl = container.querySelector(`.box-item[data-box-id="${id}"]`);
+                if (boxEl) {
+                    const unlocked = (id === '1' ? box1Unlocked : (id === '2' ? box2Unlocked : (id === '3' ?
+                        box3Unlocked : box4Unlocked)));
+                    if (!unlocked) boxEl.classList.add('locked');
+                    else boxEl.classList.remove('locked');
+                }
+            });
+        }
+
+        function loadImages(callback) {
+            const bookPromises = booksData.map(book => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = function() { imageSizes[book.src] = { width: this.naturalWidth,
+                            height: this.naturalHeight };
+                        resolve(); };
+                    img.onerror = function() { imageSizes[book.src] = { width: 100, height: 150 };
+                        resolve(); };
+                    img.src = book.src;
+                });
+            });
+            const colourPromises = colourPictures.map(pic => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve();
+                    img.src = pic.src;
+                });
+            });
+            const photoPromises = [
+                PHOTOS.small.src, PHOTOS.front.src, PHOTOS.back.src,
+                PHOTOS.stoneSmall.src, PHOTOS.stoneLarge.src,
+                PHOTOS.morseSmall.src, PHOTOS.morseLarge.src
+            ].map(src => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve();
+                    img.src = src;
+                });
+            });
+            Promise.all([...bookPromises, ...colourPromises, ...photoPromises]).then(callback);
+        }
+
+        if (isPC && DECOR) {
+            const leftContainer = document.getElementById('decor-left');
+            const rightContainer = document.getElementById('decor-right');
+            if (DECOR.leftImage) {
+                const leftImg = document.createElement('img');
+                leftImg.src = DECOR.leftImage;
+                leftImg.alt = 'Left decor';
+                leftImg.style.transform = `scale(${DECOR.scale})`;
+                leftImg.style.marginLeft = DECOR.leftOffsetX + 'px';
+                leftImg.style.marginTop = DECOR.leftOffsetY + 'px';
+                leftContainer.appendChild(leftImg);
+            }
+            if (DECOR.rightImage) {
+                const rightImg = document.createElement('img');
+                rightImg.src = DECOR.rightImage;
+                rightImg.alt = 'Right decor';
+                rightImg.style.transform = `scale(${DECOR.scale})`;
+                rightImg.style.marginRight = DECOR.rightOffsetX + 'px';
+                rightImg.style.marginTop = DECOR.rightOffsetY + 'px';
+                rightContainer.appendChild(rightImg);
+            }
+        }
+
+        loadImages(() => {
+            renderPictures();
+            renderBooks();
+            renderBoxes();
+            createPhotoElements();
+            console.log(`📱 ${isPC ? 'PC' : 'Mobile'} mode – All four puzzles active.`);
+        });
+
+        /* ---- fade in when everything is ready ---- */
+        window.addEventListener('load', function () { document.body.classList.add('ready'); });
+        if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+    </script>
+</body>
+</html>
