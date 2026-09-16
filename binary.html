@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Binary Puzzle – Detective Logic</title>
+    <style>
+        /* ===== GLOBAL SCALE CONTROL ===== */
+        :root {
+            --access-width: 75cqi;
+            --access-height: auto;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            min-height: 100vh;
+            overflow-y: auto;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            user-select: none;
+            background-color: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0;
+            opacity: 0;
+            transition: opacity .4s ease;
+        }
+        body.ready { opacity: 1; }
+
+        /* === Back buttons === */
+        .back-to-desk, .back-to-vault {
+            position: fixed;
+            top: 14px;
+            padding: 9px 20px;
+            border-radius: 40px;
+            font-family: 'Courier New', monospace;
+            font-size: .72rem;
+            font-weight: bold;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            text-decoration: none;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9999;
+            transition: background .18s ease, border-color .18s ease;
+        }
+        .back-to-desk {
+            left: 14px;
+            background: rgba(15, 42, 63, 0.85);
+            border: 1px solid rgba(182, 139, 92, 0.4);
+            color: #eace9f;
+        }
+        .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+
+        .back-to-vault {
+            right: 14px;
+            background: rgba(60, 40, 15, 0.85);
+            border: 1px solid #8a6e42;
+            color: #eace9f;
+        }
+        .back-to-vault:hover { background: rgba(90, 60, 20, 0.95); border-color: #d8ab6a; }
+
+        /* ===== PUZZLE CONTAINER ===== */
+        #puzzle-container {
+            position: relative;
+            container-type: inline-size;
+            width: 100%;
+            max-width: 600px;
+            background-image: url('bcodeface.png');
+            background-size: 100% auto;
+            background-repeat: no-repeat;
+            background-position: top left;
+            background-color: #1a1a2e;
+            margin: 0 auto;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .extra-image {
+            position: absolute;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .layer-other    { z-index: 1; }
+        .layer-solution { z-index: 2; }
+        .layer-above    { z-index: 3; }
+        .cover          { z-index: 4; transition: top 0.8s ease, opacity 0.8s; }
+        .cover.dropped  { top: 110% !important; opacity: 0; }
+        .screw          { z-index: 5; pointer-events: auto; cursor: pointer; transition: transform 0.3s ease, opacity 0.5s, top 0.5s; }
+        .screw.dropped  { pointer-events: none; opacity: 0; top: 110% !important; }
+
+        .number-item {
+            position: absolute;
+            pointer-events: auto;
+            z-index: 6;
+            font-weight: 700;
+            text-align: center;
+            transform: translate(-50%, -50%);
+            line-height: 1;
+            transition: color 0.15s;
+            background: transparent;
+            color: #ffffff;
+            text-shadow: 0 0 25px rgba(0, 0, 0, 0.95), 0 2px 10px rgba(0, 0, 0, 0.9);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 19.2cqi;
+            height: 19.2cqi;
+            font-size: 12cqi;
+        }
+        .number-item.locked {
+            cursor: not-allowed;
+            color: #000000;
+            text-shadow: none;
+            opacity: 0.9;
+        }
+        .number-item.state-1 {
+            color: #ffd93d;
+            text-shadow: 0 0 40px rgba(255, 217, 61, 0.5), 0 0 20px rgba(0, 0, 0, 0.9);
+        }
+        .number-item.locked.state-1 {
+            color: #000000;
+            text-shadow: none;
+        }
+
+        #verifyBtn {
+            position: absolute;
+            z-index: 15;
+            pointer-events: auto;
+            cursor: pointer;
+            left: 50%;
+            top: 61.3%;
+            width: 35cqi;
+            height: auto;
+            transform: translateX(-50%);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            transition: transform 0.1s, filter 0.1s;
+        }
+        #verifyBtn:active {
+            transform: translateX(-50%) scale(0.94);
+            filter: brightness(0.85);
+        }
+        #verifyBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #verifyLabel {
+            position: absolute;
+            z-index: 16;
+            pointer-events: none;
+            font-size: 4.2cqi;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.7);
+            left: 54.5%;
+            top: 63.5%;
+            transform: translate(-50%, -50%);
+            letter-spacing: 3px;
+        }
+
+        #puzzleMessage {
+            position: absolute;
+            z-index: 15;
+            pointer-events: none;
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.8);
+            min-height: 50px;
+            width: 100%;
+            left: 50%;
+            top: 71.5%;
+            transform: translateX(-50%);
+        }
+        .granted { color: #87f5b2; text-shadow: 0 0 20px #00cc66, 0 0 40px #00cc66; animation: unlockPulse 0.8s; }
+        .denied { color: #ff8a8a; text-shadow: 0 0 20px #cc3333, 0 0 40px #cc3333; }
+        .analyzing-text { color: #f5e56b; text-shadow: 0 0 20px #ffd966, 0 0 40px #ffd966; }
+        @keyframes unlockPulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); text-shadow: 0 0 40px #33ee88; }
+        }
+
+        .led {
+            position: absolute;
+            z-index: 100;
+            pointer-events: none;
+            width: 1.2cqi;
+            height: 1.2cqi;
+            background: #2b3a44;
+            border-radius: 50%;
+            box-shadow: inset 0 0 4px black;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        .led.active {
+            background: #44dd88;
+            box-shadow: 0 0 16px #22ee88, 0 0 32px #22ee88;
+        }
+        .led.denied {
+            background: #ff3333;
+            box-shadow: 0 0 16px #ff2222, 0 0 32px #ff2222;
+        }
+        #led1 { left: 25%; top: 63.1%; }
+        #led2 { left: 28%; top: 63.1%; }
+        #led3 { left: 70.5%; top: 63.1%; }
+        #led4 { left: 73.5%; top: 63.1%; }
+
+        #accessButton {
+            position: absolute;
+            z-index: 12;
+            pointer-events: none;
+            left: 50%;
+            top: 66%;
+            transform: translateX(-50%);
+            width: 91.6%;
+            aspect-ratio: 550 / 180;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        @media (max-width: 600px) {
+            #puzzle-container { max-width: 100%; }
+            .number-item { width: 19.2cqi; height: 19.2cqi; font-size: 12cqi; }
+            #verifyBtn { left: 50%; top: 61%; width: 35cqi; }
+            #verifyLabel { left: 54.5%; top: 63.3%; font-size: 4.2cqi; }
+            #puzzleMessage { top: 71.5%; font-size: 1.4rem; }
+            #led1 { left: 22%; top: 63%; }
+            #led2 { left: 24%; top: 63%; }
+            #led3 { left: 74%; top: 63%; }
+            #led4 { left: 76%; top: 63%; }
+            #accessButton { left: 50%; top: 66%; width: 91.6%; }
+            .back-to-desk, .back-to-vault { font-size: .68rem; padding: 8px 14px; letter-spacing: .18em; }
+        }
+    </style>
+</head>
+<body>
+
+    <a class="back-to-desk" href="index.html">← Desk</a>
+    <a class="back-to-vault" href="vault.html">← Vault</a>
+
+    <div id="puzzle-container">
+        <div id="overlay"></div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  1. PUZZLE LOGIC
+        // ================================================================
+
+        const VAULT_KEY = 'whitby_vault_unlocked';
+
+        const SIZE = 6;
+        const EMPTY = -1;
+        const CIRCLE = 0;
+        const TRIANGLE = 1;
+
+        const cluePattern = [
+            "0.....",
+            "......",
+            "1.....",
+            ".0..0.",
+            "1..0..",
+            ".0...0"
+        ];
+        const solutionPattern = [
+            "001011",
+            "010011",
+            "110100",
+            "001101",
+            "110010",
+            "101100"
+        ];
+
+        function patternToGrid(pattern) {
+            const grid = Array(SIZE).fill().map(() => Array(SIZE).fill(EMPTY));
+            for (let r = 0; r < SIZE; r++) {
+                const rowStr = pattern[r];
+                for (let c = 0; c < SIZE; c++) {
+                    const ch = rowStr[c];
+                    if (ch === '0') grid[r][c] = CIRCLE;
+                    else if (ch === '1') grid[r][c] = TRIANGLE;
+                }
+            }
+            return grid;
+        }
+
+        const clueGrid = patternToGrid(cluePattern);
+        const solutionGrid = patternToGrid(solutionPattern);
+        const lockedGrid = Array(SIZE).fill().map((_, r) =>
+            Array(SIZE).fill().map((_, c) => clueGrid[r][c] !== EMPTY)
+        );
+
+        let currentGrid = clueGrid.map(row => [...row]);
+        let puzzleSolved = false;
+
+        const container = document.getElementById('puzzle-container');
+        const overlay = document.getElementById('overlay');
+
+        const messageDiv = document.createElement('div');
+        messageDiv.id = 'puzzleMessage';
+        overlay.appendChild(messageDiv);
+
+        const ledIds = ['led1', 'led2', 'led3', 'led4'];
+        const leds = [];
+        ledIds.forEach(id => {
+            const led = document.createElement('span');
+            led.className = 'led';
+            led.id = id;
+            overlay.appendChild(led);
+            leds.push(led);
+        });
+
+        const verifyImg = document.createElement('img');
+        verifyImg.src = 'verify.png';
+        verifyImg.id = 'verifyBtn';
+        verifyImg.alt = 'VERIFY';
+        overlay.appendChild(verifyImg);
+
+        const verifyLabel = document.createElement('div');
+        verifyLabel.id = 'verifyLabel';
+        verifyLabel.textContent = 'VERIFY';
+        overlay.appendChild(verifyLabel);
+
+        const accessImg = document.createElement('img');
+        accessImg.src = 'accessbutton.png';
+        accessImg.id = 'accessButton';
+        accessImg.alt = 'Access Button';
+        overlay.appendChild(accessImg);
+
+        // ---- DESKTOP number positions ----
+        const DESKTOP_POSITIONS = [
+            { x: 17.6, y: 25.6 },  { x: 31, y: 25.6 },  { x: 44, y: 25.6 },  { x: 57, y: 25.6 },  { x: 70, y: 25.6 },  { x: 83, y: 25.6 },
+            { x: 17.6, y: 31.8 },  { x: 31, y: 31.8 },  { x: 44, y: 31.8 },  { x: 57, y: 31.8 },  { x: 70, y: 31.8 },  { x: 83, y: 31.8 },
+            { x: 17.6, y: 38 },{ x: 31, y: 38 },{ x: 44, y: 38 },{ x: 57, y: 38 },{ x: 70, y: 38 },{ x: 83, y: 38 },
+            { x: 17.6, y: 44.3 },{ x: 31, y: 44.3 },{ x: 44, y: 44.3 },{ x: 57, y: 44.3 },{ x: 70, y: 44.3 },{ x: 83, y: 44.3 },
+            { x: 17.6, y: 50.5 },  { x: 31, y: 50.5 },  { x: 44, y: 50.5 },  { x: 57, y: 50.5 },  { x: 70, y: 50.5 },  { x: 83, y: 50.5 },
+            { x: 17.6, y: 56.6 },{ x: 31, y: 56.6 },{ x: 44, y: 56.6 },{ x: 57, y: 56.6 },{ x: 70, y: 56.6 },{ x: 83, y: 56.6 }
+        ];
+
+        // ---- MOBILE number positions ----
+        const MOBILE_POSITIONS = [
+            { x: 17.6, y: 25.6 },  { x: 31, y: 25.6 },  { x: 44, y: 25.6 },  { x: 57, y: 25.6 },  { x: 70, y: 25.6 },  { x: 83, y: 25.6 },
+            { x: 17.6, y: 31.8 },  { x: 31, y: 31.8 },  { x: 44, y: 31.8 },  { x: 57, y: 31.8 },  { x: 70, y: 31.8 },  { x: 83, y: 31.8 },
+            { x: 17.6, y: 38 },{ x: 31, y: 38 },{ x: 44, y: 38 },{ x: 57, y: 38 },{ x: 70, y: 38 },{ x: 83, y: 38 },
+            { x: 17.6, y: 44.3 },{ x: 31, y: 44.3 },{ x: 44, y: 44.3 },{ x: 57, y: 44.3 },{ x: 70, y: 44.3 },{ x: 83, y: 44.3 },
+            { x: 17.6, y: 50.5 },  { x: 31, y: 50.5 },  { x: 44, y: 50.5 },  { x: 57, y: 50.5 },  { x: 70, y: 50.5 },  { x: 83, y: 50.5 },
+            { x: 17.6, y: 56.6 },{ x: 31, y: 56.6 },{ x: 44, y: 56.6 },{ x: 57, y: 56.6 },{ x: 70, y: 56.6 },{ x: 83, y: 56.6 }
+        ];
+
+        function isMobile() {
+            return window.matchMedia('(max-width: 600px)').matches;
+        }
+
+        function renderNumbers() {
+            document.querySelectorAll('.number-item').forEach(el => el.remove());
+
+            const POSITIONS = isMobile() ? MOBILE_POSITIONS : DESKTOP_POSITIONS;
+
+            POSITIONS.forEach((pos, index) => {
+                const r = Math.floor(index / SIZE);
+                const c = index % SIZE;
+                const val = currentGrid[r][c];
+                const isLocked = lockedGrid[r][c];
+
+                const el = document.createElement('div');
+                el.className = 'number-item';
+                if (isLocked) el.classList.add('locked');
+                el.textContent = (val === EMPTY) ? '' : (val === CIRCLE ? '0' : '1');
+                if (val === TRIANGLE) el.classList.add('state-1');
+
+                el.style.left = pos.x + '%';
+                el.style.top = pos.y + '%';
+
+                el.dataset.row = r;
+                el.dataset.col = c;
+
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const row = parseInt(this.dataset.row);
+                    const col = parseInt(this.dataset.col);
+                    if (lockedGrid[row][col] || puzzleSolved) return;
+                    let newVal = currentGrid[row][col];
+                    if (newVal === EMPTY) newVal = CIRCLE;
+                    else if (newVal === CIRCLE) newVal = TRIANGLE;
+                    else if (newVal === TRIANGLE) newVal = EMPTY;
+                    currentGrid[row][col] = newVal;
+                    this.textContent = (newVal === EMPTY) ? '' : (newVal === CIRCLE ? '0' : '1');
+                    this.classList.toggle('state-1', newVal === TRIANGLE);
+                });
+
+                overlay.appendChild(el);
+            });
+        }
+
+        function checkSolution() {
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    if (currentGrid[r][c] !== solutionGrid[r][c]) return false;
+                }
+            }
+            return true;
+        }
+
+        let deniedTimer = null;
+        let denyGeneration = 0;
+
+        function clearDeniedTimer() {
+            if (deniedTimer) {
+                clearTimeout(deniedTimer);
+                deniedTimer = null;
+            }
+            denyGeneration++;
+        }
+
+        function resetLEDs() {
+            clearDeniedTimer();
+            leds.forEach(led => {
+                led.classList.remove('active', 'denied');
+            });
+            if (messageDiv.querySelector('.denied')) {
+                messageDiv.innerHTML = '';
+            }
+        }
+
+        function grantAccess() {
+            puzzleSolved = true;
+            clearDeniedTimer();
+            messageDiv.innerHTML = '<span class="granted">🔓 ACCESS GRANTED</span>';
+            leds.forEach(led => led.classList.remove('active', 'denied'));
+            leds.forEach((led, i) => setTimeout(() => led.classList.add('active'), i * 100));
+
+            // ── Save the unlock flag & return to the vault after a short beat ──
+            try { localStorage.setItem(VAULT_KEY, 'true'); } catch (e) {}
+            setTimeout(function() {
+                window.location.href = 'vault.html';
+            }, 1600);
+        }
+
+        function denyAccess() {
+            clearDeniedTimer();
+            const myGeneration = denyGeneration;
+
+            leds.forEach(led => led.classList.remove('active', 'denied'));
+
+            messageDiv.innerHTML = '<span class="denied">⛔ ACCESS DENIED</span>';
+            leds.forEach(led => led.classList.add('denied'));
+
+            deniedTimer = setTimeout(() => {
+                if (myGeneration === denyGeneration) {
+                    messageDiv.innerHTML = '';
+                    leds.forEach(led => led.classList.remove('denied'));
+                }
+                deniedTimer = null;
+            }, 3000);
+        }
+
+        verifyImg.addEventListener('click', function() {
+            if (this.disabled || puzzleSolved) return;
+            this.disabled = true;
+            resetLEDs();
+            messageDiv.innerHTML = '<span class="analyzing-text">🔍 ANALYZING…</span>';
+            setTimeout(() => {
+                const correct = checkSolution();
+                if (correct) grantAccess();
+                else denyAccess();
+                this.disabled = false;
+            }, 800);
+        });
+
+        function autoSolvePuzzle() {
+            if (puzzleSolved) return;
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    currentGrid[r][c] = solutionGrid[r][c];
+                }
+            }
+            renderNumbers();
+            grantAccess();
+        }
+        window.autoSolvePuzzle = autoSolvePuzzle;
+
+        renderNumbers();
+
+        // ================================================================
+        //  2. IMAGES, SCREWS, HOLE
+        // ================================================================
+
+        const LAYERS = [
+            { src: 'greencut.png',    x: 40, y: 85, width: 25, height: 'auto', cls: 'layer-other', id: 'greencut-img' },
+            { src: 'redbluecut.png',  x: 40, y: 85, width: 25, height: 'auto', cls: 'layer-other' },
+            { src: 'solutionbox.png', x: 40, y: 85, width: 25, height: 'auto', cls: 'layer-solution' },
+            { src: 'bluegreen.png',   x: 42.3, y: 87, width: 20.3, height: 'auto', cls: 'layer-above' },
+            { src: 'green.png',       x: 42, y: 91.5, width: 20.9, height: 'auto', cls: 'layer-above' },
+        ];
+
+        const COVER = { src: 'hole.png', x: 40, y: 85, width: 25, height: 'auto', cls: 'cover' };
+        const SCREWS = [
+            { src: 'screw1.png', x: 42.5, y: 86, width: 7.3, height: 'auto' },
+            { src: 'screw2.png', x: 55, y: 86, width: 7.3, height: 'auto' },
+            { src: 'screw3.png', x: 42.5, y: 91, width: 7.3, height: 'auto' },
+            { src: 'screw4.png', x: 55, y: 91, width: 7.3, height: 'auto' },
+        ];
+
+        function renderImages() {
+            LAYERS.forEach((data) => {
+                const img = document.createElement('img');
+                img.src = data.src;
+                img.className = `extra-image ${data.cls || ''}`;
+                if (data.id) img.id = data.id;
+                img.style.left = data.x + '%';
+                img.style.top = data.y + '%';
+                img.style.width = (data.width !== 'auto' ? data.width + '%' : 'auto');
+                img.style.height = (data.height !== 'auto' ? data.height + '%' : 'auto');
+                overlay.appendChild(img);
+                if (data.src === 'green.png') {
+                    img.id = 'green-img';
+                    img.style.pointerEvents = 'none';
+                }
+                if (data.src === 'bluegreen.png') {
+                    img.id = 'bluegreen-img';
+                }
+            });
+
+            const coverImg = document.createElement('img');
+            coverImg.src = COVER.src;
+            coverImg.className = `extra-image ${COVER.cls || ''}`;
+            coverImg.style.left = COVER.x + '%';
+            coverImg.style.top = COVER.y + '%';
+            coverImg.style.width = (COVER.width !== 'auto' ? COVER.width + '%' : 'auto');
+            coverImg.style.height = (COVER.height !== 'auto' ? COVER.height + '%' : 'auto');
+            coverImg.id = 'cover-image';
+            overlay.appendChild(coverImg);
+
+            const screwElements = [];
+            SCREWS.forEach((data, index) => {
+                const img = document.createElement('img');
+                img.src = data.src;
+                img.className = 'extra-image screw';
+                img.style.left = data.x + '%';
+                img.style.top = data.y + '%';
+                img.style.width = (data.width !== 'auto' ? data.width + '%' : 'auto');
+                img.style.height = (data.height !== 'auto' ? data.height + '%' : 'auto');
+                img.dataset.index = index;
+                img.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    handleScrewClick(index);
+                });
+                overlay.appendChild(img);
+                screwElements.push(img);
+            });
+
+            window.screwElements = screwElements;
+            window.coverElement = coverImg;
+            window.screwClicks = [0, 0, 0, 0];
+        }
+
+        function handleScrewClick(index) {
+            const clicks = window.screwClicks;
+            if (clicks[index] >= 4) return;
+            clicks[index]++;
+            const element = window.screwElements[index];
+            element.style.transform = `rotate(${clicks[index] * 90}deg)`;
+            if (clicks[index] >= 4) {
+                element.classList.add('dropped');
+                checkAllScrewsDropped();
+            }
+        }
+
+        function checkAllScrewsDropped() {
+            const allDropped = window.screwClicks.every(c => c >= 4);
+            if (allDropped && window.coverElement) {
+                window.coverElement.classList.add('dropped');
+                const greenImg = document.getElementById('green-img');
+                if (greenImg) {
+                    greenImg.style.pointerEvents = 'auto';
+                    greenImg.style.cursor = 'pointer';
+                    greenImg.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const greencut = document.getElementById('greencut-img');
+                        if (greencut) greencut.style.zIndex = 20;
+                        if (window.autoSolvePuzzle) window.autoSolvePuzzle();
+                    });
+                }
+                const bluegreenImg = document.getElementById('bluegreen-img');
+                if (bluegreenImg) {
+                    bluegreenImg.style.pointerEvents = 'auto';
+                    bluegreenImg.style.cursor = 'pointer';
+                    bluegreenImg.addEventListener('click', function() {
+                        const redbluecut = document.querySelector('img[src="redbluecut.png"]');
+                        if (redbluecut) redbluecut.style.zIndex = 11;
+                    });
+                }
+            }
+        }
+
+        function setContainerPadding() {
+            const img = new Image();
+            img.onload = function() {
+                const aspect = img.width / img.height;
+                const paddingPercent = (1 / aspect) * 100;
+                container.style.paddingBottom = paddingPercent + '%';
+            };
+            img.onerror = function() {
+                container.style.paddingBottom = '117.65%';
+            };
+            img.src = 'bcodeface.png';
+        }
+
+        window.addEventListener('load', setContainerPadding);
+        window.addEventListener('resize', setContainerPadding);
+
+        let lastIsMobile = isMobile();
+        window.addEventListener('resize', () => {
+            const nowMobile = isMobile();
+            if (nowMobile !== lastIsMobile) {
+                lastIsMobile = nowMobile;
+                renderNumbers();
+            }
+        });
+
+        renderImages();
+    </script>
+
+    <script>
+        /* ---- fade in when everything is ready ---- */
+        window.addEventListener('load', function () { document.body.classList.add('ready'); });
+        if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+    </script>
+</body>
+</html>
