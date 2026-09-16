@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interrogation Dashboard · Dynamic ECG</title>
+    <link rel="preload" as="image" href="neilcalm.png">
+    <style>
+        /* === RESET & BASE === */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: #060a10;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #c8dae5;
+            opacity: 0;
+            transition: opacity .4s ease;
+        }
+        body.ready { opacity: 1; }
+
+        /* === Back to Desk === */
+        .back-to-desk {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            padding: 9px 20px;
+            background: rgba(15, 42, 63, 0.85);
+            border: 1px solid rgba(182, 139, 92, 0.4);
+            border-radius: 40px;
+            color: #eace9f;
+            font-family: 'Courier New', monospace;
+            font-size: .72rem;
+            font-weight: bold;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            text-decoration: none;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9999;
+            transition: background .18s ease, border-color .18s ease;
+        }
+        .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+
+        .dashboard {
+            width: 100%;
+            max-width: 1100px;
+            background: #0b1218;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px #1e3a4a inset;
+            display: flex;
+            flex-direction: row;
+            min-height: 560px;
+        }
+
+        /* LEFT PANEL (60%) */
+        .left-panel {
+            flex: 0 0 60%;
+            background: radial-gradient(ellipse at 50% 40%, #0f1c2a, #02060a);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 15px;
+            position: relative;
+            border-right: 2px solid #1e3a4a;
+            box-shadow: inset 0 0 60px rgba(0,180,255,0.04);
+        }
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(0,255,200,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,200,0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+        }
+
+        .suspect-switcher {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 18px;
+            z-index: 2;
+        }
+        .suspect-dot {
+            width: 52px; height: 62px;
+            border-radius: 16px;
+            background: #0f1a22;
+            border: 2px solid #2a4a5a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.15s ease;
+            padding: 4px 0;
+            gap: 2px;
+        }
+        .suspect-dot img {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #1a2a36;
+            border: 1px solid #3a5a6a;
+        }
+        .suspect-dot span {
+            font-size: 0.5rem;
+            text-transform: uppercase;
+            color: #7a9aaa;
+            letter-spacing: 0.5px;
+        }
+        .suspect-dot.active {
+            border-color: #00e5ff;
+            box-shadow: 0 0 20px rgba(0,229,255,0.3);
+            background: #0f2230;
+        }
+        .suspect-dot.active span { color: #b0e8ff; }
+        .suspect-dot:active { transform: scale(0.94); }
+
+        .portrait-wrapper {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin: 6px 0 10px;
+            z-index: 2;
+        }
+        .portrait-wrapper::after {
+            content: '';
+            position: absolute;
+            top: -10px; left: -10px;
+            width: calc(100% + 20px);
+            height: calc(100% + 20px);
+            border-radius: 50%;
+            border: 3px solid var(--ring-color, #69db7c);
+            animation: pulseRing 1.8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+            box-shadow: 0 0 30px var(--ring-color, #69db7c);
+            opacity: 0.6;
+        }
+        @keyframes pulseRing {
+            0% { transform: scale(0.97); opacity: 0.4; box-shadow: 0 0 20px var(--ring-color,#69db7c); }
+            50% { transform: scale(1.06); opacity: 1; box-shadow: 0 0 50px var(--ring-color,#69db7c); }
+            100% { transform: scale(0.97); opacity: 0.4; box-shadow: 0 0 20px var(--ring-color,#69db7c); }
+        }
+
+        .portrait-ring {
+            transform: rotate(-90deg);
+            width: 160px;
+            height: 160px;
+            position: relative;
+            z-index: 3;
+        }
+        .portrait-ring .bg {
+            fill: none;
+            stroke: #1a2a3a;
+            stroke-width: 6;
+        }
+        .portrait-ring .progress {
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.4s ease, stroke 0.4s ease;
+        }
+
+        .avatar-img {
+            position: absolute;
+            top: 12px; left: 12px;
+            width: 136px; height: 136px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #0a1a2a;
+            background: #0f1a22;
+            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .avatar-img img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: filter 0.4s;
+        }
+        .avatar-img.stressed img {
+            filter: contrast(1.2) brightness(0.8) saturate(1.3);
+        }
+        .avatar-placeholder {
+            font-size: 3.5rem;
+            color: #4a7a8a;
+        }
+
+        /* === ECG MONITOR === */
+        .ecg-monitor {
+            width: 90%;
+            max-width: 300px;
+            background: #050d12;
+            border: 1px solid #1a3a4a;
+            border-radius: 10px;
+            padding: 3px 5px;
+            margin: 4px 0 6px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            z-index: 2;
+            position: relative;
+            height: 70px;
+        }
+        .ecg-monitor canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 5px;
+            background: #050d12;
+        }
+        .ecg-monitor .grid-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            background:
+                linear-gradient(rgba(0,255,80,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,80,0.06) 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 5px;
+            z-index: 1;
+        }
+
+        /* Vitals */
+        .vitals {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 16px;
+            background: rgba(0,10,20,0.7);
+            backdrop-filter: blur(4px);
+            border: 1px solid #1a3a4a;
+            border-radius: 14px;
+            padding: 10px 18px;
+            width: 90%;
+            max-width: 300px;
+            z-index: 2;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .vital {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #1a2a3a;
+            padding: 4px 0;
+        }
+        .vital .label { color: #6a8a9a; }
+        .vital .value { font-weight: bold; font-family: 'Courier New', monospace; }
+        .vital .value.low { color: #69db7c; }
+        .vital .value.medium { color: #ffb347; }
+        .vital .value.high { color: #ff6b6b; }
+
+        /* RIGHT PANEL (40%) */
+        .right-panel {
+            flex: 1;
+            background: #0b1218;
+            display: flex;
+            flex-direction: column;
+            padding: 16px 12px 12px 12px;
+            min-width: 0;
+        }
+        .right-header {
+            color: #8aacbf;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            border-bottom: 2px solid #1a3a4a;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .right-header .badge {
+            background: #1a2a36;
+            padding: 2px 12px;
+            border-radius: 30px;
+            color: #00e5ff;
+            font-size: 0.6rem;
+        }
+
+        .notes-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .notes-scroll::-webkit-scrollbar { width: 3px; }
+        .notes-scroll::-webkit-scrollbar-track { background: #0a1218; }
+        .notes-scroll::-webkit-scrollbar-thumb { background: #2a5a6a; border-radius: 10px; }
+
+        .note-entry {
+            background: #0e1a22;
+            border-left: 3px solid #2a4a5a;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: 0.1s;
+            cursor: default;
+        }
+        .note-entry.locked {
+            opacity: 0.35;
+            cursor: not-allowed;
+            border-left-color: #3a3a3a;
+        }
+        .note-entry.answered {
+            border-left-color: #2a7a4a;
+            background: #0d1a1a;
+        }
+        .note-entry.askable { cursor: pointer; }
+        .note-entry.askable:hover {
+            border-left-color: #4ac0ff;
+            background: #12222e;
+        }
+
+        .note-entry .q {
+            color: #b0d4e8;
+            font-size: 0.78rem;
+            font-weight: 600;
+            display: flex;
+            gap: 6px;
+            align-items: baseline;
+        }
+        .note-entry .q .badge-q {
+            color: #4a8aaa;
+            font-size: 0.55rem;
+            background: #1a2a36;
+            padding: 0 5px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .note-entry .a {
+            color: #9ac0b0;
+            font-size: 0.78rem;
+            margin-top: 3px;
+            padding: 4px 8px;
+            background: #0a1a1a;
+            border-radius: 5px;
+            border-left: 2px solid #3a8a5a;
+            font-style: italic;
+            animation: typeIn 0.2s ease-out;
+        }
+        @keyframes typeIn {
+            0% { opacity: 0; transform: translateY(-4px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .empty-notes {
+            color: #4a6a7a;
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 30px 10px;
+            border: 1px dashed #1a3a4a;
+            border-radius: 12px;
+        }
+
+        @media (max-width: 720px) {
+            .dashboard { flex-direction: column; }
+            .left-panel {
+                flex: none;
+                border-right: none;
+                border-bottom: 2px solid #1e3a4a;
+                padding: 14px;
+            }
+            .right-panel { min-height: 260px; }
+            .portrait-wrapper { width: 130px; height: 130px; }
+            .avatar-img { width: 106px; height: 106px; top: 12px; left: 12px; }
+            .portrait-ring { width: 130px; height: 130px; }
+            .portrait-ring .bg, .portrait-ring .progress { stroke-width: 5; }
+            .portrait-wrapper::after { top: -8px; left: -8px; width: calc(100%+16px); height: calc(100%+16px); border-width: 2px; }
+            .ecg-monitor { height: 55px; }
+        }
+    </style>
+</head>
+<body>
+
+    <a class="back-to-desk" href="index.html">← Desk</a>
+
+    <div class="dashboard" id="dashboard"></div>
+
+    <script>
+        // ============================================================
+        //  DATA
+        // ============================================================
+
+        const SUSPECTS = [{
+            id: 's1',
+            name: 'Neil Down',
+            emoji: '👨',
+            image: { calm: 'neilcalm.png', stressed: 'neilstressed.png' },
+            questions: [
+                'Where were you during the heist?',
+                'Did you hear anything unusual inside the building?',
+                'Did anyone speak directly to you during the incident?',
+                'Did you see anyone carrying items out?',
+                'What were all three people wearing at the time?',
+                'Who seemed the most nervous out of everyone?',
+                'Did you notice anything strange before or after the event?',
+                'Did anyone give instructions or orders to the group?',
+                'Did you see anyone carrying tools or equipment?',
+                'Was there any arguing or disagreement between them?',
+                'Did you observe where each person went afterwards?',
+                'Who looked the most experienced or in control?',
+                'Did anyone drop or leave anything behind?',
+                'Did you hear any names mentioned during the event?',
+                'Was there someone acting as a lookout?',
+                'Did anyone seem scared or hesitant?',
+                'Did you see anyone handling money or valuables?',
+                'Is there anything else you noticed that stood out?'
+            ],
+            responses: [
+                'I was in the maintenance corridor fixing a door issue.',
+                'I heard footsteps and a faint metallic bang.',
+                'One security guard briefly asked for help.',
+                'I saw no one carrying anything out.',
+                'One in a high-vis vest, one in dark clothing, one in uniform.',
+                'The person in dark clothing seemed most nervous.',
+                'Nothing unusual before or after the repairs.',
+                'No one gave me any instructions.',
+                'I noticed tools like a crowbar nearby.',
+                'No arguing, only quiet movement.',
+                'I stayed near the same area, didn’t track them leaving.',
+                'The uniformed one seemed most experienced.',
+                'I didn’t see anything dropped.',
+                'I heard no names mentioned.',
+                'I didn’t see any lookout.',
+                'One person looked slightly anxious.',
+                'I didn’t see any money handled.',
+                'Loose wiring and broken panel stood out.'
+            ]
+        }, {
+            id: 's2',
+            name: 'Sienna Clarke',
+            emoji: '👩‍💻',
+            image: { calm: 'siennacalm.png', stressed: 'siennastressed.png' },
+            questions: [
+                'Where were you during the heist?',
+                'Did you hear anything unusual inside the system?',
+                'Did anyone talk to you directly?',
+                'Did you see anyone carrying items out?',
+                'What were the three people wearing?',
+                'Who seemed the most nervous?',
+                'Did you notice anything unusual before or after?',
+                'Did anyone give instructions?',
+                'Did you notice anyone carrying tools?',
+                'Was there any arguing among them?',
+                'Did you see where each went after leaving?',
+                'Who seemed most experienced?',
+                'Did anyone drop anything?',
+                'Did you hear any names?',
+                'Was there a lookout?',
+                'Did anyone seem scared?',
+                'Did anyone handle money?',
+                'Anything else stand out?'
+            ],
+            responses: [
+                'I was monitoring systems remotely at the time.',
+                'I detected multiple system breaches.',
+                'No one spoke to me directly.',
+                'Digital logs showed movement only.',
+                'Identities appeared masked and inconsistent.',
+                'One profile showed instability.',
+                'System behaviour changed suddenly.',
+                'Automated instructions were triggered.',
+                'I detected tool usage in restricted zones.',
+                'Logs suggest internal disagreement.',
+                'Digital tracking showed split exits.',
+                'The admin profile seemed most experienced.',
+                'One data packet was corrupted.',
+                'I recorded the name ‘Vega’.',
+                'A system node acted as lookout.',
+                'One identity showed panic signals.',
+                'Encrypted transfers were recorded.',
+                'Security override signature stood out.'
+            ]
+        }, {
+            id: 's3',
+            name: 'Vincent Hale',
+            emoji: '🧓',
+            image: { calm: 'vincentcalm.png', stressed: 'vincentstressed.png' },
+            questions: [
+                'Where were you during the heist?',
+                'Did you hear anything unusual inside the building?',
+                'Did anyone talk to you directly?',
+                'Did you see anyone carrying items out?',
+                'What were the three people wearing?',
+                'Who seemed the most nervous?',
+                'Did you notice anything unusual before or after?',
+                'Did anyone give instructions?',
+                'Did you notice anyone carrying tools?',
+                'Was there any arguing among them?',
+                'Did you see where each went after leaving?',
+                'Who seemed most experienced?',
+                'Did anyone drop anything?',
+                'Did you hear any names?',
+                'Was there a lookout?',
+                'Did anyone seem scared?',
+                'Did anyone handle money?',
+                'Anything else stand out?'
+            ],
+            responses: [
+                'I was in my office reviewing performance reports.',
+                'I heard faint movement but nothing clear.',
+                'A staff member gave me a brief update.',
+                'I didn’t see anyone carrying items.',
+                'One in uniform, one in dark clothing, one in high-vis.',
+                'The one in dark clothing seemed most nervous.',
+                'System alerts behaved strangely afterwards.',
+                'No one gave direct instructions to me.',
+                'I didn’t notice tools being used.',
+                'No arguments were visible from my position.',
+                'I didn’t track where anyone went afterwards.',
+                'The uniformed person seemed most experienced.',
+                'I didn’t see anything dropped.',
+                'No names were mentioned around me.',
+                'I didn’t observe a lookout.',
+                'One person appeared slightly uneasy.',
+                'I didn’t see any money handled.',
+                'Unexpected system lag stood out.'
+            ]
+        }];
+
+        // ============================================================
+        //  STATE
+        // ============================================================
+
+        const state = {
+            currentSuspectId: 's1',
+            answeredQuestions: { s1: [], s2: [], s3: [] },
+            stress: { s1: 0, s2: 0, s3: 0 },
+            offsets: { s1: 0, s2: 0, s3: 0 }
+        };
+
+        // ============================================================
+        //  HELPERS
+        // ============================================================
+
+        function getSuspect(id) {
+            return SUSPECTS.find(s => s.id === id);
+        }
+
+        function getStress(id) {
+            return state.stress[id] || 0;
+        }
+
+        function getAnswered(id) {
+            return state.answeredQuestions[id] || [];
+        }
+
+        function getQuestionCount(id) {
+            return getAnswered(id).length;
+        }
+
+        function isAnswered(sid, qIdx) {
+            return getAnswered(sid).includes(qIdx);
+        }
+
+        function getAskableIndices(sid) {
+            const answered = getAnswered(sid);
+            const suspect = getSuspect(sid);
+            return suspect.questions.map((_, i) => i).filter(i => !answered.includes(i));
+        }
+
+        function askQuestion(sid, qIdx) {
+            if (isAnswered(sid, qIdx)) return null;
+            const suspect = getSuspect(sid);
+            const response = suspect.responses[qIdx];
+            if (!state.answeredQuestions[sid]) state.answeredQuestions[sid] = [];
+            state.answeredQuestions[sid].push(qIdx);
+            state.stress[sid] = Math.min(100, (state.stress[sid] || 0) + 12);
+            return response;
+        }
+
+        // ============================================================
+        //  COLOUR HELPERS
+        // ============================================================
+
+        function getStressColor(stress) {
+            if (stress > 70) return '#ff6b6b';
+            if (stress > 40) return '#ffb347';
+            return '#69db7c';
+        }
+
+        function getStressClass(stress) {
+            if (stress > 70) return 'high';
+            if (stress > 40) return 'medium';
+            return 'low';
+        }
+
+        function calculateBPM(stress) {
+            return Math.round(60 + (stress / 100) * 60);
+        }
+
+        // ============================================================
+        //  ECG
+        // ============================================================
+
+        const MIN_SPEED = 0.06;
+        const MAX_SPEED = 0.18;
+
+        function getCycleLength(questionCount) {
+            if (questionCount >= 10) return 35;
+            if (questionCount >= 7) return 50;
+            if (questionCount >= 4) return 75;
+            return 110;
+        }
+
+        const AMPLITUDE_SCALE = 0.30;
+
+        let ecgCanvas = null;
+        let ecgCtx = null;
+        let lastTimestamp = 0;
+        let ecgAnimationId = null;
+
+        function startECG() {
+            if (ecgAnimationId) return;
+            lastTimestamp = performance.now();
+            function loop(timestamp) {
+                drawECG(timestamp);
+                ecgAnimationId = requestAnimationFrame(loop);
+            }
+            loop(lastTimestamp);
+        }
+
+        function refreshECG() {
+            const canvas = document.getElementById('ecgCanvas');
+            if (!canvas) {
+                ecgCanvas = null;
+                ecgCtx = null;
+                return;
+            }
+            ecgCanvas = canvas;
+            ecgCtx = canvas.getContext('2d');
+            resizeECG();
+            if (!ecgAnimationId) {
+                startECG();
+            }
+        }
+
+        function resizeECG() {
+            if (!ecgCanvas) return;
+            const parent = ecgCanvas.parentElement;
+            ecgCanvas.width = parent.clientWidth || 280;
+            ecgCanvas.height = parent.clientHeight || 60;
+        }
+
+        function ecgWave(x, offset, cycleLength) {
+            let position = ((x + offset) % cycleLength);
+            let y = 0;
+            const s = AMPLITUDE_SCALE;
+
+            const scale = cycleLength / 180;
+
+            y += 12 * s * Math.exp(-Math.pow((position - 35 * scale) / (10 * scale), 2));
+            y -= 18 * s * Math.exp(-Math.pow((position - 70 * scale) / (4 * scale), 2));
+            y += 115 * s * Math.exp(-Math.pow((position - 77 * scale) / (3 * scale), 2));
+            y -= 35 * s * Math.exp(-Math.pow((position - 84 * scale) / (5 * scale), 2));
+            y += 30 * s * Math.exp(-Math.pow((position - 120 * scale) / (16 * scale), 2));
+
+            return y;
+        }
+
+        function drawECG(timestamp) {
+            if (!ecgCtx) return;
+
+            const currentId = state.currentSuspectId;
+            const stress = getStress(currentId);
+            const qCount = getQuestionCount(currentId);
+
+            const bpm = calculateBPM(stress);
+            const speed = MIN_SPEED + (bpm - 60) / 60 * (MAX_SPEED - MIN_SPEED);
+
+            const cycleLength = getCycleLength(qCount);
+
+            if (lastTimestamp > 0) {
+                const delta = timestamp - lastTimestamp;
+                state.offsets[currentId] += delta * speed;
+            }
+            lastTimestamp = timestamp;
+
+            const canvas = ecgCanvas;
+            const ctx = ecgCtx;
+            const w = canvas.width;
+            const h = canvas.height;
+
+            const centerY = h * 0.62;
+            const color = getStressColor(stress);
+            const offset = state.offsets[currentId];
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.beginPath();
+            for (let x = 0; x < w; x++) {
+                let y = centerY - ecgWave(x, offset, cycleLength);
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 6;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        // ============================================================
+        //  RENDER DASHBOARD
+        // ============================================================
+
+        function render() {
+            const dashboard = document.getElementById('dashboard');
+            const currentId = state.currentSuspectId;
+            const suspect = getSuspect(currentId);
+            if (!suspect) return;
+
+            const stress = getStress(currentId);
+            const answered = getAnswered(currentId);
+            const askable = getAskableIndices(currentId);
+            const allQuestions = suspect.questions;
+            const ringColor = getStressColor(stress);
+            const stressClass = getStressClass(stress);
+
+            let dotsHtml = '';
+            for (const s of SUSPECTS) {
+                const active = s.id === currentId ? 'active' : '';
+                const imgSrc = s.image.calm;
+                dotsHtml += `
+                    <div class="suspect-dot ${active}" data-suspect="${s.id}">
+                        <img src="${imgSrc}" alt="${s.name}" 
+                             onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\\'font-size:1.2rem;\\'>${s.emoji}</span>'">
+                        <span>${s.name.split(' ')[0]}</span>
+                    </div>
+                `;
+            }
+
+            const circumference = 2 * Math.PI * 72;
+            const offsetRing = circumference * (1 - Math.min(stress, 100) / 100);
+
+            const isStressed = stress > 80;
+            const imgSrc = suspect.image[isStressed ? 'stressed' : 'calm'];
+            const avatarHtml = `
+                <img src="${imgSrc}" alt="${suspect.name}" 
+                     onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'avatar-placeholder\\'>${suspect.emoji}</span>'">
+            `;
+
+            const hr = calculateBPM(stress);
+            const skinCond = stress > 70 ? 'HIGH' : (stress > 40 ? 'MEDIUM' : 'LOW');
+            const resp = Math.round(12 + (stress / 100) * 8);
+            const stressIdx = Math.round(stress);
+
+            let notesHtml = '';
+            for (let i = 0; i < allQuestions.length; i++) {
+                const qText = allQuestions[i];
+                const ans = suspect.responses[i];
+                const answeredFlag = answered.includes(i);
+                const askableFlag = askable.includes(i);
+                const locked = !answeredFlag && !askableFlag;
+
+                let classes = 'note-entry';
+                if (answeredFlag) classes += ' answered';
+                else if (locked) classes += ' locked';
+                else if (askableFlag) classes += ' askable';
+
+                let badge = '';
+                if (answeredFlag) badge = '<span class="badge-q">✓</span>';
+                else if (locked) badge = '<span class="badge-q">🔒</span>';
+                else if (askableFlag) badge = '<span class="badge-q">▶</span>';
+
+                let answerHtml = '';
+                if (answeredFlag) {
+                    answerHtml = `<div class="a">💬 ${ans}</div>`;
+                }
+
+                notesHtml += `
+                    <div class="${classes}" data-qidx="${i}" data-suspect="${currentId}">
+                        <div class="q">${badge} ${qText}</div>
+                        ${answerHtml}
+                    </div>
+                `;
+            }
+            if (notesHtml === '') {
+                notesHtml = `<div class="empty-notes">📭 All questions answered for ${suspect.name}.</div>`;
+            }
+
+            dashboard.innerHTML = `
+                <div class="left-panel">
+                    <div class="suspect-switcher">${dotsHtml}</div>
+
+                    <div class="portrait-wrapper" style="--ring-color: ${ringColor};">
+                        <svg class="portrait-ring" viewBox="0 0 160 160">
+                            <circle class="bg" cx="80" cy="80" r="72" />
+                            <circle class="progress" cx="80" cy="80" r="72" 
+                                stroke="${ringColor}"
+                                stroke-dasharray="${circumference}" 
+                                stroke-dashoffset="${offsetRing}" />
+                        </svg>
+                        <div class="avatar-img ${isStressed ? 'stressed' : ''}">
+                            ${avatarHtml}
+                        </div>
+                    </div>
+
+                    <div class="ecg-monitor">
+                        <div class="grid-overlay"></div>
+                        <canvas id="ecgCanvas"></canvas>
+                    </div>
+
+                    <div class="vitals">
+                        <div class="vital"><span class="label">❤️ Heart Rate</span><span class="value ${stressClass}" id="bpmDisplay">${hr} BPM</span></div>
+                        <div class="vital"><span class="label">⚡ Skin Conduct</span><span class="value ${stressClass}">${skinCond}</span></div>
+                        <div class="vital"><span class="label">🌬 Respiration</span><span class="value ${stressClass}">${resp}/min</span></div>
+                        <div class="vital"><span class="label">📊 Stress Index</span><span class="value ${stressClass}">${stressIdx}%</span></div>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+                    <div class="right-header">
+                        <span>📋 CASE NOTES — ${suspect.name.toUpperCase()}</span>
+                        <span class="badge">${answered.length}/${allQuestions.length}</span>
+                    </div>
+                    <div class="notes-scroll" id="notesScroll">
+                        ${notesHtml}
+                    </div>
+                </div>
+            `;
+
+            refreshECG();
+
+            document.querySelectorAll('.suspect-dot').forEach(dot => {
+                dot.addEventListener('click', () => {
+                    const id = dot.dataset.suspect;
+                    if (id && id !== state.currentSuspectId) {
+                        state.currentSuspectId = id;
+                        render();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.note-entry.askable').forEach(entry => {
+                entry.addEventListener('click', () => {
+                    const sid = entry.dataset.suspect;
+                    const qidx = parseInt(entry.dataset.qidx);
+                    const response = askQuestion(sid, qidx);
+                    if (response) {
+                        render();
+                        const scroll = document.getElementById('notesScroll');
+                        if (scroll) setTimeout(() => scroll.scrollTop = scroll.scrollHeight, 30);
+                    }
+                });
+            });
+
+            updateBPMDisplay(stress);
+        }
+
+        function updateBPMDisplay(stress) {
+            const bpmEl = document.getElementById('bpmDisplay');
+            if (!bpmEl) return;
+            const hr = calculateBPM(stress);
+            bpmEl.textContent = hr + ' BPM';
+            const cls = getStressClass(stress);
+            bpmEl.className = 'value ' + cls;
+        }
+
+        // ============================================================
+        //  BOOT
+        // ============================================================
+
+        render();
+
+        setInterval(() => {
+            const currentId = state.currentSuspectId;
+            const stress = getStress(currentId);
+            updateBPMDisplay(stress);
+        }, 1000);
+
+        /* ---- fade in when everything is ready ---- */
+        window.addEventListener('load', function () { document.body.classList.add('ready'); });
+        if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+    </script>
+</body>
+</html>
