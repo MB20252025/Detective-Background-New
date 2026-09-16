@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚖️ Real Balance · Modular</title>
+    <link rel="preload" as="image" href="assets/background.png">
+    <style>
+        /* ---------- global ---------- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 16px;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: #1a140e;
+            background-image: repeating-linear-gradient(45deg, rgba(40, 30, 20, 0.1) 0px, rgba(40, 30, 20, 0.1) 2px, rgba(50, 40, 30, 0.1) 2px, rgba(50, 40, 30, 0.1) 4px);
+            opacity: 0;
+            transition: opacity .4s ease;
+        }
+        body.ready { opacity: 1; }
+
+        /* ---- Back to Puzzles (top-left) ---- */
+        .back-to-puzzles {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            padding: 10px 22px;
+            background: rgba(15, 12, 8, 0.88);
+            color: #eace9f;
+            border: 1px solid #8a6e42;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: .78rem;
+            font-weight: bold;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            text-decoration: none;
+            z-index: 9999;
+            transition: all .18s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,.55);
+        }
+        .back-to-puzzles:hover {
+            background: rgba(60, 40, 15, .95);
+            color: #fff;
+            border-color: #d8ab6a;
+            transform: translateY(-1px);
+        }
+
+        /* ---- Back to Desk (top-right) ---- */
+        .back-to-desk {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            padding: 10px 22px;
+            background: rgba(15, 42, 63, 0.85);
+            color: #eace9f;
+            border: 1px solid rgba(182, 139, 92, 0.4);
+            border-radius: 40px;
+            font-family: 'Courier New', monospace;
+            font-size: .78rem;
+            font-weight: bold;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            text-decoration: none;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9999;
+            transition: background .18s ease, border-color .18s ease;
+        }
+        .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+
+        .game-container {
+            max-width: 460px;
+            width: 100%;
+            background: #e8dcc8;
+            background: radial-gradient(circle at 10% 20%, #fdf6ed, #dac9b0);
+            border-radius: 60px 60px 35px 35px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), inset 0 0 0 2px #b6956e, inset 0 0 15px rgba(0, 0, 0, 0.2);
+            padding: 22px 16px 28px;
+            border: 6px solid #4a3422;
+            transition: all 0.2s ease;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 700;
+            color: #2c1a0e;
+            font-size: 2.2rem;
+            letter-spacing: 2px;
+            margin-top: -6px;
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+
+        .title-static {
+            text-shadow: 3px 3px 0 #b6956e, 0 2px 10px rgba(255, 215, 150, 0.3);
+        }
+
+        .balance-word {
+            display: inline-block;
+            transform-origin: center center;
+            text-shadow: 3px 3px 0 #b6956e, 0 2px 10px rgba(255, 215, 150, 0.3);
+            animation: wobbleBalance 2.8s ease-in-out 1 forwards;
+        }
+
+        @keyframes wobbleBalance {
+            0% { transform: rotate(0deg) scale(1); text-shadow: 3px 3px 0 #b6956e, 0 2px 10px rgba(255, 215, 150, 0.3); }
+            8% { transform: rotate(-5deg) scale(1.03); text-shadow: -5px 7px 0 #b6956e, 0 4px 18px rgba(255, 215, 150, 0.5); }
+            18% { transform: rotate(6deg) scale(0.97); text-shadow: 7px 2px 0 #b6956e, 0 4px 18px rgba(255, 215, 150, 0.5); }
+            30% { transform: rotate(-3.5deg) scale(1.01); text-shadow: -3px 8px 0 #b6956e, 0 3px 14px rgba(255, 215, 150, 0.4); }
+            42% { transform: rotate(2.5deg) scale(1); text-shadow: 4px 4px 0 #b6956e, 0 2px 10px rgba(255, 215, 150, 0.3); }
+            58% { transform: rotate(-1.5deg) scale(1); text-shadow: 2px 5px 0 #b6956e, 0 2px 10px rgba(255, 215, 150, 0.3); }
+            75% { transform: rotate(0.5deg) scale(1); text-shadow: 3px 3px 0 #b6956e, 0 2px 10px rgba(255, 215, 150, 0.3); }
+            100% { transform: rotate(0deg) scale(1); text-shadow: 3px 3px 0 #b6956e, 0 2px 10px rgba(255, 215, 150, 0.3); }
+        }
+
+        .sub {
+            text-align: center;
+            color: #4a3422;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            font-style: italic;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            opacity: 0.8;
+            letter-spacing: 0.5px;
+            border-bottom: 1px dashed #b6956e;
+            padding-bottom: 8px;
+        }
+
+        .scale-stage {
+            position: relative;
+            height: 320px;
+            margin: 6px 0 12px;
+            background-color: #4a3422;
+            background-image: url('assets/background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 50px 50px 20px 20px;
+            border: 4px solid #6b4f3a;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6), 0 8px 15px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+
+        .scale-stage::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at center, transparent 60%, rgba(20, 10, 0, 0.4) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .scale-holder {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .part {
+            position: absolute;
+            pointer-events: none;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        #columnPart {
+            background-image: url('assets/column.png');
+            background-size: 100% 100%;
+            z-index: 2;
+        }
+
+        #beamPart {
+            background-image: url('assets/beam.png');
+            background-size: 100% 100%;
+            z-index: 5;
+            transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+        }
+
+        .pan-string {
+            position: absolute;
+            pointer-events: auto;
+            cursor: pointer;
+            z-index: 20;
+            background-image: url('assets/panstring.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 18px;
+            transition: transform 0.15s;
+            filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.3));
+        }
+
+        .pan-string:active { transform: scale(0.97); }
+        .pan-string.bounce { animation: panBounce 0.2s ease-out; }
+
+        @keyframes panBounce {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.08); }
+            70% { transform: scale(0.96); }
+            100% { transform: scale(1); }
+        }
+
+        .weights-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            width: 100%;
+            pointer-events: none;
+            gap: 2px;
+            padding-bottom: 4px;
+        }
+
+        .bottom-row, .top-row {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            flex-wrap: nowrap;
+            width: 100%;
+        }
+
+        .weight-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 248, 235, 0.9);
+            border: 3px solid #4a3422;
+            box-shadow: 0 4px 0 #2b1a0e, 0 6px 12px rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            cursor: pointer;
+            pointer-events: auto;
+            flex-shrink: 0;
+            transition: transform 0.08s, box-shadow 0.08s;
+            overflow: hidden;
+            padding: 3px;
+            backdrop-filter: blur(2px);
+        }
+
+        .weight-badge img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .weight-badge:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #2b1a0e;
+        }
+
+        .tray-item {
+            width: 60px;
+            height: 60px;
+            background: #fcf3df;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #6b4f3a;
+            box-shadow: 0 4px 0 #3d291a, 0 6px 12px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.12s ease;
+            overflow: hidden;
+            padding: 6px;
+        }
+
+        .tray-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .tray-item.selected {
+            border: 4px solid #d4af37;
+            box-shadow: 0 0 25px #d4af37, 0 4px 0 #3d291a;
+            transform: scale(1.05) translateY(-2px);
+            background: #fff8e7;
+        }
+
+        .tray-item.used {
+            opacity: 0.3;
+            filter: grayscale(0.9);
+            pointer-events: none;
+            border-color: #4a3422;
+            box-shadow: 0 2px 0 #3d291a;
+            transform: scale(0.95);
+        }
+
+        .tray-item:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #3d291a;
+        }
+
+        .tray-label {
+            font-size: 0.95rem;
+            color: #2c1a0e;
+            margin: 12px 0 6px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .tray {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 4px 0 14px;
+            padding: 14px 12px;
+            background: #3a2c1e;
+            border-radius: 50px;
+            border: 3px solid #1f140c;
+            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.6);
+        }
+
+        .action-row {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin: 4px 0 12px;
+        }
+
+        .reset-btn {
+            background: linear-gradient(180deg, #7a3e2a, #4a2214);
+            border: 2px solid #b6956e;
+            box-shadow: 0 6px 0 #2b140a, 0 8px 20px rgba(0, 0, 0, 0.3);
+            color: #f4ebd9;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            font-size: 1.2rem;
+            padding: 10px 40px;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.06s, box-shadow 0.06s;
+            letter-spacing: 1px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .reset-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #2b140a;
+        }
+
+        .guess-panel {
+            background: #d6c5aa;
+            border: 4px solid #7a6040;
+            border-radius: 40px 40px 20px 20px;
+            box-shadow: inset 0 2px 15px rgba(0, 0, 0, 0.2), 0 6px 15px rgba(0, 0, 0, 0.2);
+            padding: 20px 12px 16px;
+            margin-top: 4px;
+        }
+
+        .guess-title {
+            text-align: center;
+            font-size: 1.0rem;
+            font-weight: 700;
+            color: #2c1a0e;
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .guess-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .guess-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #fcf2dd;
+            padding: 4px 14px 4px 10px;
+            border-radius: 40px;
+            border: 2px solid #7a6040;
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.1);
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .guess-item label { font-size: 1.6rem; line-height: 1; }
+
+        .guess-item input {
+            width: 55px;
+            padding: 6px 4px;
+            font-size: 1.2rem;
+            text-align: center;
+            border: 2px solid #b39264;
+            border-radius: 30px;
+            background: #fffcf0;
+            font-weight: 700;
+            color: #2c1f13;
+            outline: none;
+            transition: border 0.2s;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .guess-item input:focus {
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3);
+        }
+
+        .check-btn {
+            background: linear-gradient(180deg, #3d7a5a, #1f4a32);
+            border: 2px solid #8bcaa8;
+            box-shadow: 0 6px 0 #0f2a1a, 0 8px 20px rgba(0, 0, 0, 0.3);
+            color: #f4ebd9;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            font-size: 1.4rem;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.06s, box-shadow 0.06s;
+            letter-spacing: 1px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .check-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #0f2a1a;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 1.2rem;
+            min-height: 2.6rem;
+            color: #2c1a0e;
+            margin: 12px 0 2px;
+            padding: 8px 16px;
+            background: #f4e9d8;
+            border-radius: 40px;
+            border: 2px solid #b39264;
+            font-weight: 600;
+            box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.1);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 420px) {
+            .game-container { padding: 16px 10px 20px; border-radius: 40px 40px 25px 25px; }
+            .scale-stage { height: 270px; }
+            .weight-badge { width: 34px; height: 34px; padding: 2px; }
+            .tray-item { width: 50px; height: 50px; padding: 4px; }
+            .guess-item input { width: 45px; font-size: 1.0rem; padding: 4px 2px; }
+            h1 { font-size: 1.8rem; }
+            .reset-btn { font-size: 1.0rem; padding: 8px 28px; }
+            .check-btn { font-size: 1.1rem; padding: 6px 18px; }
+            .tray { gap: 6px; padding: 10px 8px; }
+            .guess-item { padding: 3px 10px 3px 6px; font-size: 1.2rem; }
+            .back-to-puzzles, .back-to-desk { font-size: .68rem; padding: 8px 14px; letter-spacing: .18em; }
+        }
+
+        @media (max-width: 360px) {
+            .scale-stage { height: 220px; }
+            .weight-badge { width: 28px; height: 28px; padding: 1px; }
+            .tray-item { width: 40px; height: 40px; padding: 3px; }
+            .guess-item input { width: 38px; font-size: 0.9rem; }
+            h1 { font-size: 1.5rem; }
+            .sub { font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <a class="back-to-puzzles" href="puzzles.html">← Puzzles</a>
+    <a class="back-to-desk" href="index.html">← Desk</a>
+
+    <div class="game-container">
+        <h1>
+            <span class="title-static">⚖️ REAL </span>
+            <span class="balance-word">BALANCE</span>
+        </h1>
+        <div class="sub">select a weight → tap a pan · tap badge to remove</div>
+
+        <div class="scale-stage" id="scaleStage">
+            <div class="scale-holder" id="scaleHolder">
+
+                <div id="columnPart" class="part"></div>
+                <div id="beamPart" class="part"></div>
+
+                <div class="pan-string left-pan" id="leftPan">
+                    <div class="weights-container" id="leftWeights">
+                        <div class="top-row" id="leftTopRow"></div>
+                        <div class="bottom-row" id="leftBottomRow"></div>
+                    </div>
+                </div>
+
+                <div class="pan-string right-pan" id="rightPan">
+                    <div class="weights-container" id="rightWeights">
+                        <div class="top-row" id="rightTopRow"></div>
+                        <div class="bottom-row" id="rightBottomRow"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="tray-label">▼ select a weight (one each) ▼</div>
+        <div class="tray" id="tray">
+            <div class="tray-item" data-type="2">
+                <img src="assets/2weight.png" alt="2">
+            </div>
+            <div class="tray-item" data-type="5">
+                <img src="assets/5weight.png" alt="5">
+            </div>
+            <div class="tray-item" data-type="star">
+                <img src="assets/star.png" alt="⭐">
+            </div>
+            <div class="tray-item" data-type="triangle">
+                <img src="assets/triangle.png" alt="🔺">
+            </div>
+            <div class="tray-item" data-type="circle">
+                <img src="assets/ball.png" alt="⚫">
+            </div>
+        </div>
+
+        <div class="action-row">
+            <button class="reset-btn" id="resetBtn">⟲ reset</button>
+        </div>
+
+        <div class="guess-panel">
+            <div class="guess-title">🔍 deduce hidden values</div>
+            <div class="guess-row">
+                <div class="guess-item"><label>⭐</label><input type="number" id="starGuess" placeholder="?" /></div>
+                <div class="guess-item"><label>🔺</label><input type="number" id="triangleGuess" placeholder="?" /></div>
+                <div class="guess-item"><label>⚫</label><input type="number" id="circleGuess" placeholder="?" /></div>
+                <button class="check-btn" id="checkBtn">✔ check</button>
+            </div>
+            <div class="message" id="messageDisplay"></div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const OFFSETS = {
+                column: { x: 0, y: 0, scale: 1 },
+                beam: { x: 0, y: 0, scale: 1 },
+                leftPan: { x: 0, y: 0, scale: 1 },
+                rightPan: { x: 0, y: 0, scale: 1 },
+            };
+
+            const CONFIG = {
+                columnWidth: 100,
+                columnHeight: 260,
+                beamWidth: 320,
+                beamHeight: 80,
+                beamHalf: 138,
+                panWidth: 130,
+                panHeight: 160,
+                containerWidth: 380,
+                containerHeight: 320,
+                pivotY: 50,
+                pivotX: 190,
+            };
+
+            function getImagePath(type) {
+                const map = {
+                    '2': 'assets/2weight.png',
+                    '5': 'assets/5weight.png',
+                    'star': 'assets/star.png',
+                    'triangle': 'assets/triangle.png',
+                    'circle': 'assets/ball.png',
+                };
+                return map[type] || '';
+            }
+
+            const beamEl = document.getElementById('beamPart');
+            const columnEl = document.getElementById('columnPart');
+            const leftPan = document.getElementById('leftPan');
+            const rightPan = document.getElementById('rightPan');
+            const leftTopRow = document.getElementById('leftTopRow');
+            const leftBottomRow = document.getElementById('leftBottomRow');
+            const rightTopRow = document.getElementById('rightTopRow');
+            const rightBottomRow = document.getElementById('rightBottomRow');
+            const trayItems = document.querySelectorAll('.tray-item');
+            const resetBtn = document.getElementById('resetBtn');
+            const starInp = document.getElementById('starGuess');
+            const triangleInp = document.getElementById('triangleGuess');
+            const circleInp = document.getElementById('circleGuess');
+            const checkBtn = document.getElementById('checkBtn');
+            const msg = document.getElementById('messageDisplay');
+
+            const SECRET = { star: 2, triangle: 4, circle: 6 };
+            let leftSet = new Set();
+            let rightSet = new Set();
+            let selectedType = null;
+
+            function getValue(type) {
+                if (type === '2') return 2;
+                if (type === '5') return 5;
+                if (type === 'star') return SECRET.star;
+                if (type === 'triangle') return SECRET.triangle;
+                if (type === 'circle') return SECRET.circle;
+                return 0;
+            }
+
+            function getChar(type) {
+                if (type === '2') return '2';
+                if (type === '5') return '5';
+                if (type === 'star') return '⭐';
+                if (type === 'triangle') return '🔺';
+                if (type === 'circle') return '⚫';
+                return '?';
+            }
+
+            function splitPyramid(items) {
+                let arr = Array.from(items);
+                let total = arr.length;
+                if (total <= 2) return { bottom: arr, top: [] };
+                if (total === 3) return { bottom: arr.slice(0, 2), top: arr.slice(2) };
+                if (total === 4) return { bottom: arr.slice(0, 2), top: arr.slice(2) };
+                return { bottom: arr.slice(0, 3), top: arr.slice(3) };
+            }
+
+            function computeTotals() {
+                let leftTotal = 0, rightTotal = 0;
+                for (let t of leftSet) leftTotal += getValue(t);
+                for (let t of rightSet) rightTotal += getValue(t);
+                return { leftTotal, rightTotal };
+            }
+
+            function renderWeights() {
+                leftBottomRow.innerHTML = '';
+                leftTopRow.innerHTML = '';
+                rightBottomRow.innerHTML = '';
+                rightTopRow.innerHTML = '';
+
+                let leftSplit = splitPyramid(leftSet);
+                leftSplit.bottom.forEach(type => leftBottomRow.appendChild(createWeightBadge(type, 'left')));
+                leftSplit.top.forEach(type => leftTopRow.appendChild(createWeightBadge(type, 'left')));
+
+                let rightSplit = splitPyramid(rightSet);
+                rightSplit.bottom.forEach(type => rightBottomRow.appendChild(createWeightBadge(type, 'right')));
+                rightSplit.top.forEach(type => rightTopRow.appendChild(createWeightBadge(type, 'right')));
+            }
+
+            function createWeightBadge(type, side) {
+                let b = document.createElement('span');
+                b.className = 'weight-badge';
+                b.dataset.type = type;
+                b.dataset.side = side;
+
+                let img = document.createElement('img');
+                img.src = getImagePath(type);
+                img.alt = getChar(type);
+                b.appendChild(img);
+
+                b.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (selectedType !== null) {
+                        addToSide(side);
+                    } else {
+                        removeWeight(side, type);
+                    }
+                });
+                return b;
+            }
+
+            function removeWeight(side, type) {
+                if (side === 'left') leftSet.delete(type);
+                else rightSet.delete(type);
+                if (selectedType === type) selectedType = null;
+                renderAll();
+            }
+
+            function updatePositions(angle) {
+                const {
+                    columnWidth, columnHeight,
+                    beamWidth, beamHeight, beamHalf,
+                    panWidth, panHeight,
+                    containerWidth, containerHeight,
+                    pivotY
+                } = CONFIG;
+
+                const { column, beam, leftPan: leftPanOff, rightPan: rightPanOff } = OFFSETS;
+
+                const colW = columnWidth * column.scale;
+                const colH = columnHeight * column.scale;
+                columnEl.style.width = colW + 'px';
+                columnEl.style.height = colH + 'px';
+                columnEl.style.left = `calc(50% - ${colW/2}px + ${column.x}px)`;
+                columnEl.style.top = `calc(10px + ${column.y}px)`;
+
+                const beamW = beamWidth * beam.scale;
+                const beamH = beamHeight * beam.scale;
+                const halfW = beamW / 2;
+                const pivotX = containerWidth / 2;
+                const beamLeft = pivotX - halfW + beam.x;
+                const beamTop = pivotY - beamH / 2 + beam.y;
+                beamEl.style.width = beamW + 'px';
+                beamEl.style.height = beamH + 'px';
+                beamEl.style.left = beamLeft + 'px';
+                beamEl.style.top = beamTop + 'px';
+                beamEl.style.transformOrigin = `${halfW}px ${beamH/2}px`;
+                beamEl.style.transform = `rotate(${angle}deg)`;
+
+                const rad = angle * Math.PI / 180;
+                const cos = Math.cos(rad);
+                const sin = Math.sin(rad);
+                const beamCenterX = pivotX + beam.x;
+                const beamCenterY = pivotY + beam.y;
+                let leftEndX = beamCenterX - halfW * cos;
+                let leftEndY = beamCenterY - halfW * sin;
+                let rightEndX = beamCenterX + halfW * cos;
+                let rightEndY = beamCenterY + halfW * sin;
+
+                const stringLen = 70;
+
+                const panScale = leftPanOff.scale;
+                const panW = panWidth * panScale;
+                const panH = panHeight * panScale;
+                let leftPanX = leftEndX + leftPanOff.x;
+                let leftPanY = leftEndY + stringLen + leftPanOff.y;
+                leftPanX = Math.max(panW / 2, Math.min(containerWidth - panW / 2, leftPanX));
+                leftPanY = Math.max(panH / 2, Math.min(containerHeight - panH / 2, leftPanY));
+                leftPan.style.width = panW + 'px';
+                leftPan.style.height = panH + 'px';
+                leftPan.style.left = (leftPanX - panW / 2) + 'px';
+                leftPan.style.top = (leftPanY - panH / 2) + 'px';
+
+                const panScaleR = rightPanOff.scale;
+                const panWR = panWidth * panScaleR;
+                const panHR = panHeight * panScaleR;
+                let rightPanX = rightEndX + rightPanOff.x;
+                let rightPanY = rightEndY + stringLen + rightPanOff.y;
+                rightPanX = Math.max(panWR / 2, Math.min(containerWidth - panWR / 2, rightPanX));
+                rightPanY = Math.max(panHR / 2, Math.min(containerHeight - panHR / 2, rightPanY));
+                rightPan.style.width = panWR + 'px';
+                rightPan.style.height = panHR + 'px';
+                rightPan.style.left = (rightPanX - panWR / 2) + 'px';
+                rightPan.style.top = (rightPanY - panHR / 2) + 'px';
+            }
+
+            function renderAll() {
+                renderWeights();
+                let { leftTotal, rightTotal } = computeTotals();
+                let diff = leftTotal - rightTotal;
+                let angle = Math.min(18, Math.max(-18, -diff * 0.8));
+                updatePositions(angle);
+
+                trayItems.forEach(item => {
+                    let t = item.dataset.type;
+                    item.classList.toggle('used', leftSet.has(t) || rightSet.has(t));
+                    item.classList.toggle('selected', t === selectedType && !leftSet.has(t) && !rightSet.has(t));
+                });
+            }
+
+            function addToSide(side) {
+                if (!selectedType) {
+                    msg.textContent = '⚡ select a weight first';
+                    setTimeout(() => { if (msg.textContent === '⚡ select a weight first') msg.textContent = ''; }, 700);
+                    return;
+                }
+                if (leftSet.has(selectedType) || rightSet.has(selectedType)) {
+                    msg.textContent = '⛔ already used (tap badge to remove)';
+                    setTimeout(() => { if (msg.textContent === '⛔ already used (tap badge to remove)') msg.textContent = ''; }, 1000);
+                    return;
+                }
+                if (side === 'left') leftSet.add(selectedType);
+                else rightSet.add(selectedType);
+                selectedType = null;
+                renderAll();
+
+                let pan = side === 'left' ? leftPan : rightPan;
+                pan.classList.add('bounce');
+                setTimeout(() => pan.classList.remove('bounce'), 200);
+                msg.textContent = '';
+            }
+
+            function resetAll() {
+                leftSet.clear();
+                rightSet.clear();
+                selectedType = null;
+                renderAll();
+                msg.textContent = '';
+            }
+
+            trayItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    let t = item.dataset.type;
+                    if (leftSet.has(t) || rightSet.has(t)) {
+                        msg.textContent = '⛔ already on scale (tap badge to remove)';
+                        setTimeout(() => { if (msg.textContent === '⛔ already on scale (tap badge to remove)') msg.textContent = ''; }, 700);
+                        return;
+                    }
+                    selectedType = (selectedType === t) ? null : t;
+                    renderAll();
+                    msg.textContent = selectedType ? `selected ${getChar(selectedType)}` : 'no selection';
+                    setTimeout(() => { if (msg.textContent.includes('selected') || msg.textContent === 'no selection') msg.textContent = ''; }, 700);
+                });
+            });
+
+            leftPan.addEventListener('click', () => addToSide('left'));
+            rightPan.addEventListener('click', () => addToSide('right'));
+            resetBtn.addEventListener('click', resetAll);
+
+            checkBtn.addEventListener('click', () => {
+                let s = parseInt(starInp.value, 10);
+                let t = parseInt(triangleInp.value, 10);
+                let c = parseInt(circleInp.value, 10);
+                if (isNaN(s) || isNaN(t) || isNaN(c)) {
+                    msg.textContent = '❌ enter numbers';
+                    return;
+                }
+                if (s === SECRET.star && t === SECRET.triangle && c === SECRET.circle) {
+                    msg.textContent = '✅ Puzzle solved!';
+                } else {
+                    msg.textContent = '❌ Not quite. Try again.';
+                }
+            });
+
+            function init() {
+                const container = document.getElementById('scaleHolder');
+                const rect = container.getBoundingClientRect();
+                CONFIG.containerWidth = rect.width;
+                CONFIG.containerHeight = rect.height;
+                CONFIG.pivotX = rect.width / 2;
+                renderAll();
+            }
+
+            window.addEventListener('load', init);
+            window.addEventListener('resize', init);
+            setTimeout(init, 100);
+        })();
+
+        /* ---- fade in when everything is ready ---- */
+        window.addEventListener('load', function () { document.body.classList.add('ready'); });
+        if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+    </script>
+</body>
+</html>
