@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Safe Door – Vault</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      background: #1a1410;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      opacity: 0;
+      transition: opacity .4s ease;
+    }
+    body.ready { opacity: 1; }
+
+    /* === Back to Desk === */
+    .back-to-desk {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      padding: 9px 20px;
+      background: rgba(15, 42, 63, 0.85);
+      border: 1px solid rgba(182, 139, 92, 0.4);
+      border-radius: 40px;
+      color: #eace9f;
+      font-family: 'Courier New', monospace;
+      font-size: .72rem;
+      font-weight: bold;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      text-decoration: none;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999;
+      transition: background .18s ease, border-color .18s ease;
+    }
+    .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+
+    /* ═══════════════════════════════════════════════════════════ */
+    /* ── OVERALL DOOR SCALE – change this number ── */
+    :root {
+      --door-scale: 1.0;
+
+      /* ── Individual element scales ── */
+      --bolt-scale: 1.70;
+      --keypad-scale: 0.8;
+      --wheel-scale: 1.65;
+      --redlight-scale: 1.0;
+
+      /* ── Bulb case controls ── */
+      --bulbcase-scale: 2;
+      --bulbcase-top: 0%;
+      --bulbcase-left: 0%;
+    }
+
+    /* ── Full‑screen container – centers the door ── */
+    #safe-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #1a1410;
+    }
+
+    /* ── Door wrapper – fits in viewport, then scaled ── */
+    #door-wrapper {
+      position: relative;
+      width: min(100vw, calc(100vh * 700 / 550));
+      height: min(100vh, calc(100vw * 550 / 700));
+      transform: scale(var(--door-scale));
+      transform-origin: center;
+      background: url('vaultdoor.jpg') no-repeat center / contain;
+      background-color: #2a211c;
+      box-shadow: 0 0 0 4px #1a1410;
+    }
+
+    /* ── BOLT WRAPPERS ── */
+    .bolt-wrapper {
+      position: absolute;
+      width: 10.86%;
+      height: 8%;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .bolt-wrapper.left-top {
+      top: 25.40%;
+      left: 21.91%;
+    }
+    .bolt-wrapper.left-bottom {
+      top: 48.00%;
+      left: 68.81%;
+    }
+    .bolt-wrapper.right-middle {
+      top: 72.18%;
+      right: 67.60%;
+    }
+
+    .bolt-wrapper img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      transform: scale(var(--bolt-scale));
+      transform-origin: center;
+    }
+    .bolt-wrapper.unlocked img {
+      opacity: 1;
+    }
+
+    /* ── RED LIGHT ── */
+    #redlight-wrapper {
+      position: absolute;
+      top: 10%;
+      left: 30%;
+      width: 8%;
+      height: 8%;
+      transform: translateX(-50%) scale(var(--redlight-scale));
+      transform-origin: center;
+      z-index: 12;
+      pointer-events: none;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      border: 4px solid #111111;
+      background: #111111;
+      box-shadow:
+        inset 0 0 10px rgba(0, 0, 0, 0.9),
+        0 0 12px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+    }
+
+    #redlight-wrapper::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      left: -30%;
+      width: 160%;
+      height: 160%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 30, 0, 0.25), transparent 70%);
+      filter: blur(20px);
+      opacity: 0;
+      animation: haloPulse 1.2s ease-in-out infinite;
+      pointer-events: none;
+      z-index: -1;
+      transition: background 0.6s ease;
+    }
+
+    #redlight {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 45% 35%, #ff6644, #cc0000 40%, #880000 70%, #440000 100%);
+      box-shadow:
+        inset 0 -6px 10px rgba(0, 0, 0, 0.7),
+        inset 0 6px 14px rgba(255, 200, 150, 0.5),
+        0 0 30px rgba(255, 0, 0, 0.6);
+      animation: redPulse 1.2s ease-in-out infinite;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.4));
+      transition: background 0.8s ease, box-shadow 0.8s ease, filter 0.8s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    #bulbcase {
+      position: absolute;
+      top: var(--bulbcase-top);
+      left: var(--bulbcase-left);
+      width: 100%;
+      height: 100%;
+      background: url('bulbcase.png') no-repeat center / contain;
+      transform: scale(var(--bulbcase-scale));
+      transform-origin: center;
+      pointer-events: none;
+      z-index: 2;
+      transition: transform 0.3s ease;
+    }
+
+    @keyframes redPulse {
+      0% {
+        box-shadow: inset 0 -6px 10px rgba(0, 0, 0, 0.7), inset 0 6px 14px rgba(255, 200, 150, 0.5), 0 0 30px rgba(255, 0, 0, 0.6);
+        filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.4));
+      }
+      50% {
+        box-shadow: inset 0 -6px 10px rgba(0, 0, 0, 0.7), inset 0 6px 24px rgba(255, 200, 150, 0.8), 0 0 70px rgba(255, 0, 0, 0.9), 0 0 120px rgba(255, 50, 0, 0.4);
+        filter: drop-shadow(0 0 45px rgba(255, 0, 0, 0.7));
+      }
+      100% {
+        box-shadow: inset 0 -6px 10px rgba(0, 0, 0, 0.7), inset 0 6px 14px rgba(255, 200, 150, 0.5), 0 0 30px rgba(255, 0, 0, 0.6);
+        filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.4));
+      }
+    }
+
+    @keyframes haloPulse {
+      0% { opacity: 0.3; transform: scale(0.9); }
+      50% { opacity: 0.9; transform: scale(1.3); }
+      100% { opacity: 0.3; transform: scale(0.9); }
+    }
+
+    #redlight-wrapper.green #redlight {
+      background: radial-gradient(circle at 45% 35%, #88ff66, #00cc44 40%, #008833 70%, #004422 100%);
+      box-shadow:
+        inset 0 -6px 10px rgba(0, 0, 0, 0.7),
+        inset 0 6px 14px rgba(200, 255, 150, 0.5),
+        0 0 40px rgba(0, 255, 68, 0.7),
+        0 0 80px rgba(0, 255, 68, 0.3);
+      filter: drop-shadow(0 0 35px rgba(0, 255, 68, 0.5));
+      animation: greenPulse 1.5s ease-in-out infinite;
+    }
+
+    #redlight-wrapper.green::before {
+      background: radial-gradient(circle, rgba(0, 255, 68, 0.25), transparent 70%);
+    }
+
+    @keyframes greenPulse {
+      0% {
+        box-shadow: inset 0 -6px 10px rgba(0, 0, 0, 0.7), inset 0 6px 14px rgba(200, 255, 150, 0.5), 0 0 40px rgba(0, 255, 68, 0.7), 0 0 80px rgba(0, 255, 68, 0.3);
+        filter: drop-shadow(0 0 35px rgba(0, 255, 68, 0.5));
+      }
+      50% {
+        box-shadow: inset 0 -6px 10px rgba(0, 0, 0, 0.7), inset 0 6px 24px rgba(200, 255, 150, 0.8), 0 0 70px rgba(0, 255, 68, 1), 0 0 140px rgba(0, 255, 68, 0.5);
+        filter: drop-shadow(0 0 60px rgba(0, 255, 68, 0.7));
+      }
+      100% {
+        box-shadow: inset 0 -6px 10px rgba(0, 0, 0, 0.7), inset 0 6px 14px rgba(200, 255, 150, 0.5), 0 0 40px rgba(0, 255, 68, 0.7), 0 0 80px rgba(0, 255, 68, 0.3);
+        filter: drop-shadow(0 0 35px rgba(0, 255, 68, 0.5));
+      }
+    }
+
+    @keyframes wheelSpinContinuous {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #wheel.spinning {
+      animation: wheelSpinContinuous 1.2s linear infinite !important;
+      pointer-events: none;
+    }
+
+    #wheel {
+      width: 100%;
+      height: 100%;
+      background: url('wheel.png') no-repeat center / contain;
+      cursor: pointer;
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
+      transition: filter 0.2s;
+      animation: wheelJiggle 2s ease-in-out infinite;
+      pointer-events: auto;
+    }
+    #wheel:hover {
+      filter: drop-shadow(0 6px 16px rgba(200, 180, 140, 0.3)) brightness(1.05);
+    }
+
+    @keyframes wheelJiggle {
+      0% { transform: rotate(0deg); }
+      25% { transform: rotate(4deg); }
+      75% { transform: rotate(-4deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    #wheel-wrapper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 17.14%;
+      height: 21.82%;
+      z-index: 15;
+      transform: translate(-50%, -50%) scale(var(--wheel-scale));
+      transform-origin: center;
+      pointer-events: none;
+    }
+    #wheel-wrapper .wheel-inner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #keypad {
+      position: absolute;
+      top: 80%;
+      left: 65%;
+      width: 30%;
+      height: 24%;
+      transform: translate(-50%, -50%) scale(var(--keypad-scale));
+      transform-origin: center;
+      z-index: 20;
+      cursor: pointer;
+      background: url('keypad.jpg') no-repeat center / contain;
+      transition: filter 0.2s, transform 0.1s;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7));
+    }
+    #keypad:hover {
+      filter: drop-shadow(0 4px 12px rgba(200, 180, 140, 0.4)) brightness(1.1);
+    }
+    #keypad:active {
+      transform: translate(-50%, -50%) scale(0.94);
+    }
+  </style>
+</head>
+<body>
+
+<a class="back-to-desk" href="index.html">← Desk</a>
+
+<div id="safe-container">
+  <div id="door-wrapper">
+    <!-- RED WARNING LIGHT -->
+    <div id="redlight-wrapper">
+      <div id="redlight"></div>
+      <div id="bulbcase"></div>
+    </div>
+
+    <!-- BOLTS -->
+    <div class="bolt-wrapper left-top" id="bolt1">
+      <img src="unlockbolt1.jpg" alt="unlock bolt 1" />
+    </div>
+    <div class="bolt-wrapper left-bottom" id="bolt2">
+      <img src="unlockbolt2.png" alt="unlock bolt 2" />
+    </div>
+    <div class="bolt-wrapper right-middle" id="bolt3">
+      <img src="unlockbolt3.png" alt="unlock bolt 3" />
+    </div>
+
+    <!-- KEYPAD -->
+    <div id="keypad" title="Click to access binary puzzle"></div>
+
+    <!-- WHEEL -->
+    <div id="wheel-wrapper">
+      <div id="wheel" class="wheel-inner" title="Spin the wheel"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const VAULT_KEY = 'whitby_vault_unlocked';
+
+    const keypad = document.getElementById('keypad');
+    const wheel = document.getElementById('wheel');
+    const redlightWrapper = document.getElementById('redlight-wrapper');
+    const boltWrappers = [
+      document.getElementById('bolt1'),
+      document.getElementById('bolt2'),
+      document.getElementById('bolt3')
+    ];
+
+    let isUnlocked = false;
+    let isSpinning = false;
+    let boltsRevealed = false;
+
+    // ── Was the puzzle already solved? ──
+    let flag = false;
+    try { flag = localStorage.getItem(VAULT_KEY) === 'true'; } catch (e) { flag = false; }
+
+    function revealBolts() {
+      if (boltsRevealed) return;
+      boltsRevealed = true;
+      console.log('🔧 Revealing bolts...');
+      boltWrappers.forEach((wrapper, index) => {
+        setTimeout(() => {
+          wrapper.classList.add('unlocked');
+          console.log(`✅ Bolt ${index + 1} revealed.`);
+          if (index === 2) {
+            wheel.classList.remove('spinning');
+            isSpinning = false;
+            console.log('🛑 Wheel stopped – all bolts revealed.');
+            redlightWrapper.classList.add('green');
+            console.log('🟢 Light turned GREEN!');
+          }
+        }, index * 400 + 200);
+      });
+    }
+
+    function onWheelClick() {
+      if (isSpinning) return;
+
+      if (!isUnlocked) {
+        wheel.style.animation = 'none';
+        void wheel.offsetHeight;
+        wheel.style.animation = 'wheelJiggle 0.6s ease-in-out 2';
+        setTimeout(() => {
+          wheel.style.animation = 'wheelJiggle 2s ease-in-out infinite';
+        }, 1200);
+        console.log('⛔ Wheel is locked – use the keypad first.');
+        return;
+      }
+
+      if (boltsRevealed) {
+        console.log('⏳ Door already unlocked – bolts already revealed.');
+        return;
+      }
+
+      console.log('🔄 Wheel spinning continuously...');
+      isSpinning = true;
+      wheel.style.animation = 'none';
+      void wheel.offsetHeight;
+      wheel.classList.add('spinning');
+      revealBolts();
+    }
+
+    // ── Keypad → Binary Puzzle ──
+    keypad.addEventListener('click', function() {
+      // If already unlocked, do nothing (or navigate back to binary for reference)
+      if (isUnlocked) {
+        console.log('Vault already unlocked – no need to re-enter the code.');
+        return;
+      }
+      window.location.href = 'binary.html';
+    });
+
+    wheel.addEventListener('click', onWheelClick);
+
+    // ── Initial state ──
+    boltWrappers.forEach(w => w.classList.remove('unlocked'));
+    redlightWrapper.classList.remove('green');
+
+    if (flag) {
+      // Already solved previously → auto-open the vault
+      isUnlocked = true;
+      console.log('🔓 Vault already unlocked (returned from puzzle)');
+      // Small delay for the page to settle, then spin + reveal
+      setTimeout(function() {
+        isSpinning = true;
+        wheel.style.animation = 'none';
+        void wheel.offsetHeight;
+        wheel.classList.add('spinning');
+        revealBolts();
+      }, 300);
+    } else {
+      console.log('🔐 Safe door ready – click keypad to start.');
+    }
+  })();
+
+  /* ---- fade in when everything is ready ---- */
+  window.addEventListener('load', function () { document.body.classList.add('ready'); });
+  if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+</script>
+</body>
+</html>
