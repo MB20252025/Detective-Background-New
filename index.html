@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Image Layout</title>
+<link rel="preload" as="image" href="Dback.jpg">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, sans-serif;
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+  body.ready { opacity: 1; }
+
+  .stage {
+    --ar: 1.7778;
+    position: relative;
+    width: min(100vw, calc(100vh * var(--ar)));
+    aspect-ratio: var(--ar);
+    background: #222 center / 100% 100% no-repeat;
+    overflow: hidden;
+  }
+
+  .layer {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+
+  .item {
+    position: absolute;
+    left: calc(var(--x) * 1%);
+    top:  calc(var(--y) * 1%);
+    width: calc(var(--w) * 1%);
+    height: auto;
+    transform: translate(-50%, -50%)
+               rotate(calc(var(--r) * 1deg))
+               scale(var(--s));
+    transform-origin: 50% 50%;
+    z-index: var(--z);
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .item.clickable {
+    pointer-events: auto;
+    cursor: pointer;
+    transition: filter .22s ease;
+  }
+  .item.clickable:hover {
+    filter: brightness(1.15) drop-shadow(0 0 14px rgba(255, 224, 160, .7));
+  }
+  .item.clickable:active {
+    filter: brightness(1.25) drop-shadow(0 0 22px rgba(255, 224, 160, .9));
+  }
+</style>
+</head>
+<body>
+
+  <div class="stage">
+    <div class="layer" id="layer"></div>
+  </div>
+
+<script>
+/* ============================================================
+   EDIT EVERYTHING HERE
+   ============================================================ */
+const CONFIG = {
+  background: 'Dback.jpg',
+
+  global: {
+    x: 0,
+    y: 0,
+    scale: 1
+  },
+
+  images: [
+    //                   x     y     w    z   scale  rotation   link
+    { file: 'D1.png',      x: 23,    y: 93.5, w: 14, z: 1,  scale: 1.2,  rotation: 0, link: 'interrogation.html' },
+    { file: 'D2.png',      x: 9.4,   y: 80,   w: 14, z: 4,  scale: 1.5,  rotation: 0, link: 'puzzles.html' },
+    { file: 'D3.png',      x: 55,    y: 74,   w: 14, z: 3,  scale: 3.0,  rotation: 0, link: 'newspaper.html' },
+    { file: 'D4.png',      x: 12.5,  y: 62,   w: 14, z: 2,  scale: 2.1,  rotation: 0, link: 'suspect.html' },
+    { file: 'D5.png',      x: 52,    y: 82,   w: 14, z: 5,  scale: 4.2,  rotation: 0, link: 'hanoi.html' },
+    { file: 'D6.png',      x: 82.5,  y: 21.5, w: 14, z: 6,  scale: 2.45, rotation: 0, link: 'cryptogram.html' },
+    { file: 'D7.png',      x: 51,    y: 53.1, w: 14, z: 7,  scale: 3.36, rotation: 0, link: 'p1.html' },
+    { file: 'D8.png',      x: 88,    y: 63,   w: 14, z: 8,  scale: 1.8,  rotation: 0, link: 'menu.html' },
+    { file: 'D9.png',      x: 50.5,  y: 28,   w: 14, z: 9,  scale: 1.8,  rotation: 0, link: 'coffee.html' },
+    { file: 'D10.png',     x: 82,    y: 95,   w: 14, z: 10, scale: 2.3,  rotation: 0, link: 'casebook.html' },
+
+    // NEW — empty cup. Change 'empty-cup.html' to the page you want it to open.
+    { file: 'emptycup.png', x: 85,   y: 85,   w: 12, z: 11, scale: 1.8,  rotation: 0, link: 'empty-cup.html' }
+  ]
+};
+/* ========================= END OF CONFIG ==================== */
+
+
+const stage = document.querySelector('.stage');
+const layer = document.getElementById('layer');
+
+stage.style.backgroundImage = `url("${CONFIG.background}")`;
+
+const bgProbe = new Image();
+bgProbe.onload = () => {
+  const ar = bgProbe.naturalWidth / bgProbe.naturalHeight;
+  stage.style.setProperty('--ar', ar);
+};
+bgProbe.src = CONFIG.background;
+
+CONFIG.images.forEach(cfg => {
+  const img = document.createElement('img');
+  img.className = 'item';
+  img.src = cfg.file;
+  img.alt = cfg.link ? `Open ${cfg.link.replace('.html','')}` : '';
+  img.draggable = false;
+
+  img.style.setProperty('--x', cfg.x);
+  img.style.setProperty('--y', cfg.y);
+  img.style.setProperty('--w', cfg.w);
+  img.style.setProperty('--z', cfg.z ?? 1);
+  img.style.setProperty('--s', cfg.scale ?? 1);
+  img.style.setProperty('--r', cfg.rotation ?? 0);
+
+  if (cfg.link) {
+    img.classList.add('clickable');
+    img.dataset.link = cfg.link;
+    img.setAttribute('role', 'link');
+    img.setAttribute('tabindex', '0');
+  }
+
+  layer.appendChild(img);
+});
+
+(function applyGlobal() {
+  const g = CONFIG.global;
+  layer.style.transform = `translate(${g.x}%, ${g.y}%) scale(${g.scale})`;
+})();
+
+function openLink(el) {
+  const url = el && el.dataset.link;
+  if (!url) return;
+
+  el.style.filter = 'brightness(1.4) drop-shadow(0 0 26px rgba(255,236,190,1))';
+
+  setTimeout(() => {
+    document.body.style.transition = 'opacity .22s ease';
+    document.body.style.opacity = '0';
+    setTimeout(() => { window.location.href = url; }, 200);
+  }, 90);
+}
+
+layer.addEventListener('click', (e) => {
+  const el = e.target.closest('.item.clickable');
+  if (el) openLink(el);
+});
+
+layer.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest('.item.clickable');
+  if (el) { e.preventDefault(); openLink(el); }
+});
+
+window.addEventListener('load', function () { document.body.classList.add('ready'); });
+if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+</script>
+</body>
+</html>
