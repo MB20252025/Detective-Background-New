@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>⚓ WHITBY CRYPTOGRAM</title>
+    <link rel="preload" as="image" href="whiteboard.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: url('whiteboard.png') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity .4s ease;
+        }
+        body.ready { opacity: 1; }
+
+        /* ---- Back to desk ---- */
+        .back-to-desk {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            padding: 9px 20px;
+            background: rgba(15, 42, 63, 0.85);
+            border: 1px solid rgba(182, 139, 92, 0.4);
+            border-radius: 40px;
+            color: #eace9f;
+            font-family: 'Courier New', monospace;
+            font-size: .72rem;
+            font-weight: bold;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            text-decoration: none;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9999;
+            transition: background .18s ease, border-color .18s ease;
+        }
+        .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+
+        #cryptogramContainer {
+            transform-origin: top center;
+            transition: transform 0.2s ease;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            width: 1100px;
+            height: auto;
+        }
+
+        .cryptogram-wrapper {
+            width: 100%;
+            max-width: 1100px;
+            background: transparent;
+            border: 2px solid rgba(200, 200, 200, 0.25);
+            border-radius: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
+            overflow: hidden;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+        }
+
+        .cryptogram-body {
+            padding: 24px 16px 20px;
+            background: transparent;
+        }
+
+        /* ---- CRYPTOGRAM WORDS ---- */
+        .crypto-words {
+            background: rgba(250, 250, 250, 0.25);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            border: 1px solid rgba(200, 200, 200, 0.25);
+            border-radius: 18px;
+            padding: 12px 8px;
+            margin: 0 0 16px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 16px;
+            justify-content: center;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+            overflow-x: auto;
+        }
+
+        .word {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 0px;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+        }
+
+        .crypto-cell-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            flex-shrink: 0;
+        }
+
+        .crypto-cell {
+            background: rgba(245, 245, 245, 0.50);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            border: none;
+            border-radius: 6px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: 'Courier Prime', monospace;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            user-select: none;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .crypto-cell video {
+            width: 70%;
+            height: 70%;
+            object-fit: contain;
+            border-radius: 3px;
+            display: block;
+            background: transparent;
+        }
+
+        .crypto-cell .cell-placeholder {
+            font-size: 0.8rem;
+            color: #888;
+            font-weight: 400;
+            font-family: 'Courier Prime', monospace;
+            opacity: 0.4;
+        }
+
+        .crypto-cell .letter-fallback {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .crypto-cell.revealed {
+            background: transparent;
+            backdrop-filter: none;
+            box-shadow: none;
+            cursor: default;
+        }
+
+        .crypto-cell:hover:not(.revealed) {
+            transform: scale(1.04);
+            background: rgba(232, 232, 232, 0.70);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .cell-number {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #2c3e50;
+            font-family: 'Courier Prime', monospace;
+            letter-spacing: 0.3px;
+            background: rgba(255, 255, 255, 0.30);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            padding: 0 6px;
+            border-radius: 16px;
+            border: 1px solid rgba(176, 176, 176, 0.20);
+            min-width: 20px;
+            text-align: center;
+            transition: 0.2s;
+            line-height: 1.4;
+        }
+
+        .cell-number.solved-number {
+            border-color: rgba(176, 176, 176, 0.50);
+            background: rgba(240, 240, 240, 0.40);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        @media (max-width: 680px) {
+            .crypto-cell { width: 40px; height: 40px; font-size: 1.2rem; }
+            .crypto-cell video { width: 68%; height: 68%; }
+            .crypto-cell .letter-fallback { font-size: 1.3rem; }
+            .cell-number { font-size: 0.65rem; min-width: 18px; }
+            .crypto-words { gap: 10px 14px; padding: 10px 6px; }
+        }
+
+        @media (max-width: 550px) {
+            .crypto-cell { width: 34px; height: 34px; font-size: 0.9rem; border-radius: 4px; }
+            .crypto-cell video { width: 64%; height: 64%; }
+            .crypto-cell .letter-fallback { font-size: 1.0rem; }
+            .cell-number { font-size: 0.55rem; min-width: 16px; padding: 0 4px; }
+            .crypto-words { gap: 8px 12px; padding: 8px 4px; }
+        }
+
+        @media (max-width: 420px) {
+            .crypto-cell { width: 28px; height: 28px; font-size: 0.7rem; border-radius: 3px; }
+            .crypto-cell video { width: 60%; height: 60%; }
+            .crypto-cell .letter-fallback { font-size: 0.8rem; }
+            .cell-number { font-size: 0.5rem; min-width: 14px; padding: 0 3px; }
+            .crypto-words { gap: 6px 10px; padding: 6px 3px; }
+        }
+
+        .cryptogram-controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 4px 0 0;
+            flex-wrap: wrap;
+        }
+
+        .cryptogram-hint-btn {
+            background: rgba(182, 139, 92, 0.75);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            color: #ffffff;
+            border: none;
+            border-radius: 60px;
+            padding: 8px 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            box-shadow: 0 2px 0 rgba(138, 109, 68, 0.30);
+            font-family: 'Cinzel', serif;
+        }
+
+        .cryptogram-hint-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 0px 0 rgba(138, 109, 68, 0.30);
+        }
+
+        .cryptogram-hint-btn:disabled {
+            opacity: 0.5;
+            transform: none;
+            cursor: not-allowed;
+            box-shadow: 0 2px 0 rgba(138, 109, 68, 0.30);
+        }
+
+        .celebration {
+            text-align: center;
+            padding: 10px;
+            background: rgba(58, 122, 90, 0.75);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 40px;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 12px;
+            border: 2px solid rgba(176, 176, 176, 0.30);
+            box-shadow: 0 0 20px rgba(58, 122, 90, 0.15);
+            font-family: 'Cinzel', serif;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(44, 62, 80, 0.85);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(176, 176, 176, 0.30);
+            border-radius: 50px;
+            padding: 8px 24px;
+            color: #ffffff;
+            font-weight: bold;
+            z-index: 5000;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            animation: toastFade 2.4s ease forwards;
+            pointer-events: none;
+        }
+
+        @keyframes toastFade {
+            0%   { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+            85%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+        }
+
+        .guess-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.40);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.2s;
+        }
+
+        .guess-modal.active { opacity: 1; pointer-events: auto; }
+
+        .guess-modal-content {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 2px solid rgba(176, 176, 176, 0.40);
+            border-radius: 48px;
+            padding: 28px 24px;
+            max-width: 380px;
+            width: 90%;
+            text-align: center;
+            color: #1a1a1a;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .guess-modal-content h3 {
+            font-size: 1.9rem;
+            margin-bottom: 16px;
+            color: #2c3e50;
+            font-family: 'Cinzel', serif;
+        }
+
+        .guess-modal-content p {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            color: #4a5f6b;
+        }
+
+        .guess-input {
+            background: rgba(245, 245, 245, 0.80);
+            border: 2px solid rgba(176, 176, 176, 0.50);
+            border-radius: 50px;
+            padding: 14px;
+            font-size: 2rem;
+            width: 90px;
+            text-align: center;
+            margin: 16px auto;
+            display: block;
+            color: #1a1a1a;
+            font-weight: bold;
+            font-family: 'Courier Prime', monospace;
+            outline: none;
+        }
+
+        .guess-input:focus {
+            border-color: #b68b5c;
+            box-shadow: 0 0 8px rgba(182, 139, 92, 0.20);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 18px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .modal-btn {
+            background: #b68b5c;
+            border: none;
+            border-radius: 60px;
+            padding: 8px 28px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #ffffff;
+            transition: 0.1s;
+            font-family: 'Cinzel', serif;
+        }
+
+        .modal-btn:active { transform: scale(0.96); }
+        .modal-btn.secondary { background: #a0a0a0; color: #ffffff; }
+
+        .guess-feedback {
+            background: rgba(240, 240, 240, 0.70);
+            padding: 12px;
+            border-radius: 30px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .guess-feedback.success { color: #3a7a5a; }
+        .guess-feedback.error { color: #c0392b; }
+
+        @media (max-width: 480px) {
+            .cryptogram-body { padding: 14px 10px 16px; }
+            .guess-modal-content { padding: 20px 16px; }
+            .guess-modal-content h3 { font-size: 1.4rem; }
+            .guess-input { width: 70px; padding: 10px; font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <a class="back-to-desk" href="index.html">← Desk</a>
+
+    <div id="cryptogramContainer">
+        <div class="cryptogram-wrapper">
+            <div class="cryptogram-body" id="cryptogramRoot">
+                <!-- Rendered by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Guess Modal -->
+    <div class="guess-modal" id="guessModal">
+        <div class="guess-modal-content">
+            <h3><i class="fas fa-question-circle"></i> Enter Letter</h3>
+            <p>What letter does this number represent?</p>
+            <input type="text" class="guess-input" id="guessInput" maxlength="1" autofocus />
+            <div class="modal-buttons">
+                <button class="modal-btn" id="submitGuessBtn">SUBMIT</button>
+                <button class="modal-btn secondary" id="cancelGuessBtn">CANCEL</button>
+            </div>
+            <div class="guess-feedback" id="guessFeedback"></div>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  WHITBY CRYPTOGRAM — Whiteboard Edition
+        // ================================================================
+
+        (function() {
+
+            // ============================================================
+            //  👇 ADJUST THESE VALUES TO POSITION / SIZE THE GAME 👇
+            // ============================================================
+            const TOP_OFFSET   = 155;
+            const MAX_SCALE    = 0.80;
+            const SIDE_PADDING = 20;
+            // ============================================================
+
+            // ---------- CONSTANTS ----------
+            const LETTER_TO_NUMBER = {
+                'A': 21, 'B': 24, 'C': 6,  'D': 22, 'E': 2,  'F': 15, 'G': 11,
+                'H': 17, 'I': 20, 'J': 10, 'K': 23, 'L': 8,  'M': 16, 'N': 12,
+                'O': 14, 'P': 13, 'Q': 3,  'R': 5,  'S': 7,  'T': 25, 'U': 4,
+                'V': 19, 'W': 18, 'X': 26, 'Y': 9,  'Z': 1
+            };
+
+            const TARGET_SENTENCE = "THE VAULT IS BENEATH THE STAGE OF THE NEW THEATRE ROYAL";
+            const PRE_REVEALED = { '2': 'E', '8': 'L', '6': 'C', '7': 'S', '9': 'Y', '5': 'R' };
+            const MAX_HINTS = 3;
+
+            // ---------- STATE ----------
+            let sentenceItems = [];
+            let hintsUsed = 0;
+            let isSolved = false;
+            let cellWrappers = [];
+
+            const root = document.getElementById('cryptogramRoot');
+            const modal = document.getElementById('guessModal');
+            const guessInput = document.getElementById('guessInput');
+            const guessFeedback = document.getElementById('guessFeedback');
+            const submitBtn = document.getElementById('submitGuessBtn');
+            const cancelBtn = document.getElementById('cancelGuessBtn');
+
+            // ---------- VIDEO HELPERS ----------
+            function createVideoWithFallback(letter) {
+                const container = document.createElement('div');
+                container.style.width = '100%';
+                container.style.height = '100%';
+                container.style.display = 'flex';
+                container.style.alignItems = 'center';
+                container.style.justifyContent = 'center';
+
+                const video = document.createElement('video');
+                video.muted = true;
+                video.autoplay = true;
+                video.loop = false;
+                video.playsInline = true;
+                video.controls = false;
+                video.preload = 'auto';
+                video.className = 'crypto-video';
+                video.setAttribute('muted', '');
+                video.setAttribute('playsinline', '');
+                video.setAttribute('autoplay', '');
+                video.style.width = '70%';
+                video.style.height = '70%';
+                video.style.objectFit = 'contain';
+                video.style.borderRadius = '3px';
+
+                const src = document.createElement('source');
+                src.src = `${letter}.mp4`;
+                src.type = 'video/mp4';
+                video.appendChild(src);
+
+                video.onerror = function() {
+                    this.remove();
+                    const fallback = document.createElement('span');
+                    fallback.className = 'letter-fallback';
+                    fallback.textContent = letter;
+                    container.appendChild(fallback);
+                };
+
+                video.onstalled = function() {
+                    setTimeout(() => {
+                        if (video.parentNode && !video.parentNode.querySelector('.letter-fallback')) {
+                            video.remove();
+                            const fallback = document.createElement('span');
+                            fallback.className = 'letter-fallback';
+                            fallback.textContent = letter;
+                            container.appendChild(fallback);
+                        }
+                    }, 3000);
+                };
+
+                container.appendChild(video);
+                video.play().catch(() => {
+                    video.remove();
+                    const fallback = document.createElement('span');
+                    fallback.className = 'letter-fallback';
+                    fallback.textContent = letter;
+                    container.appendChild(fallback);
+                });
+
+                return container;
+            }
+
+            function getVideoContainer(letter) {
+                return createVideoWithFallback(letter);
+            }
+
+            // ---------- INIT ----------
+            function init() {
+                sentenceItems = [];
+                for (let ch of TARGET_SENTENCE) {
+                    if (ch === ' ') continue;
+                    const num = LETTER_TO_NUMBER[ch];
+                    sentenceItems.push({ letter: ch, number: num, revealed: false });
+                }
+
+                for (let item of sentenceItems) {
+                    const numStr = String(item.number);
+                    if (PRE_REVEALED[numStr] === item.letter) {
+                        item.revealed = true;
+                    }
+                }
+
+                buildFullDOM();
+                applyScale();
+            }
+
+            // ---------- DOM BUILD ----------
+            function buildFullDOM() {
+                root.innerHTML = '';
+
+                const wordsContainer = document.createElement('div');
+                wordsContainer.className = 'crypto-words';
+                wordsContainer.id = 'cryptoWordsContainer';
+
+                const words = TARGET_SENTENCE.split(' ');
+                let globalIdx = 0;
+                cellWrappers = [];
+
+                for (let w of words) {
+                    const wordDiv = document.createElement('div');
+                    wordDiv.className = 'word';
+
+                    for (let i = 0; i < w.length; i++) {
+                        const item = sentenceItems[globalIdx];
+                        const isRevealed = item.revealed;
+                        const num = item.number;
+                        const letter = item.letter;
+
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'crypto-cell-wrapper';
+
+                        const cell = document.createElement('div');
+                        cell.className = `crypto-cell ${isRevealed ? 'revealed' : ''}`;
+                        cell.dataset.pos = globalIdx;
+                        cell.dataset.letter = letter;
+                        cell.dataset.number = num;
+
+                        if (isRevealed) {
+                            const container = getVideoContainer(letter);
+                            cell.appendChild(container);
+                        } else {
+                            const placeholder = document.createElement('span');
+                            placeholder.className = 'cell-placeholder';
+                            placeholder.textContent = '·';
+                            cell.appendChild(placeholder);
+                        }
+
+                        const numUnder = document.createElement('div');
+                        numUnder.className = `cell-number ${isRevealed ? 'solved-number' : ''}`;
+                        numUnder.textContent = num;
+
+                        wrapper.appendChild(cell);
+                        wrapper.appendChild(numUnder);
+                        wordDiv.appendChild(wrapper);
+
+                        cellWrappers[globalIdx] = { cell, numberEl: numUnder };
+                        globalIdx++;
+                    }
+                    wordsContainer.appendChild(wordDiv);
+                }
+
+                root.appendChild(wordsContainer);
+
+                const controlsDiv = document.createElement('div');
+                controlsDiv.className = 'cryptogram-controls';
+                controlsDiv.id = 'controlsDiv';
+                const hintBtn = document.createElement('button');
+                hintBtn.className = 'cryptogram-hint-btn';
+                hintBtn.id = 'cryptogramHintBtn';
+                hintBtn.innerHTML = `<i class="fas fa-lightbulb"></i> REVEAL HINT (${MAX_HINTS} left)`;
+                controlsDiv.appendChild(hintBtn);
+                root.appendChild(controlsDiv);
+
+                attachClickEvents();
+                attachHintEvent();
+                updateHintButton();
+
+                if (countRevealed() === getTotal()) {
+                    isSolved = true;
+                    showCelebration();
+                }
+            }
+
+            // ---------- EVENTS ----------
+            function attachClickEvents() {
+                document.querySelectorAll('#cryptogramRoot .crypto-cell:not(.revealed)').forEach(cell => {
+                    cell.removeEventListener('click', cellClickHandler);
+                    cell.addEventListener('click', cellClickHandler);
+                });
+            }
+
+            function cellClickHandler(e) {
+                const pos = parseInt(this.dataset.pos);
+                const expectedLetter = this.dataset.letter;
+                openGuessModal(pos, expectedLetter);
+            }
+
+            function attachHintEvent() {
+                const hintBtn = document.getElementById('cryptogramHintBtn');
+                if (hintBtn) {
+                    hintBtn.removeEventListener('click', hintClickHandler);
+                    hintBtn.addEventListener('click', hintClickHandler);
+                }
+            }
+
+            function hintClickHandler() {
+                if (hintsUsed >= MAX_HINTS || isSolved) return;
+                for (let item of sentenceItems) {
+                    if (!item.revealed) {
+                        revealLetter(item.letter);
+                        hintsUsed++;
+                        showToast(`🔎 Hint: letter '${item.letter}' revealed.`);
+                        updateHintButton();
+                        break;
+                    }
+                }
+            }
+
+            // ---------- UPDATE FUNCTIONS ----------
+            function countRevealed() { return sentenceItems.filter(item => item.revealed).length; }
+            function getTotal() { return sentenceItems.length; }
+
+            function revealLetter(letter) {
+                let changed = false;
+                for (let i = 0; i < sentenceItems.length; i++) {
+                    const item = sentenceItems[i];
+                    if (item.letter === letter && !item.revealed) {
+                        item.revealed = true;
+                        changed = true;
+                        updateCell(i);
+                    }
+                }
+                if (changed) {
+                    if (countRevealed() === getTotal() && !isSolved) {
+                        isSolved = true;
+                        showToast('🎉 Cryptogram solved! The truth is revealed.');
+                        showCelebration();
+                        updateHintButton();
+                        attachClickEvents();
+                    }
+                }
+            }
+
+            function updateCell(index) {
+                const item = sentenceItems[index];
+                const refs = cellWrappers[index];
+                if (!refs) return;
+                const { cell, numberEl } = refs;
+
+                cell.innerHTML = '';
+                cell.classList.add('revealed');
+
+                const container = getVideoContainer(item.letter);
+                cell.appendChild(container);
+
+                numberEl.classList.add('solved-number');
+            }
+
+            function updateHintButton() {
+                const hintBtn = document.getElementById('cryptogramHintBtn');
+                if (!hintBtn) return;
+                const remaining = MAX_HINTS - hintsUsed;
+                const disabled = hintsUsed >= MAX_HINTS || isSolved;
+                hintBtn.disabled = disabled;
+                hintBtn.innerHTML = `<i class="fas fa-lightbulb"></i> REVEAL HINT (${remaining} left)`;
+            }
+
+            function showCelebration() {
+                const existing = document.querySelector('.celebration');
+                if (existing) existing.remove();
+                const celeb = document.createElement('div');
+                celeb.className = 'celebration';
+                celeb.innerHTML = '🔓 MESSAGE DECRYPTED — The conspiracy is unveiled.';
+                root.appendChild(celeb);
+            }
+
+            // ---------- SCALING + POSITIONING ----------
+            function applyScale() {
+                const container = document.getElementById('cryptogramContainer');
+                const wrapper = document.querySelector('.cryptogram-wrapper');
+                if (!container || !wrapper) return;
+
+                const wrapperWidth  = wrapper.scrollWidth  || 1100;
+                const wrapperHeight = wrapper.scrollHeight || 700;
+
+                const availWidth  = window.innerWidth  - SIDE_PADDING * 2;
+                const availHeight = window.innerHeight - TOP_OFFSET - SIDE_PADDING;
+
+                let scaleX = availWidth  / wrapperWidth;
+                let scaleY = availHeight / wrapperHeight;
+                let scale  = Math.min(scaleX, scaleY, MAX_SCALE);
+
+                container.style.transform = `translateY(${TOP_OFFSET}px) scale(${scale})`;
+                container.style.margin = '0 auto';
+                container.style.width  = `${wrapperWidth}px`;
+                container.style.height = `${wrapperHeight}px`;
+                container.style.transformOrigin = 'top center';
+            }
+
+            // ---------- TOAST ----------
+            function showToast(msg) {
+                const el = document.createElement('div');
+                el.className = 'toast';
+                el.textContent = msg;
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 2400);
+            }
+
+            // ---------- GUESS MODAL ----------
+            let currentGuessPos = null;
+            let currentGuessLetter = null;
+
+            function openGuessModal(pos, correctLetter) {
+                if (isSolved) return;
+                currentGuessPos = pos;
+                currentGuessLetter = correctLetter;
+                guessFeedback.textContent = '';
+                guessFeedback.className = 'guess-feedback';
+                guessInput.value = '';
+                modal.classList.add('active');
+                setTimeout(() => guessInput.focus(), 100);
+            }
+
+            function closeGuessModal() {
+                modal.classList.remove('active');
+                currentGuessPos = null;
+                currentGuessLetter = null;
+            }
+
+            function submitGuess() {
+                let guess = guessInput.value.trim().toUpperCase();
+                const feedback = guessFeedback;
+
+                if (!guess || !guess.match(/[A-Z]/)) {
+                    feedback.textContent = '❌ Enter a single letter A–Z';
+                    feedback.className = 'guess-feedback error';
+                    guessInput.value = '';
+                    guessInput.focus();
+                    return;
+                }
+                if (guess.length > 1) guess = guess[0];
+
+                if (currentGuessPos === null) { closeGuessModal(); return; }
+
+                const correct = (guess === currentGuessLetter);
+
+                if (correct) {
+                    feedback.textContent = '✅ Correct! Letter revealed.';
+                    feedback.className = 'guess-feedback success';
+                    revealLetter(currentGuessLetter);
+                    setTimeout(() => attachClickEvents(), 100);
+                    setTimeout(() => closeGuessModal(), 600);
+                } else {
+                    feedback.textContent = `❌ Wrong. '${guess}' is not correct. Try again.`;
+                    feedback.className = 'guess-feedback error';
+                    guessInput.value = '';
+                    guessInput.focus();
+                }
+            }
+
+            // ---------- EVENT BINDING ----------
+            submitBtn.addEventListener('click', submitGuess);
+            cancelBtn.addEventListener('click', closeGuessModal);
+
+            guessInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') submitGuess();
+            });
+
+            let autoSubmitLock = false;
+            guessInput.addEventListener('input', function() {
+                if (autoSubmitLock) return;
+                const val = this.value.trim().toUpperCase();
+                if (val.length === 1 && val.match(/[A-Z]/)) {
+                    autoSubmitLock = true;
+                    submitGuess();
+                    setTimeout(() => { autoSubmitLock = false; }, 400);
+                }
+            });
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeGuessModal();
+            });
+
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(applyScale, 100);
+            });
+
+            window.addEventListener('load', function() {
+                setTimeout(applyScale, 300);
+            });
+
+            init();
+
+        })();
+
+        /* ---- fade in when everything is ready ---- */
+        window.addEventListener('load', function () { document.body.classList.add('ready'); });
+        if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+    </script>
+
+</body>
+</html>
