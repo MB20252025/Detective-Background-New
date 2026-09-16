@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>The Coffee Puzzle · Breakroom</title>
+<link rel="preload" as="image" href="coffeeback.jpg">
+<style>
+  * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+  body {
+    background-image: url('coffeeback.jpg');
+    background-size: cover; background-position: center;
+    background-repeat: no-repeat; background-attachment: fixed;
+    min-height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 16px; margin: 0;
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+  body.ready { opacity: 1; }
+
+  .back-to-desk {
+    position: fixed; top: 14px; left: 14px;
+    padding: 9px 20px;
+    background: rgba(15,42,63,0.85);
+    border: 1px solid rgba(182,139,92,0.4);
+    border-radius: 40px;
+    color: #eace9f;
+    font-family: 'Courier New', monospace;
+    font-size: .72rem; font-weight: bold;
+    letter-spacing: .22em; text-transform: uppercase;
+    text-decoration: none; backdrop-filter: blur(6px);
+    z-index: 30;
+  }
+  .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+
+  .card {
+    background: rgba(30, 25, 20, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-radius: 40px 40px 30px 30px;
+    padding: 20px 22px 26px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(180, 141, 100, 0.4);
+    display: flex; flex-direction: column; align-items: center;
+    max-width: 1000px; width: 100%;
+  }
+  h1 {
+    font-weight: 400; color: #fad7a8;
+    text-shadow: 0 2px 8px #2d1f13;
+    font-size: 1.8rem; letter-spacing: 1px; margin-bottom: 0;
+  }
+  .sub {
+    color: #dbbc93; background: #1f1a15b8;
+    padding: 4px 22px; border-radius: 40px;
+    border: 1px solid #b48d64;
+    font-size: 1.1rem; margin-bottom: 4px;
+  }
+  .info {
+    font-size: 0.85rem; background: #1f2a2f;
+    padding: 4px 18px; border-radius: 30px;
+    border: 1px solid #b59268; margin-bottom: 12px;
+    color: #dbbc93; text-align: center;
+  }
+  .container-row {
+    display: flex; justify-content: center; align-items: flex-end;
+    gap: 16px; width: 100%; flex-wrap: nowrap; margin-bottom: 8px;
+  }
+  .container-item {
+    display: flex; flex-direction: column; align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s;
+    flex: 1 1 0; min-width: 0; max-width: 33.33%;
+    position: relative;
+  }
+  .container-item:hover { transform: scale(1.02); }
+  .container-item.selected {
+    transform: translateY(-6px);
+    filter: drop-shadow(0 0 16px #fdb657);
+  }
+  .container-item canvas {
+    width: 100%; height: auto; max-height: 48vh;
+    display: block; touch-action: none;
+    border: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .container-label {
+    margin-top: 8px;
+    font-size: 0.95rem;
+    background: #2b231d;
+    padding: 3px 16px; border-radius: 30px;
+    border: 1px solid #b6976f;
+    color: #fadbbc;
+    box-shadow: inset 0 1px 3px #3d2c1b;
+    white-space: nowrap;
+  }
+  .controls {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 12px; margin: 6px 0 2px;
+  }
+  button {
+    padding: 8px 28px; font-size: 1rem; font-weight: 600;
+    background: #4f3a28; border: 2px solid #cbab82;
+    color: #f7e9d3; border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 3px 0 #2b1d12;
+    letter-spacing: 0.5px;
+    flex: 1 1 auto; min-width: 110px;
+  }
+  button:hover:not(:disabled) {
+    background: #73583e; border-color: #f5cf9e;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 #2b1d12;
+  }
+  button:active:not(:disabled) {
+    transform: translateY(2px); box-shadow: 0 1px 0 #2b1d12;
+  }
+  button:disabled {
+    opacity: 0.5; cursor: not-allowed;
+    transform: none !important; box-shadow: 0 3px 0 #2b1d12;
+  }
+  .status {
+    font-size: 1rem;
+    background: #1f1a15b8;
+    padding: 4px 24px; border-radius: 30px;
+    border: 1px solid #b48d64;
+    color: #f0dcc0; margin-top: 4px; text-align: center;
+  }
+  .note {
+    font-style: italic; color: #cfa97c;
+    font-size: 0.7rem; margin-top: 4px;
+    opacity: 0.7; text-align: center;
+  }
+  @media (max-width: 680px) {
+    .card { padding: 14px 12px 18px; }
+    .container-row { gap: 10px; }
+    .container-item canvas { max-height: 34vh; }
+    .container-label { font-size: 0.75rem; padding: 2px 10px; margin-top: 4px; }
+    h1 { font-size: 1.4rem; }
+    .sub { font-size: 0.9rem; padding: 2px 14px; }
+    .info { font-size: 0.7rem; padding: 2px 12px; margin-bottom: 6px; }
+    button { min-width: 70px; padding: 5px 14px; font-size: 0.75rem; }
+    .status { font-size: 0.8rem; padding: 2px 14px; }
+  }
+  @media (max-width: 460px) {
+    .container-row { gap: 6px; }
+    .container-item canvas { max-height: 28vh; }
+    .container-label { font-size: 0.6rem; padding: 1px 8px; }
+    h1 { font-size: 1.1rem; }
+    .sub { font-size: 0.75rem; padding: 2px 10px; }
+    .info { font-size: 0.6rem; padding: 2px 8px; }
+  }
+</style>
+</head>
+<body>
+
+  <a class="back-to-desk" href="index.html">← Desk</a>
+
+  <div class="card">
+    <h1>☕ The Coffee Puzzle</h1>
+    <div class="sub">8L in the 10L Jug</div>
+    <div class="info">Tap a container, then tap another to pour</div>
+
+    <div class="container-row" id="containerRow">
+      <div class="container-item" data-index="0">
+        <canvas id="canvas6" width="200" height="360"></canvas>
+        <div class="container-label">6L Cup</div>
+      </div>
+      <div class="container-item" data-index="1">
+        <canvas id="canvas5" width="200" height="290"></canvas>
+        <div class="container-label">5L Cup</div>
+      </div>
+      <div class="container-item" data-index="2">
+        <canvas id="canvas10" width="240" height="400"></canvas>
+        <div class="container-label">10L Jug</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="resetBtn">⟲ Fresh Coffee</button>
+      <button id="autoSolveBtn">⚡ Auto Solve</button>
+    </div>
+
+    <div class="status" id="statusDisplay">Levels: 6L / 5L / 0L</div>
+    <div class="note" id="debugNote">— Breakroom Edition —</div>
+  </div>
+
+  <script>
+  (function() {
+    const IMAGES = ['6l.png', '5l.png', 'jug.png'];
+    const CAPACITIES = [6, 5, 10];
+    const INITIAL_VOLUMES = [6, 5, 0];
+    const TARGET_INDEX = 2;
+    const TARGET_VOLUME = 8;
+    const MEASURE_CONFIGS = [
+      { maxLevel: 0.85, fontSize: 0.028, tickHalf: 20, textOffset: -16, tickWidth: 3 },
+      { maxLevel: 0.85, fontSize: 0.028, tickHalf: 20, textOffset: -16, tickWidth: 3 },
+      { maxLevel: 0.75, fontSize: 0.024, tickHalf: 24, textOffset: -18, tickWidth: 3 }
+    ];
+    const ANIMATION_DURATION = 600;
+
+    const canvases = [
+      document.getElementById('canvas6'),
+      document.getElementById('canvas5'),
+      document.getElementById('canvas10')
+    ];
+    const containerItems = document.querySelectorAll('.container-item');
+    const statusEl = document.getElementById('statusDisplay');
+    const debugEl = document.getElementById('debugNote');
+    const resetBtn = document.getElementById('resetBtn');
+    const autoSolveBtn = document.getElementById('autoSolveBtn');
+
+    let volumes = [...INITIAL_VOLUMES];
+    let selectedIndex = null;
+    let isAnimating = false;
+    let animationQueue = [];
+    let winTriggered = false;
+    let autoSolving = false;
+
+    const containers = [];
+
+    function computeInteriorMask(imageData, w, h) {
+      const data = imageData.data;
+      const mask = new Uint8Array(w * h);
+      let seedX = Math.floor(w / 2);
+      let seedY = Math.floor(h / 2);
+      let found = false;
+      const searchRadius = Math.min(w, h) * 0.3;
+      for (let r = 0; r < searchRadius && !found; r += 2) {
+        for (let angle = 0; angle < Math.PI * 2 && !found; angle += 0.2) {
+          const px = Math.floor(w / 2 + r * Math.cos(angle));
+          const py = Math.floor(h / 2 + r * Math.sin(angle));
+          if (px < 0 || px >= w || py < 0 || py >= h) continue;
+          const idx = (py * w + px) * 4;
+          if (data[idx + 3] < 128) { seedX = px; seedY = py; found = true; }
+        }
+      }
+      if (!found) { for (let i = 0; i < mask.length; i++) mask[i] = 1; return mask; }
+      const queue = [];
+      const visited = new Uint8Array(w * h);
+      const startIdx = seedY * w + seedX;
+      queue.push(seedX, seedY);
+      visited[startIdx] = 1;
+      while (queue.length > 0) {
+        const cx = queue.shift();
+        const cy = queue.shift();
+        const idx = cy * w + cx;
+        mask[idx] = 1;
+        const neighbors = [[cx-1,cy],[cx+1,cy],[cx,cy-1],[cx,cy+1]];
+        for (let n of neighbors) {
+          const nx = n[0]; const ny = n[1];
+          if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+          const nIdx = ny * w + nx;
+          if (visited[nIdx]) continue;
+          const alpha = data[(nIdx) * 4 + 3];
+          if (alpha < 128) { visited[nIdx] = 1; queue.push(nx, ny); }
+        }
+      }
+      const interiorCount = mask.reduce((a, b) => a + b, 0);
+      if (interiorCount === 0) { for (let i = 0; i < mask.length; i++) mask[i] = 1; }
+      return mask;
+    }
+
+    function loadContainer(index) {
+      const canvas = canvases[index];
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      const container = { canvas, ctx, img, mask: null, maskReady: false, width: canvas.width, height: canvas.height, loaded: false };
+      containers[index] = container;
+      img.onload = function() {
+        canvas.width = img.width; canvas.height = img.height;
+        container.width = img.width; container.height = img.height;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        container.mask = computeInteriorMask(imageData, canvas.width, canvas.height);
+        container.maskReady = true; container.loaded = true; drawAll();
+      };
+      img.onerror = function() {
+        debugEl.textContent = '❌ Failed to load ' + IMAGES[index] + '. Using fallback.';
+        canvas.width = 200; canvas.height = 300;
+        container.width = 200; container.height = 300;
+        ctx.fillStyle = '#b48b62'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#5a3f2a'; ctx.lineWidth = 3;
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        const mask = new Uint8Array(canvas.width * canvas.height);
+        for (let i = 0; i < mask.length; i++) mask[i] = 1;
+        container.mask = mask; container.maskReady = true; container.loaded = true; drawAll();
+      };
+      img.src = IMAGES[index];
+    }
+
+    function drawContainer(index) {
+      const container = containers[index];
+      if (!container || !container.loaded || !container.maskReady) return;
+      const { canvas, ctx, img, mask, width: w, height: h } = container;
+      const maxLiters = CAPACITIES[index];
+      const config = MEASURE_CONFIGS[index];
+      const maxLevel = config.maxLevel;
+      const frac = volumes[index] / maxLiters;
+      const effectiveFrac = Math.min(frac, 1);
+      const liquidHeight = effectiveFrac * maxLevel * h;
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      if (liquidHeight > 0) {
+        const grad = ctx.createLinearGradient(0, h - liquidHeight, 0, h);
+        grad.addColorStop(0, '#8b5d37'); grad.addColorStop(0.4, '#6b3e1f');
+        grad.addColorStop(0.8, '#4d2c15'); grad.addColorStop(1, '#2f1a0c');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, h - liquidHeight, w, liquidHeight);
+        const highlightY = h - liquidHeight;
+        ctx.beginPath();
+        ctx.ellipse(w * 0.3, highlightY + 2, w * 0.25, 4, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 220, 170, 0.25)'; ctx.fill();
+        const imageData = ctx.getImageData(0, 0, w, h);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+          const px = (i / 4) % w;
+          const py = Math.floor((i / 4) / w);
+          const maskIdx = py * w + px;
+          if (mask[maskIdx] === 0) data[i + 3] = 0;
+        }
+        ctx.putImageData(imageData, 0, 0);
+      }
+      ctx.drawImage(img, 0, 0, w, h);
+      const glassGrad = ctx.createLinearGradient(0, 0, w * 0.3, 0);
+      glassGrad.addColorStop(0, 'rgba(255,255,255,0.06)');
+      glassGrad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = glassGrad; ctx.fillRect(0, 0, w, h);
+      drawMeasurements(index);
+      updateStatus();
+    }
+
+    function drawMeasurements(index) {
+      const container = containers[index];
+      if (!container || !container.loaded) return;
+      const { canvas, ctx, width: w, height: h } = container;
+      const maxLiters = CAPACITIES[index];
+      const config = MEASURE_CONFIGS[index];
+      const xPos = w * 0.5;
+      ctx.save();
+      ctx.font = `bold ${Math.max(16, w * config.fontSize)}px Arial`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 6;
+      for (let L = 1; L <= maxLiters; L++) {
+        const fraction = (L / maxLiters) * config.maxLevel;
+        const y = h - fraction * h;
+        ctx.beginPath();
+        ctx.moveTo(xPos - config.tickHalf, y);
+        ctx.lineTo(xPos + config.tickHalf, y);
+        ctx.strokeStyle = 'rgba(255, 240, 220, 0.7)';
+        ctx.lineWidth = config.tickWidth; ctx.stroke();
+        if (!(index === TARGET_INDEX && L === TARGET_VOLUME)) {
+          ctx.fillStyle = 'rgba(255, 240, 220, 0.9)';
+          ctx.fillText(L + 'L', xPos, y + config.textOffset);
+        }
+      }
+      if (index === TARGET_INDEX) {
+        const targetFrac = (TARGET_VOLUME / maxLiters) * config.maxLevel;
+        const targetY = h - targetFrac * h;
+        ctx.shadowColor = 'rgba(46, 204, 113, 0.6)'; ctx.shadowBlur = 16;
+        ctx.beginPath();
+        ctx.moveTo(xPos - config.tickHalf - 8, targetY);
+        ctx.lineTo(xPos + config.tickHalf + 8, targetY);
+        ctx.strokeStyle = '#2ecc71'; ctx.lineWidth = 5; ctx.stroke();
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = '#2ecc71';
+        ctx.font = `bold ${Math.max(20, w * config.fontSize * 1.4)}px Arial`;
+        ctx.fillText('🎯 8L', xPos, targetY - 24);
+        ctx.shadowBlur = 0;
+      }
+      ctx.restore();
+    }
+
+    function updateStatus() {
+      const vals = volumes.map((v, i) => v.toFixed(1) + 'L');
+      statusEl.textContent = `Levels: ${vals[0]} / ${vals[1]} / ${vals[2]}`;
+    }
+
+    function drawAll() {
+      for (let i = 0; i < containers.length; i++) {
+        if (containers[i] && containers[i].loaded) drawContainer(i);
+      }
+      containerItems.forEach((el, idx) => {
+        el.classList.toggle('selected', idx === selectedIndex);
+      });
+    }
+
+    function checkWin() {
+      if (winTriggered) return;
+      if (Math.abs(volumes[TARGET_INDEX] - TARGET_VOLUME) < 0.001) {
+        winTriggered = true;
+        setTimeout(() => { alert("☕ 8L! Target reached, officer."); winTriggered = false; }, 100);
+      }
+    }
+
+    function pour(fromIdx, toIdx) {
+      if (fromIdx === toIdx) return;
+      const fromVol = volumes[fromIdx];
+      const toVol = volumes[toIdx];
+      const space = CAPACITIES[toIdx] - toVol;
+      if (space <= 0) return;
+      const amount = Math.min(space, fromVol);
+      if (amount === 0) return;
+      if (isAnimating) { animationQueue.push({ fromIdx, toIdx }); return; }
+      isAnimating = true;
+      const startFrom = fromVol; const startTo = toVol;
+      const startTime = performance.now();
+      function step(time) {
+        const elapsed = time - startTime;
+        const progress = Math.min(elapsed / ANIMATION_DURATION, 1);
+        const eased = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        const currentAmount = amount * eased;
+        volumes[fromIdx] = startFrom - currentAmount;
+        volumes[toIdx] = startTo + currentAmount;
+        drawAll();
+        if (progress < 1) requestAnimationFrame(step);
+        else {
+          volumes[fromIdx] = startFrom - amount;
+          volumes[toIdx] = startTo + amount;
+          isAnimating = false; drawAll(); checkWin();
+          if (animationQueue.length > 0) {
+            const next = animationQueue.shift(); pour(next.fromIdx, next.toIdx);
+          } else if (autoSolving) {
+            autoSolving = false; autoSolveBtn.disabled = false; resetBtn.disabled = false;
+            debugEl.textContent = '✅ Auto-solve complete!';
+          }
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    function solvePuzzle() {
+      const start = [6, 5, 0]; const target = 8; const cap = CAPACITIES;
+      const visited = new Set(); const queue = []; const parent = new Map();
+      const startKey = start.join(','); visited.add(startKey); queue.push(start); parent.set(startKey, null);
+      while (queue.length > 0) {
+        const state = queue.shift();
+        if (Math.abs(state[2] - target) < 0.001) {
+          const path = []; let curKey = state.join(',');
+          while (parent.get(curKey) !== null) {
+            const p = parent.get(curKey); path.unshift(p.action); curKey = p.state.join(',');
+          }
+          return path;
+        }
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (i === j) continue;
+            const fromVol = state[i]; const toVol = state[j];
+            const space = cap[j] - toVol;
+            if (space <= 0 || fromVol === 0) continue;
+            const amount = Math.min(space, fromVol);
+            if (amount === 0) continue;
+            const newState = [...state];
+            newState[i] = fromVol - amount; newState[j] = toVol + amount;
+            const key = newState.join(',');
+            if (!visited.has(key)) { visited.add(key); queue.push(newState); parent.set(key, { state, action: [i, j] }); }
+          }
+        }
+      }
+      return null;
+    }
+
+    function autoSolve() {
+      if (isAnimating || autoSolving) return;
+      resetGame(true);
+      const path = solvePuzzle();
+      if (!path) { alert('No solution found!'); return; }
+      autoSolving = true;
+      autoSolveBtn.disabled = true;
+      resetBtn.disabled = true;
+      animationQueue = [];
+      debugEl.textContent = '⏳ Auto-solving...';
+      for (let action of path) animationQueue.push({ fromIdx: action[0], toIdx: action[1] });
+      const first = animationQueue.shift();
+      if (first) pour(first.fromIdx, first.toIdx);
+      else { autoSolving = false; autoSolveBtn.disabled = false; resetBtn.disabled = false; debugEl.textContent = '— Breakroom Edition —'; }
+    }
+
+    function resetGame(silent = false) {
+      if (isAnimating) return;
+      if (!silent && autoSolving) return;
+      volumes = [...INITIAL_VOLUMES];
+      selectedIndex = null;
+      animationQueue = [];
+      winTriggered = false;
+      if (autoSolving) { autoSolving = false; autoSolveBtn.disabled = false; resetBtn.disabled = false; }
+      drawAll();
+      if (!silent) debugEl.textContent = '— Breakroom Edition —';
+    }
+
+    function onContainerClick(index) {
+      if (isAnimating || autoSolving) return;
+      if (selectedIndex === null) { selectedIndex = index; drawAll(); }
+      else {
+        const from = selectedIndex; const to = index;
+        pour(from, to); selectedIndex = null; drawAll();
+      }
+    }
+
+    containerItems.forEach((item, idx) => {
+      item.addEventListener('click', () => onContainerClick(idx));
+    });
+    resetBtn.addEventListener('click', () => resetGame(false));
+    autoSolveBtn.addEventListener('click', autoSolve);
+    for (let i = 0; i < 3; i++) loadContainer(i);
+    drawAll();
+    window.addEventListener('resize', () => { drawAll(); });
+  })();
+
+  window.addEventListener('load', function () { document.body.classList.add('ready'); });
+  if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+  </script>
+</body>
+</html>
