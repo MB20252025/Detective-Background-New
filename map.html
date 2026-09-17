@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Map — Whitby Case</title>
+<link rel="preload" as="image" href="map6.jpg">
+
+<style>
+  /* ============================================================
+     👇 MAP POSITION & SCALE — EDIT THESE THREE NUMBERS 👇
+     ============================================================
+     --map-x      0 = far left,  50 = centre, 100 = far right
+     --map-y      0 = top,       50 = centre, 100 = bottom
+     --map-scale  0.5 = small,   1.0 = normal, 2.0 = big
+     ============================================================ */
+  :root {
+    --map-x: 50;
+    --map-y: 50;
+    --map-scale: 1.0;
+  }
+  /* ============================================================
+     END OF MAP POSITION & SCALE
+     ============================================================ */
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #0a0705;
+    font-family: 'Courier New', monospace;
+  }
+
+  body {
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+  body.ready { opacity: 1; }
+
+  /* ── The map image ── */
+  .map-image {
+    position: fixed;
+    left: calc(var(--map-x) * 1%);
+    top:  calc(var(--map-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--map-scale));
+    transform-origin: center center;
+    max-width: 96vw;
+    max-height: 96vh;
+    width: auto;
+    height: auto;
+    display: block;
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,.85),
+                0 0 0 1px rgba(182,139,92,.25);
+    border-radius: 4px;
+  }
+
+  /* ── Back to Desk (top-left) ── */
+  .back-to-desk {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    padding: 9px 20px;
+    background: rgba(15, 42, 63, 0.85);
+    border: 1px solid rgba(182, 139, 92, 0.4);
+    border-radius: 40px;
+    color: #eace9f;
+    font-family: 'Courier New', monospace;
+    font-size: .72rem;
+    font-weight: bold;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9999;
+    transition: background .18s ease, border-color .18s ease;
+  }
+  .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+</style>
+</head>
+<body>
+
+  <a class="back-to-desk" href="index.html">← Desk</a>
+
+  <img src="map6.jpg" class="map-image" alt="Case map" draggable="false" />
+
+  <script>
+    window.addEventListener('load', function () { document.body.classList.add('ready'); });
+    if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+  </script>
+</body>
+</html>
