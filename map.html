@@ -4,11 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Map — Whitby Case</title>
-<link rel="preload" as="image" href="map6.jpg">
 
 <style>
   /* ============================================================
-     👇 MAP POSITION & SCALE — EDIT THESE THREE NUMBERS 👇
+     👇 BASE MAP (map6.jpg) POSITION & SCALE 👇
      ============================================================
      --map-x      0 = far left,  50 = centre, 100 = far right
      --map-y      0 = top,       50 = centre, 100 = bottom
@@ -20,7 +19,7 @@
     --map-scale: 1.0;
   }
   /* ============================================================
-     END OF MAP POSITION & SCALE
+     END OF BASE MAP POSITION & SCALE
      ============================================================ */
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -31,35 +30,129 @@
     background: #0a0705;
     font-family: 'Courier New', monospace;
   }
-
   body {
     opacity: 0;
     transition: opacity .4s ease;
   }
   body.ready { opacity: 1; }
 
-  /* ── The map image ── */
-  .map-image {
+  /* ── Stage: container that holds the map + all overlays ──
+     Because the overlays' x/y percentages are relative to this box,
+     they move and scale together with the base map. */
+  .stage {
     position: fixed;
     left: calc(var(--map-x) * 1%);
     top:  calc(var(--map-y) * 1%);
     transform: translate(-50%, -50%) scale(var(--map-scale));
     transform-origin: center center;
+    width: 96vw;
+    max-width: 1400px;
+    aspect-ratio: 1600 / 1000; /* will be corrected by JS once map6.jpg loads */
+    z-index: 1;
+  }
+
+  /* The base map fills the stage */
+  .map-base {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+    border-radius: 4px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.85),
+                0 0 0 1px rgba(182,139,92,.25);
+  }
+
+  /* ── Clickable overlays on top of the map ── */
+  .map-item {
+    position: absolute;
+    left: calc(var(--x) * 1%);
+    top:  calc(var(--y) * 1%);
+    width: calc(var(--w) * 1%);
+    height: auto;
+    transform: translate(-50%, -50%)
+               rotate(calc(var(--r) * 1deg))
+               scale(var(--s));
+    transform-origin: 50% 50%;
+    z-index: var(--z);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: auto;
+    transition: filter .22s ease, transform .22s ease;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,.5));
+  }
+  .map-item:hover {
+    filter: brightness(1.15) drop-shadow(0 0 14px rgba(255, 224, 160, .85));
+    transform: translate(-50%, -50%)
+               rotate(calc(var(--r) * 1deg))
+               scale(calc(var(--s) * 1.05));
+  }
+  .map-item:active {
+    filter: brightness(1.25) drop-shadow(0 0 22px rgba(255, 224, 160, 1));
+  }
+
+  /* ── Big-image detail view ── */
+  .detail-view {
+    position: fixed;
+    inset: 0;
+    background: #0a0705;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s ease;
+  }
+  .detail-view.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .detail-view img {
     max-width: 96vw;
     max-height: 96vh;
     width: auto;
     height: auto;
     display: block;
-    z-index: 1;
-    pointer-events: none;
     user-select: none;
     -webkit-user-drag: none;
+    border-radius: 4px;
     box-shadow: 0 20px 60px rgba(0,0,0,.85),
                 0 0 0 1px rgba(182,139,92,.25);
-    border-radius: 4px;
   }
 
-  /* ── Back to Desk (top-left) ── */
+  /* ── Back-to-detail button (top-left, on top of everything) ── */
+  .back-to-detail {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    padding: 9px 20px;
+    background: rgba(60, 40, 15, 0.88);
+    border: 1px solid #8a6e42;
+    border-radius: 40px;
+    color: #eace9f;
+    font-family: 'Courier New', monospace;
+    font-size: .72rem;
+    font-weight: bold;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 600;
+    cursor: pointer;
+    display: none;
+    transition: background .18s ease, border-color .18s ease;
+  }
+  .back-to-detail:hover { background: rgba(90, 60, 20, 0.95); border-color: #d8ab6a; }
+  body.detail-active .back-to-detail { display: block; }
+
+  /* ── Back-to-desk button (top-left, only visible on map view) ── */
   .back-to-desk {
     position: fixed;
     top: 14px;
@@ -77,21 +170,119 @@
     text-decoration: none;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    z-index: 9999;
+    z-index: 600;
     transition: background .18s ease, border-color .18s ease;
   }
   .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+  body.detail-active .back-to-desk { display: none; }
 </style>
 </head>
 <body>
 
   <a class="back-to-desk" href="index.html">← Desk</a>
+  <button class="back-to-detail" id="backToMap">← Map</button>
 
-  <img src="map6.jpg" class="map-image" alt="Case map" draggable="false" />
+  <!-- The map + its overlays -->
+  <div class="stage" id="stage">
+    <img class="map-base" id="mapBase" src="map6.jpg" alt="Case map" draggable="false" />
+    <!-- Overlays added by JavaScript -->
+  </div>
 
-  <script>
-    window.addEventListener('load', function () { document.body.classList.add('ready'); });
-    if (document.readyState === 'complete') { document.body.classList.add('ready'); }
-  </script>
+  <!-- Big-image detail view -->
+  <div class="detail-view" id="detailView">
+    <img id="detailImage" src="" alt="" draggable="false" />
+  </div>
+
+<script>
+/* ============================================================
+   EDIT EVERYTHING HERE
+   ------------------------------------------------------------
+   Each overlay item:
+     file     — small image shown on the map
+     big      — big image opened when clicked
+     x / y    — position on the map (% of the map box)
+     w        — width (% of the map box)
+     z        — stacking order
+     scale    — extra scale multiplier
+     rotation — tilt, in degrees
+   ============================================================ */
+const CONFIG = {
+  base: 'map6.jpg',
+
+  items: [
+    { file: 'map1.jpg',     big: 'bigmap1.jpg',     x: 20, y: 30, w: 8, z: 1, scale: 1.0, rotation: 0 },
+    { file: 'map2.jpg',     big: 'bigmap2.jpg',     x: 35, y: 55, w: 8, z: 2, scale: 1.0, rotation: 0 },
+    { file: 'map3.jpg',     big: 'bigmap3.jpg',     x: 50, y: 30, w: 8, z: 3, scale: 1.0, rotation: 0 },
+    { file: 'map4.jpg',     big: 'bigmap4.jpg',     x: 65, y: 55, w: 8, z: 4, scale: 1.0, rotation: 0 },
+    { file: 'map5.jpg',     big: 'bigmap5.jpg',     x: 80, y: 30, w: 8, z: 5, scale: 1.0, rotation: 0 },
+    { file: 'receipt.png',  big: 'bigreceipt.png',  x: 30, y: 78, w: 8, z: 6, scale: 1.0, rotation: 0 },
+    { file: 'boatpic.png',  big: 'bigboatpic.png',  x: 70, y: 78, w: 8, z: 7, scale: 1.0, rotation: 0 }
+  ]
+};
+/* ========================= END OF CONFIG ==================== */
+
+
+const stage       = document.getElementById('stage');
+const mapBase     = document.getElementById('mapBase');
+const detailView  = document.getElementById('detailView');
+const detailImage = document.getElementById('detailImage');
+const backToMap   = document.getElementById('backToMap');
+
+/* ---------- Set the stage aspect ratio from map6.jpg ---------- */
+mapBase.addEventListener('load', () => {
+  const ar = mapBase.naturalWidth / mapBase.naturalHeight;
+  stage.style.aspectRatio = mapBase.naturalWidth + ' / ' + mapBase.naturalHeight;
+});
+
+/* ---------- Build the overlays ---------- */
+CONFIG.items.forEach(cfg => {
+  const img = document.createElement('img');
+  img.className = 'map-item';
+  img.src = cfg.file;
+  img.alt = cfg.big;
+  img.draggable = false;
+
+  img.style.setProperty('--x', cfg.x);
+  img.style.setProperty('--y', cfg.y);
+  img.style.setProperty('--w', cfg.w);
+  img.style.setProperty('--z', cfg.z ?? 1);
+  img.style.setProperty('--s', cfg.scale ?? 1);
+  img.style.setProperty('--r', cfg.rotation ?? 0);
+
+  img.addEventListener('click', () => openDetail(cfg.big));
+  stage.appendChild(img);
+});
+
+/* ---------- Open the big version ---------- */
+function openDetail(bigSrc) {
+  detailImage.src = bigSrc;
+  detailView.classList.add('active');
+  document.body.classList.add('detail-active');
+}
+
+/* ---------- Return to the map ---------- */
+function closeDetail() {
+  detailView.classList.remove('active');
+  document.body.classList.remove('detail-active');
+  // Small delay so the fade-out finishes before clearing the src
+  setTimeout(() => { if (!detailView.classList.contains('active')) detailImage.src = ''; }, 350);
+}
+
+backToMap.addEventListener('click', closeDetail);
+
+/* Also allow tapping the big image itself to go back */
+detailView.addEventListener('click', (e) => {
+  if (e.target === detailView || e.target === detailImage) closeDetail();
+});
+
+/* Escape key = back */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && detailView.classList.contains('active')) closeDetail();
+});
+
+/* ---------- Fade in the page ---------- */
+window.addEventListener('load', function () { document.body.classList.add('ready'); });
+if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+</script>
 </body>
 </html>
