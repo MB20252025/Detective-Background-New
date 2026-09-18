@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Puzzle 5 · The Roar of the Crowd</title>
+<link rel="preload" as="image" href="p5.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --title-x: 25;  --title-y: 30;  --title-scale: 0.5;
+    --desc-x: 25;   --desc-y: 40;   --desc-scale: 0.5;
+    --options-x: 25; --options-y: 50; --options-scale: 0.5;
+    --hint-x: 25;   --hint-y: 60;   --hint-scale: 0.5;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    color: #ece3d0; background: #051020; }
+  body { opacity: 0; transition: opacity .4s ease; }
+  body.ready { opacity: 1; }
+  .photo-bg { position: fixed; inset: 0;
+    background: url('p5.jpg') center center / cover no-repeat; z-index: 0; }
+  .block { position: fixed; transform-origin: center center; z-index: 10; }
+  .title-block { left: calc(var(--title-x) * 1%); top: calc(var(--title-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--title-scale)); width: min(680px, 85vw); }
+  .puzzle-title { font-family: 'Cinzel', serif; font-size: 1.35rem;
+    font-weight: 600; color: #fff; line-height: 1.3; text-align: center;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,1); }
+  .desc-block { left: calc(var(--desc-x) * 1%); top: calc(var(--desc-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--desc-scale)); width: min(680px, 85vw); }
+  .puzzle-desc { font-size: 1rem; line-height: 1.6; color: #f5efdf;
+    padding: 12px 16px; background: rgba(0,0,0,0.5); border-radius: 14px;
+    border-left: 3px solid #b68b5c; backdrop-filter: blur(2px);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.7); }
+  .options-block { left: calc(var(--options-x) * 1%); top: calc(var(--options-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--options-scale)); width: min(680px, 85vw); }
+  .options { display: flex; flex-wrap: wrap; gap: 12px 20px; justify-content: center; }
+  .option { display: flex; align-items: center; gap: 10px;
+    font-size: 0.95rem; color: #f5efdf;
+    padding: 6px 14px 6px 10px; border-radius: 40px;
+    background: rgba(0,0,0,0.55); border: 1px solid rgba(182,139,92,0.25);
+    backdrop-filter: blur(2px);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6); cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+    user-select: none; }
+  .option:hover { background: rgba(182,139,92,0.25);
+    border-color: rgba(182,139,92,0.6); transform: translateX(2px); }
+  .option.correct { background: rgba(40,120,70,0.6);
+    border-color: #5cd88a; box-shadow: 0 0 20px rgba(92,216,138,0.7);
+    transform: scale(1.03); }
+  .option.correct .letter { background: #2e8b57; color: #fff; border-color: #5cd88a; }
+  .option.wrong { background: rgba(150,40,40,0.55);
+    border-color: #e05050; animation: shake 0.4s ease; }
+  .option.wrong .letter { background: #a02020; color: #fff; border-color: #e05050; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); } }
+  .option .letter { display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #1e3d4a; color: #eace9f; font-weight: 700; font-size: 0.8rem;
+    flex-shrink: 0; border: 1px solid rgba(182,139,92,0.3);
+    transition: background 0.15s, color 0.15s, border-color 0.15s; }
+  .hint-block { left: calc(var(--hint-x) * 1%); top: calc(var(--hint-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--hint-scale)); width: min(680px, 85vw);
+    display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .hint-btn { background: rgba(15,42,63,0.9);
+    border: 1px solid #b68b5c; border-radius: 40px;
+    padding: 6px 20px; font-family: 'Inter', sans-serif;
+    font-weight: 600; font-size: 0.85rem; color: #ece3d0;
+    cursor: pointer; backdrop-filter: blur(2px); }
+  .hint-btn:hover:not(:disabled) { background: #2a5a6a; border-color: #eace9f; }
+  .hint-btn:active:not(:disabled) { transform: scale(0.96); }
+  .hint-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .hint-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .hint-item { font-size: 0.9rem; color: #f5efdf;
+    background: rgba(0,0,0,0.65); padding: 8px 16px; border-radius: 20px;
+    border-left: 3px solid #b68b5c; backdrop-filter: blur(2px);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6); animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); } }
+  .nav-controls { position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%); display: flex; align-items: center;
+    gap: 16px; padding: 10px 18px; background: rgba(15,42,63,0.85);
+    border: 1px solid rgba(182,139,92,0.3); border-radius: 60px;
+    backdrop-filter: blur(6px); z-index: 20; flex-wrap: wrap; justify-content: center; }
+  .nav-btn { background: #1e3d4a; border: 1px solid #6b4f3c;
+    border-radius: 40px; padding: 8px 22px; font-family: 'Inter', sans-serif;
+    font-weight: 600; font-size: 0.85rem; color: #ece3d0;
+    cursor: pointer; letter-spacing: 0.3px; text-decoration: none;
+    display: inline-flex; align-items: center; }
+  .nav-btn:hover:not(:disabled) { background: #2a5a6a; border-color: #b68b5c; }
+  .nav-btn:active:not(:disabled) { transform: scale(0.96); }
+  .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .nav-indicator { font-family: 'Cinzel', serif; font-size: 0.85rem;
+    color: #cdba92; font-weight: 500; letter-spacing: 0.5px; }
+  .nav-indicator span { color: #eace9f; font-weight: 700; }
+  .back-to-desk { position: fixed; top: 14px; left: 14px;
+    padding: 9px 20px; background: rgba(15,42,63,0.85);
+    border: 1px solid rgba(182,139,92,0.4); border-radius: 40px;
+    color: #eace9f; font-family: 'Courier New', monospace;
+    font-size: .72rem; font-weight: bold; letter-spacing: .22em;
+    text-transform: uppercase; text-decoration: none;
+    backdrop-filter: blur(6px); z-index: 30; }
+  .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+  @media (max-width: 640px) {
+    .puzzle-title { font-size: 1.1rem; }
+    .puzzle-desc { font-size: 0.9rem; padding: 10px 12px; }
+    .option { font-size: 0.85rem; padding: 4px 10px 4px 8px; }
+    .option .letter { width: 22px; height: 22px; font-size: 0.7rem; }
+    .nav-btn { padding: 6px 16px; font-size: 0.8rem; } }
+</style>
+</head>
+<body>
+
+  <div class="photo-bg"></div>
+  <a class="back-to-desk" href="index.html">← Desk</a>
+
+  <div class="block title-block">
+    <div class="puzzle-title">The Roar of the Crowd</div>
+  </div>
+
+  <div class="block desc-block">
+    <div class="puzzle-desc">Red and white rise together. Every seat has its place, every voice its space. When full, the roar of the imps shakes the stands. How many of them can be heard at once?</div>
+  </div>
+
+  <div class="block options-block">
+    <div class="options">
+      <div class="option" data-value="A"><span class="letter">A</span><span class="text">11,500</span></div>
+      <div class="option" data-value="B"><span class="letter">B</span><span class="text">11,920</span></div>
+      <div class="option" data-value="C"><span class="letter">C</span><span class="text">10,780</span></div>
+    </div>
+  </div>
+
+  <div class="block hint-block">
+    <button class="hint-btn">💡 Hint (3 left)</button>
+    <div class="hint-list"></div>
+  </div>
+
+  <div class="nav-controls">
+    <a class="nav-btn" href="p4.html">◀ Previous</a>
+    <div class="nav-indicator"><span>5</span> of 7</div>
+    <a class="nav-btn" href="p6.html">Next ▶</a>
+  </div>
+
+  <script>
+    var SAVE_KEY = 'whitby_p5_solved';
+    var SOLUTION = "C";
+    var HINTS = [
+      "Think smaller than big Premier League stadiums.",
+      "It's just over ten thousand, not close to twelve.",
+      "The exact number is ten thousand, seven hundred and eighty."
+    ];
+    var hintIndex = 0;
+    var hintBtn = document.querySelector('.hint-btn');
+    var hintList = document.querySelector('.hint-list');
+    hintBtn.addEventListener('click', function () {
+      if (hintIndex >= HINTS.length) return;
+      var el = document.createElement('div');
+      el.className = 'hint-item';
+      el.textContent = '💡 ' + HINTS[hintIndex];
+      hintList.appendChild(el);
+      hintIndex++;
+      var remaining = HINTS.length - hintIndex;
+      if (remaining > 0) hintBtn.textContent = '💡 Hint (' + remaining + ' left)';
+      else { hintBtn.disabled = true; hintBtn.textContent = '💡 No hints left'; }
+    });
+
+    function markSolved() {
+      document.querySelectorAll('.option').forEach(function (o) {
+        if ((o.dataset.value || '').toUpperCase() === SOLUTION) o.classList.add('correct');
+      });
+    }
+    try { if (localStorage.getItem(SAVE_KEY) === 'true') markSolved(); } catch (e) {}
+
+    document.querySelectorAll('.option').forEach(function (opt) {
+      opt.addEventListener('click', function () {
+        if (this.classList.contains('correct')) return;
+        var value = (this.dataset.value || '').toUpperCase();
+        if (value === SOLUTION) {
+          document.querySelectorAll('.option').forEach(function (o) { o.classList.remove('wrong'); });
+          this.classList.add('correct');
+          try { localStorage.setItem(SAVE_KEY, 'true'); } catch (e) {}
+        } else {
+          this.classList.add('wrong');
+          var self = this;
+          setTimeout(function () { self.classList.remove('wrong'); }, 700);
+        }
+      });
+    });
+
+    window.addEventListener('load', function () { document.body.classList.add('ready'); });
+    if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+  </script>
+</body>
+</html>
