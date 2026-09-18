@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maps — Whitby Case</title>
+<link rel="preload" as="image" href="maps.png">
+<link rel="preload" as="image" href="evidence.png">
+<link rel="preload" as="image" href="bigmap.png">
+
+<style>
+  /* ============================================================
+     👇 EDIT EVERYTHING HERE 👇
+     ============================================================ */
+  :root {
+    /* ── Background: maps.png ── */
+    --bg-x:     50;
+    --bg-y:     50;
+    --bg-scale: 1.0;
+
+    /* ── Overlay 1: evidence.png ── */
+    --evidence-x:        21.4;
+    --evidence-y:        34;
+    --evidence-w:        30;
+    --evidence-scale:    1.5;
+    --evidence-rotation: 0;
+
+    /* ── Overlay 2: bigmap.png ── */
+    --bigmap-x:          72;
+    --bigmap-y:          31;
+    --bigmap-w:          30;
+    --bigmap-scale:      1.85;
+    --bigmap-rotation:   0;
+  }
+  /* ============================================================ */
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: #0a0705;
+    font-family: 'Courier New', monospace;
+  }
+  body { opacity: 0; transition: opacity .4s ease; }
+  body.ready { opacity: 1; }
+
+  /* ── Background layer ── */
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: url('maps.png') no-repeat center center;
+    background-size: contain;
+    transform: scale(var(--bg-scale));
+    transform-origin: calc(var(--bg-x) * 1%) calc(var(--bg-y) * 1%);
+    pointer-events: none;
+  }
+
+  /* ── Full-screen stage for the clickable pictures ── */
+  .stage {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+  }
+
+  /* ── Clickable picture — INVISIBLE but still clickable ── */
+  .pic {
+    position: absolute;
+    height: auto;
+    transform-origin: 50% 50%;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
+
+    /* ★ Hidden by default */
+    opacity: 0;
+    transition: opacity .25s ease;
+  }
+
+  /* Optional: faint hint while pressing/hovering.
+     Delete these two rules if you want them to stay completely hidden. */
+  .pic:hover,
+  .pic:active {
+    opacity: 0.35;
+  }
+
+  /* ── evidence.png ── */
+  .pic.evidence {
+    left: calc(var(--evidence-x) * 1%);
+    top:  calc(var(--evidence-y) * 1%);
+    width: calc(var(--evidence-w) * 1%);
+    transform: translate(-50%, -50%)
+               rotate(calc(var(--evidence-rotation) * 1deg))
+               scale(var(--evidence-scale));
+  }
+
+  /* ── bigmap.png ── */
+  .pic.bigmap {
+    left: calc(var(--bigmap-x) * 1%);
+    top:  calc(var(--bigmap-y) * 1%);
+    width: calc(var(--bigmap-w) * 1%);
+    transform: translate(-50%, -50%)
+               rotate(calc(var(--bigmap-rotation) * 1deg))
+               scale(var(--bigmap-scale));
+  }
+
+  /* ── Back to Desk ── */
+  .back-to-desk {
+    position: fixed;
+    top: 14px; left: 14px;
+    padding: 9px 20px;
+    background: rgba(15,42,63,.85);
+    border: 1px solid rgba(182,139,92,.4);
+    border-radius: 40px;
+    color: #eace9f;
+    font-family: 'Courier New', monospace;
+    font-size: .72rem; font-weight: bold;
+    letter-spacing: .22em; text-transform: uppercase;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9999;
+    transition: background .18s ease, border-color .18s ease;
+  }
+  .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+</style>
+</head>
+<body>
+
+  <a class="back-to-desk" href="index.html">← Desk</a>
+
+  <!-- Background: maps.png -->
+  <div class="bg-layer"></div>
+
+  <!-- Clickable overlays (invisible but active) -->
+  <div class="stage">
+
+    <img class="pic evidence" src="evidence.png" alt="Evidence"
+         draggable="false" data-go="evidence.html" />
+
+    <img class="pic bigmap" src="bigmap.png" alt="Big map"
+         draggable="false" data-go="map.html" />
+
+  </div>
+
+<script>
+  /* Click any picture → go to its page with a quick fade */
+  document.querySelectorAll('.pic').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var url = el.dataset.go;
+      if (!url) return;
+      setTimeout(function () {
+        document.body.style.transition = 'opacity .22s ease';
+        document.body.style.opacity = '0';
+        setTimeout(function () { window.location.href = url; }, 200);
+      }, 90);
+    });
+  });
+
+  window.addEventListener('load', function () { document.body.classList.add('ready'); });
+  if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+</script>
+</body>
+</html>
