@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evidence — Whitby Case</title>
+<link rel="preload" as="image" href="bigevidence.jpg">
+<link rel="preload" as="image" href="e1.jpg">
+<link rel="preload" as="image" href="e2.jpg">
+<link rel="preload" as="image" href="e3.jpg">
+<link rel="preload" as="image" href="e4.jpg">
+<link rel="preload" as="image" href="e5.jpg">
+<link rel="preload" as="image" href="e6.jpg">
+
+<style>
+  /* ============================================================
+     👇 EVIDENCE BACKGROUND (bigevidence.jpg) — POSITION & SCALE 👇
+     ============================================================ */
+  :root {
+    --ev-x:     50;
+    --ev-y:     50;
+    --ev-scale: 1.0;
+  }
+  /* ============================================================ */
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: #0a0705;
+    font-family: 'Courier New', monospace;
+  }
+  body { opacity: 0; transition: opacity .4s ease; }
+  body.ready { opacity: 1; }
+
+  /* ── Background: bigevidence.jpg ── */
+  .evidence-image {
+    position: fixed;
+    left: calc(var(--ev-x) * 1%);
+    top:  calc(var(--ev-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--ev-scale));
+    transform-origin: center center;
+    max-width: 96vw;
+    max-height: 96vh;
+    width: auto;
+    height: auto;
+    display: block;
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    border-radius: 4px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.85),
+                0 0 0 1px rgba(182,139,92,.25);
+  }
+
+  /* ── Clickable hotspots — invisible but fully clickable ── */
+  .hotspot {
+    position: absolute;
+    height: auto;
+    left: calc(var(--x) * 1%);
+    top:  calc(var(--y) * 1%);
+    width: calc(var(--w) * 1%);
+    transform: translate(-50%, -50%)
+               rotate(calc(var(--r) * 1deg))
+               scale(var(--s));
+    transform-origin: 50% 50%;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
+    z-index: 5;
+
+    /* ★ Hidden — but the clickable area is still active */
+    opacity: 0;
+    transition: opacity .25s ease;
+  }
+
+  /* Optional: faint hint when pressing one. Delete these two rules
+     if you want them to stay completely invisible even on hover. */
+  .hotspot:hover,
+  .hotspot:active {
+    opacity: 0.35;
+  }
+
+  /* ── Two buttons ── */
+  .back-to-desk,
+  .back-to-maps {
+    position: fixed;
+    top: 14px;
+    padding: 9px 20px;
+    border-radius: 40px;
+    font-family: 'Courier New', monospace;
+    font-size: .72rem;
+    font-weight: bold;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9999;
+    transition: background .18s ease, border-color .18s ease;
+  }
+  .back-to-desk {
+    left: 14px;
+    background: rgba(15,42,63,.85);
+    border: 1px solid rgba(182,139,92,.4);
+    color: #eace9f;
+  }
+  .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+
+  .back-to-maps {
+    right: 14px;
+    background: rgba(60,40,15,.85);
+    border: 1px solid #8a6e42;
+    color: #eace9f;
+  }
+  .back-to-maps:hover { background: rgba(90,60,20,.95); border-color: #d8ab6a; }
+</style>
+</head>
+<body>
+
+  <a class="back-to-desk" href="index.html">← Desk</a>
+  <a class="back-to-maps" href="maps.html">← Maps</a>
+
+  <img src="bigevidence.jpg" class="evidence-image" alt="Evidence" draggable="false" />
+
+  <!-- Hotspots added by JavaScript -->
+
+<script>
+/* ============================================================
+   EDIT EVERYTHING HERE
+   ------------------------------------------------------------
+   Each hotspot has:
+     file     — small image (invisible, just used to size the hotspot)
+     big      — big image opened when clicked
+     x, y     — position on the evidence picture (%)
+     w        — width (% of the screen)
+     z        — stacking order
+     scale    — extra size multiplier
+     rotation — tilt in degrees
+   ============================================================ */
+const HOTSPOTS = [
+  { file: 'e1.jpg', big: 'bige1.jpg', x: 20, y: 25, w: 10, z: 1, scale: 1.0, rotation: 0 },
+  { file: 'e2.jpg', big: 'bige2.jpg', x: 50, y: 25, w: 10, z: 2, scale: 1.0, rotation: 0 },
+  { file: 'e3.jpg', big: 'bige3.jpg', x: 80, y: 25, w: 10, z: 3, scale: 1.0, rotation: 0 },
+  { file: 'e4.jpg', big: 'bige4.jpg', x: 20, y: 70, w: 10, z: 4, scale: 1.0, rotation: 0 },
+  { file: 'e5.jpg', big: 'bige5.jpg', x: 50, y: 70, w: 10, z: 5, scale: 1.0, rotation: 0 },
+  { file: 'e6.jpg', big: 'bige6.jpg', x: 80, y: 70, w: 10, z: 6, scale: 1.0, rotation: 0 }
+];
+/* ========================= END OF CONFIG ==================== */
+
+
+/* ---------- Build the hotspots ---------- */
+const stage = document.body;
+
+HOTSPOTS.forEach(function (cfg) {
+  const img = document.createElement('img');
+  img.className = 'hotspot';
+  img.src = cfg.file;
+  img.alt = cfg.big;
+  img.draggable = false;
+
+  img.style.setProperty('--x', cfg.x);
+  img.style.setProperty('--y', cfg.y);
+  img.style.setProperty('--w', cfg.w);
+  img.style.setProperty('--z', cfg.z ?? 1);
+  img.style.setProperty('--s', cfg.scale ?? 1);
+  img.style.setProperty('--r', cfg.rotation ?? 0);
+
+  img.addEventListener('click', function () {
+    window.location.href = cfg.big;
+  });
+
+  stage.appendChild(img);
+});
+
+window.addEventListener('load', function () { document.body.classList.add('ready'); });
+if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+</script>
+</body>
+</html>
