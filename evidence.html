@@ -53,7 +53,7 @@
                 0 0 0 1px rgba(182,139,92,.25);
   }
 
-  /* ── Clickable hotspots — invisible but fully clickable ── */
+  /* ── Clickable pictures (e1–e6) — VISIBLE ── */
   .hotspot {
     position: absolute;
     height: auto;
@@ -68,17 +68,17 @@
     user-select: none;
     -webkit-user-drag: none;
     z-index: 5;
-
-    /* ★ Hidden — but the clickable area is still active */
-    opacity: 0;
-    transition: opacity .25s ease;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,.55));
+    transition: filter .22s ease, transform .22s ease;
   }
-
-  /* Optional: faint hint when pressing one. Delete these two rules
-     if you want them to stay completely invisible even on hover. */
-  .hotspot:hover,
+  .hotspot:hover {
+    filter: brightness(1.15) drop-shadow(0 0 16px rgba(255,224,160,.85));
+    transform: translate(-50%, -50%)
+               rotate(calc(var(--r) * 1deg))
+               scale(calc(var(--s) * 1.05));
+  }
   .hotspot:active {
-    opacity: 0.35;
+    filter: brightness(1.25) drop-shadow(0 0 24px rgba(255,224,160,1));
   }
 
   /* ── Two buttons ── */
@@ -123,17 +123,16 @@
 
   <img src="bigevidence.jpg" class="evidence-image" alt="Evidence" draggable="false" />
 
-  <!-- Hotspots added by JavaScript -->
+  <!-- Hotspots (e1–e6) added by JavaScript -->
 
 <script>
 /* ============================================================
    EDIT EVERYTHING HERE
    ------------------------------------------------------------
-   Each hotspot has:
-     file     — small image (invisible, just used to size the hotspot)
+     file     — small picture shown on top of bigevidence.jpg
      big      — big image opened when clicked
-     x, y     — position on the evidence picture (%)
-     w        — width (% of the screen)
+     x, y     — position (% of screen)
+     w        — width (% of screen)
      z        — stacking order
      scale    — extra size multiplier
      rotation — tilt in degrees
@@ -150,8 +149,6 @@ const HOTSPOTS = [
 
 
 /* ---------- Build the hotspots ---------- */
-const stage = document.body;
-
 HOTSPOTS.forEach(function (cfg) {
   const img = document.createElement('img');
   img.className = 'hotspot';
@@ -170,7 +167,7 @@ HOTSPOTS.forEach(function (cfg) {
     window.location.href = cfg.big;
   });
 
-  stage.appendChild(img);
+  document.body.appendChild(img);
 });
 
 window.addEventListener('load', function () { document.body.classList.add('ready'); });
