@@ -11,6 +11,12 @@
 <link rel="preload" as="image" href="e4.jpg">
 <link rel="preload" as="image" href="e5.jpg">
 <link rel="preload" as="image" href="e6.jpg">
+<link rel="preload" as="image" href="bige1.jpg">
+<link rel="preload" as="image" href="bige2.jpg">
+<link rel="preload" as="image" href="bige3.jpg">
+<link rel="preload" as="image" href="bige4.jpg">
+<link rel="preload" as="image" href="bige5.jpg">
+<link rel="preload" as="image" href="bige6.jpg">
 
 <style>
   /* ============================================================
@@ -81,9 +87,45 @@
     filter: brightness(1.25) drop-shadow(0 0 24px rgba(255,224,160,1));
   }
 
-  /* ── Two buttons ── */
+  /* ── BIG-IMAGE DETAIL VIEW ── */
+  .detail-view {
+    position: fixed;
+    inset: 0;
+    background: #0a0705;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s ease;
+  }
+  .detail-view.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .detail-view img {
+    position: absolute;
+    left: calc(var(--big-x) * 1%);
+    top:  calc(var(--big-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--big-scale));
+    transform-origin: center center;
+    max-width: 96vw;
+    max-height: 96vh;
+    width: auto;
+    height: auto;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+    border-radius: 4px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.85),
+                0 0 0 1px rgba(182,139,92,.25);
+  }
+
+  /* ── Buttons ── */
   .back-to-desk,
-  .back-to-maps {
+  .back-to-maps,
+  .back-to-evidence {
     position: fixed;
     top: 14px;
     padding: 9px 20px;
@@ -97,6 +139,7 @@
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     z-index: 9999;
+    cursor: pointer;
     transition: background .18s ease, border-color .18s ease;
   }
   .back-to-desk {
@@ -114,29 +157,40 @@
     color: #eace9f;
   }
   .back-to-maps:hover { background: rgba(90,60,20,.95); border-color: #d8ab6a; }
+
+  /* "← Evidence" button — only visible inside the detail view */
+  .back-to-evidence {
+    left: 14px;
+    background: rgba(60,40,15,.85);
+    border: 1px solid #8a6e42;
+    color: #eace9f;
+    display: none;
+  }
+  .back-to-evidence:hover { background: rgba(90,60,20,.95); border-color: #d8ab6a; }
+  body.detail-active .back-to-desk,
+  body.detail-active .back-to-maps { display: none; }
+  body.detail-active .back-to-evidence { display: block; }
 </style>
 </head>
 <body>
 
   <a class="back-to-desk" href="index.html">← Desk</a>
   <a class="back-to-maps" href="maps.html">← Maps</a>
+  <button class="back-to-evidence" id="backToEvidence">← Evidence</button>
 
   <img src="bigevidence.jpg" class="evidence-image" alt="Evidence" draggable="false" />
 
-  <!-- Hotspots (e1–e6) added by JavaScript -->
+  <!-- Big-image viewer -->
+  <div class="detail-view" id="detailView">
+    <img id="detailImage" src="" alt="" draggable="false" />
+  </div>
 
 <script>
 /* ============================================================
    EDIT EVERYTHING HERE
-   ------------------------------------------------------------
-     file     — small picture shown on top of bigevidence.jpg
-     big      — big image opened when clicked
-     x, y     — position (% of screen)
-     w        — width (% of screen)
-     z        — stacking order
-     scale    — extra size multiplier
-     rotation — tilt in degrees
    ============================================================ */
+
+/* ── The 6 small pictures on top of bigevidence.jpg ── */
 const HOTSPOTS = [
   { file: 'e1.jpg', big: 'bige1.jpg', x: 30, y: 85, w: 10, z: 1, scale: 3.1, rotation: 0 },
   { file: 'e2.jpg', big: 'bige2.jpg', x: 66, y: 85, w: 10, z: 2, scale: 3.1, rotation: 0 },
@@ -145,10 +199,28 @@ const HOTSPOTS = [
   { file: 'e5.jpg', big: 'bige5.jpg', x: 30, y: 12, w: 10, z: 5, scale: 3.1, rotation: 0 },
   { file: 'e6.jpg', big: 'bige6.jpg', x: 66, y: 12, w: 10, z: 6, scale: 3.1, rotation: 0 }
 ];
+
+/* ── Per-image scale & position for the BIG versions ──
+   Each bige picture has its own three controls:
+     scale  — 1.0 = normal, 1.5 = bigger, 0.7 = smaller
+     x, y   — 50,50 = centre; 0 = left/top; 100 = right/bottom
+   Change one number and that image alone changes. */
+const BIG_CONFIG = {
+  'bige1.jpg': { scale: 1.0, x: 50, y: 50 },
+  'bige2.jpg': { scale: 1.0, x: 50, y: 50 },
+  'bige3.jpg': { scale: 1.0, x: 50, y: 50 },
+  'bige4.jpg': { scale: 1.0, x: 50, y: 50 },
+  'bige5.jpg': { scale: 1.0, x: 50, y: 50 },
+  'bige6.jpg': { scale: 1.0, x: 50, y: 50 }
+};
 /* ========================= END OF CONFIG ==================== */
 
 
-/* ---------- Build the hotspots ---------- */
+const detailView    = document.getElementById('detailView');
+const detailImage   = document.getElementById('detailImage');
+const backToEvidence = document.getElementById('backToEvidence');
+
+/* ---------- Build the 6 hotspots ---------- */
 HOTSPOTS.forEach(function (cfg) {
   const img = document.createElement('img');
   img.className = 'hotspot';
@@ -164,10 +236,40 @@ HOTSPOTS.forEach(function (cfg) {
   img.style.setProperty('--r', cfg.rotation ?? 0);
 
   img.addEventListener('click', function () {
-    window.location.href = cfg.big;
+    openDetail(cfg.big);
   });
 
   document.body.appendChild(img);
+});
+
+/* ---------- Open the big image in the overlay ---------- */
+function openDetail(bigSrc) {
+  const cfg = BIG_CONFIG[bigSrc] || { scale: 1.0, x: 50, y: 50 };
+
+  detailImage.src = bigSrc;
+  detailImage.style.setProperty('--big-scale', cfg.scale);
+  detailImage.style.setProperty('--big-x', cfg.x);
+  detailImage.style.setProperty('--big-y', cfg.y);
+
+  detailView.classList.add('active');
+  document.body.classList.add('detail-active');
+}
+
+/* ---------- Close the overlay ---------- */
+function closeDetail() {
+  detailView.classList.remove('active');
+  document.body.classList.remove('detail-active');
+  setTimeout(function () {
+    if (!detailView.classList.contains('active')) detailImage.src = '';
+  }, 350);
+}
+
+backToEvidence.addEventListener('click', closeDetail);
+detailView.addEventListener('click', function (e) {
+  if (e.target === detailView || e.target === detailImage) closeDetail();
+});
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && detailView.classList.contains('active')) closeDetail();
 });
 
 window.addEventListener('load', function () { document.body.classList.add('ready'); });
