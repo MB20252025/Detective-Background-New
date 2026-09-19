@@ -59,7 +59,7 @@
                 0 0 0 1px rgba(182,139,92,.25);
   }
 
-  /* ── Clickable pictures (e1–e6) — VISIBLE ── */
+  /* ── Clickable pictures (e1–e6) — INVISIBLE but still clickable ── */
   .hotspot {
     position: absolute;
     height: auto;
@@ -74,17 +74,17 @@
     user-select: none;
     -webkit-user-drag: none;
     z-index: 5;
-    filter: drop-shadow(0 4px 10px rgba(0,0,0,.55));
-    transition: filter .22s ease, transform .22s ease;
+
+    /* ★ Hidden by default */
+    opacity: 0;
+    transition: opacity .25s ease;
   }
-  .hotspot:hover {
-    filter: brightness(1.15) drop-shadow(0 0 16px rgba(255,224,160,.85));
-    transform: translate(-50%, -50%)
-               rotate(calc(var(--r) * 1deg))
-               scale(calc(var(--s) * 1.05));
-  }
+
+  /* Optional: faint hint while pressing/hovering.
+     Delete these two rules if you want them to stay completely hidden. */
+  .hotspot:hover,
   .hotspot:active {
-    filter: brightness(1.25) drop-shadow(0 0 24px rgba(255,224,160,1));
+    opacity: 0.35;
   }
 
   /* ── BIG-IMAGE DETAIL VIEW ── */
@@ -190,7 +190,7 @@
    EDIT EVERYTHING HERE
    ============================================================ */
 
-/* ── The 6 small pictures on top of bigevidence.jpg ── */
+/* ── The 6 invisible clickable spots on bigevidence.jpg ── */
 const HOTSPOTS = [
   { file: 'e1.jpg', big: 'bige1.jpg', x: 30, y: 85, w: 10, z: 1, scale: 3.1, rotation: 0 },
   { file: 'e2.jpg', big: 'bige2.jpg', x: 66, y: 85, w: 10, z: 2, scale: 3.1, rotation: 0 },
@@ -203,8 +203,7 @@ const HOTSPOTS = [
 /* ── Per-image scale & position for the BIG versions ──
    Each bige picture has its own three controls:
      scale  — 1.0 = normal, 1.5 = bigger, 0.7 = smaller
-     x, y   — 50,50 = centre; 0 = left/top; 100 = right/bottom
-   Change one number and that image alone changes. */
+     x, y   — 50,50 = centre; 0 = left/top; 100 = right/bottom */
 const BIG_CONFIG = {
   'bige1.jpg': { scale: 1.0, x: 50, y: 50 },
   'bige2.jpg': { scale: 1.0, x: 50, y: 50 },
@@ -216,8 +215,8 @@ const BIG_CONFIG = {
 /* ========================= END OF CONFIG ==================== */
 
 
-const detailView    = document.getElementById('detailView');
-const detailImage   = document.getElementById('detailImage');
+const detailView     = document.getElementById('detailView');
+const detailImage    = document.getElementById('detailImage');
 const backToEvidence = document.getElementById('backToEvidence');
 
 /* ---------- Build the 6 hotspots ---------- */
