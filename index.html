@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Image Layout</title>
+<link rel="preload" as="image" href="Dback.jpg">
+<link rel="preload" as="image" href="lampoff.png">
+<link rel="preload" as="image" href="lampon.png">
+<link rel="preload" as="image" href="blacklamp.png">
+<style>
+  /* ============================================================
+     THE DESK
+     ============================================================ */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, sans-serif;
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+  body.ready { opacity: 1; }
+
+  .stage {
+    --ar: 1.7778;
+    position: relative;
+    width: min(100vw, calc(100vh * var(--ar)));
+    aspect-ratio: var(--ar);
+    background: #222 center / 100% 100% no-repeat;
+    overflow: hidden;
+  }
+
+  .layer {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+
+  .item {
+    position: absolute;
+    left: calc(var(--x) * 1%);
+    top:  calc(var(--y) * 1%);
+    width: calc(var(--w) * 1%);
+    height: auto;
+    transform: translate(-50%, -50%)
+               rotate(calc(var(--r) * 1deg))
+               scale(var(--s));
+    transform-origin: 50% 50%;
+    z-index: var(--z);
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .item.clickable {
+    pointer-events: auto;
+    cursor: pointer;
+    transition: filter .22s ease;
+  }
+  .item.clickable:hover {
+    filter: brightness(1.15) drop-shadow(0 0 14px rgba(255, 224, 160, .7));
+  }
+  .item.clickable:active {
+    filter: brightness(1.25) drop-shadow(0 0 22px rgba(255, 224, 160, .9));
+  }
+
+  .item.hidden-item {
+    opacity: 0;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: opacity .7s ease, filter .22s ease;
+  }
+  .item.hidden-item.revealed { opacity: 1; }
+  .item.hidden-item.revealed:hover {
+    filter: brightness(1.15) drop-shadow(0 0 14px rgba(255, 224, 160, .7));
+  }
+
+  /* ============================================================
+     LAMP OVERLAY — sits on top of the desk
+     ============================================================ */
+  .lamp-stage {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+    z-index: 10000;
+    opacity: 1;
+    transition: opacity .55s ease;
+  }
+  .lamp-stage.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .lamp-layer {
+    position: absolute; inset: 0;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 85% auto;
+    pointer-events: none;
+    transition: opacity 0.9s ease;
+  }
+  .lamp-layer.off { background-image: url('lampoff.png'); opacity: 1; }
+  .lamp-layer.on  { background-image: url('lampon.png');  opacity: 0; }
+  .lamp-stage.lit .lamp-layer.off { opacity: 0; }
+  .lamp-stage.lit .lamp-layer.on  { opacity: 1; }
+
+  .blacklamp {
+    position: absolute;
+    left: 83.5%;
+    top: 58.2%;
+    width: 10vw; height: auto;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    z-index: 10;
+    user-select: none;
+    -webkit-user-drag: none;
+    transition: filter .25s ease, transform .25s ease, opacity .35s ease;
+    animation: lampPulse 2.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 2px rgba(255, 200, 90, 0.55));
+  }
+  .blacklamp:hover {
+    filter: brightness(1.08) drop-shadow(0 0 3px rgba(255, 210, 110, 0.75));
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  .blacklamp:active { transform: translate(-50%, -50%) scale(0.96); }
+  @keyframes lampPulse {
+    0%, 100% { filter: drop-shadow(0 0 1.5px rgba(255, 200, 90, 0.45)) brightness(1); }
+    50%      { filter: drop-shadow(0 0 3px   rgba(255, 210, 110, 0.70)) brightness(1.04); }
+  }
+  .lamp-stage.lit .blacklamp { opacity: 0; pointer-events: none; }
+
+  .lamp-menu {
+    position: absolute;
+    left: 50%;
+    top: 62%;
+    transform: translate(-50%, -50%) translateY(24px);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition:
+      opacity   .55s ease .45s,
+      transform .55s cubic-bezier(.2,.9,.3,1.05) .45s;
+  }
+  .lamp-stage.lit .lamp-menu {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) translateY(0);
+  }
+
+  .lamp-menu-btn {
+    padding: 15px 50px;
+    min-width: 300px;
+    background: rgba(18, 12, 6, 0.78);
+    color: #e8d9b8;
+    border: 2px solid #8a6e42;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 1.05rem;
+    font-weight: bold;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-align: center;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07);
+    transition: all .18s ease;
+  }
+  .lamp-menu-btn:hover:not(:disabled) {
+    background: rgba(55, 38, 16, 0.92);
+    color: #fff;
+    border-color: #d8ab6a;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.7), 0 0 26px rgba(255,210,130,0.32), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+  .lamp-menu-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 3px 10px rgba(0,0,0,0.5); }
+  .lamp-menu-btn:disabled { opacity: 0.35; cursor: not-allowed; color: #9a8a68; border-color: #4a3a24; }
+
+  .lamp-how-page {
+    position: absolute; inset: 0;
+    background: #0e0a07;
+    z-index: 500;
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity .35s ease;
+  }
+  .lamp-how-page.active { opacity: 1; pointer-events: auto; }
+  .lamp-page-back {
+    position: absolute; top: 20px; left: 20px;
+    padding: 10px 22px;
+    background: rgba(20, 15, 8, 0.88);
+    color: #e8d9b8;
+    border: 1px solid #8a6e42;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    cursor: pointer;
+    z-index: 10;
+  }
+  .lamp-page-back:hover { background: rgba(60, 40, 15, 0.95); color: #fff; border-color: #d8ab6a; }
+  .lamp-page-content {
+    flex: 1;
+    padding: 90px 40px 40px;
+    overflow-y: auto;
+    color: #d8c093;
+    font-size: 1rem;
+    line-height: 1.7;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lamp-page-placeholder {
+    text-align: center;
+    color: #6a5a3f;
+    font-size: 0.9rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 640px) {
+    .lamp-menu-btn { min-width: 220px; padding: 12px 24px; font-size: 0.9rem; letter-spacing: 3px; }
+    .lamp-menu { gap: 10px; }
+    .lamp-layer { background-size: 90% auto; }
+    .blacklamp { width: 22vw; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============================================================
+       THE DESK (loaded underneath the lamp overlay)
+       ============================================================ -->
+  <div class="stage">
+    <div class="layer" id="layer"></div>
+  </div>
+
+  <!-- ============================================================
+       LAMP OVERLAY — sits on top of the desk on first load
+       ============================================================ -->
+  <div class="lamp-stage" id="lampOverlay">
+    <div class="lamp-layer off"></div>
+    <div class="lamp-layer on"></div>
+
+    <img src="blacklamp.png" class="blacklamp" id="blackLamp"
+         alt="Turn on the lamp" draggable="false" />
+
+    <div class="lamp-menu" id="lampMenu">
+      <button class="lamp-menu-btn" id="newGameBtn">New Game</button>
+      <button class="lamp-menu-btn" id="continueGameBtn">Continue Game</button>
+      <button class="lamp-menu-btn" id="howToPlayBtn">How To Play</button>
+    </div>
+
+    <div class="lamp-how-page" id="lampHowPage">
+      <button class="lamp-page-back" id="lampHowBack">← BACK</button>
+      <div class="lamp-page-content">
+        <div class="lamp-page-placeholder">How To Play — coming soon</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   THE DESK — same as before, unchanged
+   ============================================================ */
+const CONFIG = {
+  background: 'Dback.jpg',
+  global: { x: 0, y: 0, scale: 1 },
+  images: [
+    { file: 'D1.png',      x: 23,    y: 93.5, w: 14, z: 1,  scale: 1.2,  rotation: 0, link: 'interrogation.html' },
+    { file: 'D2.png',      x: 9.4,   y: 80,   w: 14, z: 4,  scale: 1.5,  rotation: 0, link: 'puzzles.html' },
+    { file: 'D3.png',      x: 55,    y: 74,   w: 14, z: 3,  scale: 3.0,  rotation: 0, link: 'newspaper.html' },
+    { file: 'D4.png',      x: 12.5,  y: 62,   w: 14, z: 2,  scale: 2.1,  rotation: 0, link: 'suspect.html' },
+    { file: 'D5.png',      x: 52,    y: 82,   w: 14, z: 5,  scale: 4.2,  rotation: 0, link: 'hanoi.html' },
+    { file: 'D6.png',      x: 82.5,  y: 21.5, w: 14, z: 6,  scale: 2.45, rotation: 0, link: 'cryptogram.html' },
+    { file: 'D7.png',      x: 51,    y: 53.1, w: 14, z: 7,  scale: 3.36, rotation: 0, link: 'p1.html' },
+    { file: 'D8.png',      x: 88,    y: 63,   w: 14, z: 8,  scale: 1.8,  rotation: 0 },
+    { file: 'D9.png',      x: 50.5,  y: 28,   w: 14, z: 9,  scale: 1.8,  rotation: 0, link: 'coffee.html' },
+    { file: 'D10.png',     x: 84,    y: 95,   w: 13, z: 10, scale: 2.3,  rotation: 0, link: 'casebook.html' },
+    { file: 'emptycup.png', x: 93.31, y: 84.33, w: 14, z: 11, scale: 0.965, rotation: 0, hidden: true },
+    { file: 'mapboard.png', x: 10, y: 25, w: 14, z: 12, scale: 2.0, rotation: 0, link: 'maps.html' }
+  ]
+};
+
+const stage = document.querySelector('.stage');
+const layer = document.getElementById('layer');
+
+stage.style.backgroundImage = `url("${CONFIG.background}")`;
+
+const bgProbe = new Image();
+bgProbe.onload = () => {
+  const ar = bgProbe.naturalWidth / bgProbe.naturalHeight;
+  stage.style.setProperty('--ar', ar);
+};
+bgProbe.src = CONFIG.background;
+
+CONFIG.images.forEach(cfg => {
+  const img = document.createElement('img');
+  img.className = 'item';
+  img.src = cfg.file;
+  img.alt = cfg.link ? `Open ${cfg.link.replace('.html','')}` : '';
+  img.draggable = false;
+
+  img.style.setProperty('--x', cfg.x);
+  img.style.setProperty('--y', cfg.y);
+  img.style.setProperty('--w', cfg.w);
+  img.style.setProperty('--z', cfg.z ?? 1);
+  img.style.setProperty('--s', cfg.scale ?? 1);
+  img.style.setProperty('--r', cfg.rotation ?? 0);
+
+  if (cfg.link) {
+    img.dataset.link = cfg.link;
+    img.setAttribute('role', 'link');
+    img.setAttribute('tabindex', '0');
+  }
+
+  if (cfg.hidden) {
+    img.classList.add('hidden-item');
+    img.dataset.hidden = 'true';
+  } else if (cfg.link) {
+    img.classList.add('clickable');
+  }
+
+  layer.appendChild(img);
+});
+
+(function applyGlobal() {
+  const g = CONFIG.global;
+  layer.style.transform = `translate(${g.x}%, ${g.y}%) scale(${g.scale})`;
+})();
+
+function openLink(el) {
+  const url = el && el.dataset.link;
+  if (!url) return;
+  el.style.filter = 'brightness(1.4) drop-shadow(0 0 26px rgba(255,236,190,1))';
+  setTimeout(() => {
+    document.body.style.transition = 'opacity .22s ease';
+    document.body.style.opacity = '0';
+    setTimeout(() => { window.location.href = url; }, 200);
+  }, 90);
+}
+
+layer.addEventListener('click', (e) => {
+  const el = e.target.closest('.item');
+  if (!el) return;
+  if (el.classList.contains('hidden-item') && !el.classList.contains('revealed')) {
+    el.classList.add('revealed');
+    return;
+  }
+  if (el.dataset.link) openLink(el);
+});
+
+layer.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest('.item');
+  if (!el) return;
+  if (el.classList.contains('hidden-item') && !el.classList.contains('revealed')) {
+    e.preventDefault();
+    el.classList.add('revealed');
+    return;
+  }
+  if (el.dataset.link) { e.preventDefault(); openLink(el); }
+});
+
+/* ============================================================
+   LAMP OVERLAY — the menu on top of the desk
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var SAVE_PREFIX = 'whitby_';
+  var SESSION_KEY = 'whitby_lamp_shown';
+
+  function clearAllSaves() {
+    try {
+      var keys = Object.keys(localStorage);
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].indexOf(SAVE_PREFIX) === 0) localStorage.removeItem(keys[i]);
+      }
+    } catch (e) {}
+  }
+  function hasAnySave() {
+    try {
+      var keys = Object.keys(localStorage);
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].indexOf(SAVE_PREFIX) === 0) return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+  function lampAlreadyShown() {
+    try { return sessionStorage.getItem(SESSION_KEY) === 'true'; } catch (e) { return false; }
+  }
+  function markLampShown() {
+    try { sessionStorage.setItem(SESSION_KEY, 'true'); } catch (e) {}
+  }
+
+  var overlay     = document.getElementById('lampOverlay');
+  var blackLamp   = document.getElementById('blackLamp');
+  var newGameBtn  = document.getElementById('newGameBtn');
+  var continueBtn = document.getElementById('continueGameBtn');
+  var howBtn      = document.getElementById('howToPlayBtn');
+  var howPage     = document.getElementById('lampHowPage');
+  var howBack     = document.getElementById('lampHowBack');
+
+  /* If the lamp was already dismissed this session, skip it */
+  if (lampAlreadyShown()) {
+    overlay.classList.add('hidden');
+    overlay.style.display = 'none';
+  }
+
+  var preload = new Image();
+  preload.src = 'lampon.png';
+
+  function hideOverlay() {
+    markLampShown();
+    overlay.style.transition = 'opacity .5s ease';
+    overlay.style.opacity = '0';
+    setTimeout(function () {
+      overlay.style.display = 'none';
+    }, 550);
+  }
+
+  /* Lamp click — crossfade and reveal the menu */
+  blackLamp.addEventListener('click', function () {
+    if (overlay.classList.contains('lit')) return;
+    overlay.classList.add('lit');
+  });
+
+  /* Continue button state */
+  function refreshContinue() {
+    var has = hasAnySave();
+    continueBtn.disabled = !has;
+    continueBtn.title = has ? '' : 'No saved game found';
+  }
+  refreshContinue();
+
+  /* New Game — clears every save, then reveals the desk */
+  newGameBtn.addEventListener('click', function () {
+    if (hasAnySave()) {
+      var ok = window.confirm('Starting a new game will erase all your progress.\n\nContinue?');
+      if (!ok) return;
+      clearAllSaves();
+      refreshContinue();
+    }
+    hideOverlay();
+  });
+
+  /* Continue Game — reveals the desk */
+  continueBtn.addEventListener('click', function () {
+    if (continueBtn.disabled) return;
+    hideOverlay();
+  });
+
+  /* How To Play */
+  howBtn.addEventListener('click', function () { howPage.classList.add('active'); });
+  howBack.addEventListener('click', function () { howPage.classList.remove('active'); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && howPage.classList.contains('active')) {
+      howPage.classList.remove('active');
+    }
+  });
+})();
+
+/* Fade the whole page in when ready */
+window.addEventListener('load', function () { document.body.classList.add('ready'); });
+if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+</script>
+</body>
+</html>
