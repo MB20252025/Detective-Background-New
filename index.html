@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Whitby — Main Menu</title>
+<link rel="preload" as="image" href="lampoff.png">
+<link rel="preload" as="image" href="lampon.png">
+<link rel="preload" as="image" href="blacklamp.png">
+<style>
+:root {
+  --lamp-scale: 0.85;
+  --switch-x: 83.5;
+  --switch-y: 58.2;
+  --menu-x: 50;
+  --menu-y: 62;
+  --new-game-url: 'desk.html';
+  --continue-url: 'desk.html';
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%; overflow: hidden;
+  background: #000;
+  font-family: 'Courier New', monospace;
+  -webkit-tap-highlight-color: transparent;
+}
+body { opacity: 0; transition: opacity .4s ease; }
+body.ready { opacity: 1; }
+
+.lamp-stage {
+  position: relative;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+.lamp-layer {
+  position: absolute; inset: 0;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: calc(var(--lamp-scale) * 100%) auto;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+}
+.lamp-layer.off { background-image: url('lampoff.png'); opacity: 1; }
+.lamp-layer.on  { background-image: url('lampon.png');  opacity: 0; }
+.lamp-stage.lit .lamp-layer.off { opacity: 0; }
+.lamp-stage.lit .lamp-layer.on  { opacity: 1; }
+
+.blacklamp {
+  position: absolute;
+  left: calc(var(--switch-x) * 1%);
+  top: calc(var(--switch-y) * 1%);
+  width: 10vw; height: auto;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 10;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: filter .25s ease, transform .25s ease, opacity .35s ease;
+  animation: lampPulse 2.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 2px rgba(255, 200, 90, 0.55));
+}
+.blacklamp:hover {
+  filter: brightness(1.08) drop-shadow(0 0 3px rgba(255, 210, 110, 0.75));
+  transform: translate(-50%, -50%) scale(1.05);
+}
+.blacklamp:active { transform: translate(-50%, -50%) scale(0.96); }
+@keyframes lampPulse {
+  0%, 100% { filter: drop-shadow(0 0 1.5px rgba(255, 200, 90, 0.45)) brightness(1); }
+  50%      { filter: drop-shadow(0 0 3px   rgba(255, 210, 110, 0.70)) brightness(1.04); }
+}
+.lamp-stage.lit .blacklamp { opacity: 0; pointer-events: none; }
+
+.menu {
+  position: absolute;
+  left: calc(var(--menu-x) * 1%);
+  top: calc(var(--menu-y) * 1%);
+  transform: translate(-50%, -50%) translateY(24px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition:
+    opacity   .55s ease .45s,
+    transform .55s cubic-bezier(.2,.9,.3,1.05) .45s;
+}
+.lamp-stage.lit .menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) translateY(0);
+}
+
+.menu-btn {
+  position: relative;
+  padding: 15px 50px;
+  min-width: 300px;
+  background: rgba(18, 12, 6, 0.78);
+  color: #e8d9b8;
+  border: 2px solid #8a6e42;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+  font-weight: bold;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-align: center;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07);
+  transition: all .18s ease;
+}
+.menu-btn:hover:not(:disabled) {
+  background: rgba(55, 38, 16, 0.92);
+  color: #fff;
+  border-color: #d8ab6a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.7), 0 0 26px rgba(255,210,130,0.32), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.menu-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 3px 10px rgba(0,0,0,0.5); }
+.menu-btn:disabled { opacity: 0.35; cursor: not-allowed; color: #9a8a68; border-color: #4a3a24; }
+
+@media (max-width: 640px) {
+  .menu-btn { min-width: 220px; padding: 12px 24px; font-size: 0.9rem; letter-spacing: 3px; }
+  .menu { gap: 10px; }
+  :root { --lamp-scale: 0.9; }
+  .blacklamp { width: 22vw; }
+}
+
+.how-page {
+  position: fixed; inset: 0;
+  background: #0e0a07;
+  z-index: 500;
+  display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none;
+  transition: opacity .35s ease;
+}
+.how-page.active { opacity: 1; pointer-events: auto; }
+.page-back {
+  position: absolute; top: 20px; left: 20px;
+  padding: 10px 22px;
+  background: rgba(20, 15, 8, 0.88);
+  color: #e8d9b8;
+  border: 1px solid #8a6e42;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  cursor: pointer;
+  z-index: 10;
+}
+.page-back:hover { background: rgba(60, 40, 15, 0.95); color: #fff; border-color: #d8ab6a; }
+.page-content {
+  flex: 1;
+  padding: 90px 40px 40px;
+  overflow-y: auto;
+  color: #d8c093;
+  font-size: 1rem;
+  line-height: 1.7;
+  display: flex; align-items: center; justify-content: center;
+}
+.page-placeholder {
+  text-align: center;
+  color: #6a5a3f;
+  font-size: 0.9rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.toast {
+  position: fixed;
+  bottom: 30px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(20, 15, 8, 0.92);
+  border: 1px solid #8a6e42;
+  border-radius: 40px;
+  padding: 12px 28px;
+  color: #e8d9b8;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .25s, transform .25s;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="lamp-stage" id="lampStage">
+  <div class="lamp-layer off"></div>
+  <div class="lamp-layer on"></div>
+
+  <img src="blacklamp.png" class="blacklamp" id="blackLamp" alt="Turn on the lamp" draggable="false" />
+
+  <div class="menu" id="menu">
+    <button class="menu-btn" id="newGameBtn">New Game</button>
+    <button class="menu-btn" id="continueGameBtn">Continue Game</button>
+    <button class="menu-btn" id="howToPlayBtn">How To Play</button>
+  </div>
+</div>
+
+<div class="how-page" id="howPage">
+  <button class="page-back" id="howBackBtn">← BACK</button>
+  <div class="page-content" id="howContent">
+    <div class="page-placeholder">How To Play — coming soon</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var css      = getComputedStyle(document.documentElement);
+  var NEW_URL  = css.getPropertyValue('--new-game-url').trim().replace(/^['"]|['"]$/g, '');
+  var CONT_URL = css.getPropertyValue('--continue-url').trim().replace(/^['"]|['"]$/g, '');
+  var SAVE_PREFIX = 'whitby_';
+
+  function clearAllSaves() {
+    try {
+      var keys = Object.keys(localStorage);
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].indexOf(SAVE_PREFIX) === 0) localStorage.removeItem(keys[i]);
+      }
+    } catch (e) {}
+  }
+  function hasAnySave() {
+    try {
+      var keys = Object.keys(localStorage);
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].indexOf(SAVE_PREFIX) === 0) return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  var stage       = document.getElementById('lampStage');
+  var blackLamp   = document.getElementById('blackLamp');
+  var newGameBtn  = document.getElementById('newGameBtn');
+  var continueBtn = document.getElementById('continueGameBtn');
+  var howBtn      = document.getElementById('howToPlayBtn');
+  var howPage     = document.getElementById('howPage');
+  var howBackBtn  = document.getElementById('howBackBtn');
+  var toastEl     = document.getElementById('toast');
+
+  var preload = new Image();
+  preload.src = 'lampon.png';
+
+  window.addEventListener('load', function () {
+    document.body.classList.add('ready');
+  });
+  if (document.readyState === 'complete') {
+    document.body.classList.add('ready');
+  }
+
+  var toastTimer = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2400);
+  }
+
+  /* Lamp switch — crossfade and reveal menu */
+  blackLamp.addEventListener('click', function () {
+    if (stage.classList.contains('lit')) return;
+    stage.classList.add('lit');
+  });
+
+  function refreshContinueButton() {
+    var has = hasAnySave();
+    continueBtn.disabled = !has;
+    continueBtn.title = has ? '' : 'No saved game found';
+  }
+  refreshContinueButton();
+
+  function goTo(url) {
+    document.body.style.transition = 'opacity .25s ease';
+    document.body.style.opacity = '0';
+    setTimeout(function () { window.location.href = url; }, 260);
+  }
+
+  /* New Game — clears every whitby_* save then opens the desk */
+  newGameBtn.addEventListener('click', function () {
+    if (hasAnySave()) {
+      var ok = window.confirm('Starting a new game will erase all your progress.\n\nContinue?');
+      if (!ok) return;
+      clearAllSaves();
+      refreshContinueButton();
+      showToast('Progress reset');
+      setTimeout(function () { goTo(NEW_URL); }, 400);
+    } else {
+      goTo(NEW_URL);
+    }
+  });
+
+  /* Continue Game — opens the desk */
+  continueBtn.addEventListener('click', function () {
+    if (continueBtn.disabled) return;
+    goTo(CONT_URL);
+  });
+
+  /* How To Play */
+  howBtn.addEventListener('click', function () { howPage.classList.add('active'); });
+  howBackBtn.addEventListener('click', function () { howPage.classList.remove('active'); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && howPage.classList.contains('active')) {
+      howPage.classList.remove('active');
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
