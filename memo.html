@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Whitby Constabulary — Memo</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+        min-height: 100vh;
+        background: #0a0705;
+        font-family: 'Courier New', monospace;
+        color: #d9c58f;
+        overflow-x: hidden;
+    }
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px 20px;
+        opacity: 0;
+        transition: opacity .5s ease;
+        background:
+            radial-gradient(circle at 50% 20%, #1a130a 0%, #0a0705 70%);
+    }
+    body.ready { opacity: 1; }
+
+    .memo {
+        max-width: 620px;
+        width: 100%;
+        background: linear-gradient(160deg, #1c1410 0%, #120c07 100%);
+        border: 1px solid #6b4a25;
+        border-radius: 6px;
+        padding: 34px 30px 28px;
+        box-shadow:
+            0 20px 60px rgba(0,0,0,0.7),
+            0 0 0 4px rgba(107, 74, 37, 0.15),
+            inset 0 1px 0 rgba(255,255,255,0.04);
+        position: relative;
+    }
+
+    /* Aged paper corner accents */
+    .memo::before,
+    .memo::after {
+        content: '';
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        border: 1px solid #8a6e42;
+    }
+    .memo::before { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+    .memo::after  { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+    .letterhead {
+        text-align: center;
+        padding-bottom: 20px;
+        border-bottom: 1px dashed rgba(138, 110, 66, 0.45);
+        margin-bottom: 22px;
+    }
+    .crest {
+        font-size: 2rem;
+        filter: drop-shadow(0 0 14px rgba(240, 180, 41, 0.5));
+        margin-bottom: 8px;
+    }
+    .constabulary {
+        font-size: 0.88rem;
+        letter-spacing: 0.35em;
+        font-weight: bold;
+        color: #eace9f;
+        margin-bottom: 4px;
+    }
+    .dept {
+        font-size: 0.62rem;
+        letter-spacing: 0.28em;
+        color: #8a6e42;
+        text-transform: uppercase;
+    }
+
+    .memo-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px dashed rgba(138, 110, 66, 0.30);
+    }
+    .meta-row {
+        display: flex;
+        gap: 14px;
+        font-size: 0.78rem;
+        align-items: baseline;
+    }
+    .meta-row .label {
+        color: #8a6e42;
+        letter-spacing: 0.22em;
+        font-weight: bold;
+        flex-shrink: 0;
+        min-width: 48px;
+    }
+    .meta-row .value {
+        color: #d9c58f;
+        letter-spacing: 0.06em;
+    }
+
+    .memo-body {
+        font-size: 0.92rem;
+        line-height: 1.75;
+        color: #c9b585;
+        letter-spacing: 0.02em;
+        margin-bottom: 24px;
+    }
+    .memo-body p {
+        margin-bottom: 16px;
+    }
+    .memo-body p:last-child {
+        margin-bottom: 0;
+    }
+    .memo-body strong {
+        color: #eace9f;
+        font-weight: bold;
+    }
+    .memo-body em {
+        color: #b09a70;
+        font-style: italic;
+    }
+
+    .memo-sign {
+        text-align: right;
+        padding-top: 18px;
+        border-top: 1px dashed rgba(138, 110, 66, 0.30);
+        margin-bottom: 24px;
+    }
+    .sign-name {
+        font-size: 1.05rem;
+        color: #eace9f;
+        font-style: italic;
+        letter-spacing: 0.05em;
+        margin-bottom: 2px;
+    }
+    .sign-title {
+        font-size: 0.66rem;
+        letter-spacing: 0.24em;
+        color: #8a6e42;
+        text-transform: uppercase;
+    }
+
+    .continue-btn {
+        display: block;
+        width: 100%;
+        padding: 16px 20px;
+        background: linear-gradient(180deg, #d99a1a, #a37812);
+        border: 1px solid #ffd066;
+        border-radius: 12px;
+        color: #1a1006;
+        font-family: 'Courier New', monospace;
+        font-size: 0.88rem;
+        font-weight: bold;
+        letter-spacing: 0.20em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow:
+            0 8px 22px rgba(240, 180, 41, 0.35),
+            inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        transition: transform 0.08s, box-shadow 0.15s;
+    }
+    .continue-btn:hover {
+        background: linear-gradient(180deg, #ffd066, #d99a1a);
+    }
+    .continue-btn:active {
+        transform: translateY(2px);
+        box-shadow: 0 3px 12px rgba(240, 180, 41, 0.35);
+    }
+
+    @media (max-width: 480px) {
+        body { padding: 20px 12px; }
+        .memo { padding: 24px 20px 20px; }
+        .crest { font-size: 1.7rem; }
+        .constabulary { font-size: 0.76rem; letter-spacing: 0.28em; }
+        .memo-body { font-size: 0.84rem; line-height: 1.7; }
+        .meta-row { font-size: 0.72rem; }
+    }
+</style>
+</head>
+<body>
+
+<div class="memo">
+    <div class="letterhead">
+        <div class="crest">⚖️</div>
+        <div class="constabulary">WHITBY CONSTABULARY</div>
+        <div class="dept">Criminal Investigation Department</div>
+    </div>
+
+    <div class="memo-meta">
+        <div class="meta-row"><span class="label">FROM</span><span class="value">Chief Inspector Ashworth</span></div>
+        <div class="meta-row"><span class="label">TO</span><span class="value">Detective</span></div>
+        <div class="meta-row"><span class="label">RE</span><span class="value">Captain Hale Case — Preliminary Lead</span></div>
+        <div class="meta-row"><span class="label">REF</span><span class="value">WH-2024-06</span></div>
+    </div>
+
+    <div class="memo-body">
+        <p>Detective,</p>
+
+        <p>The Hale jewellery case is officially reopened. <strong>Six pieces</strong> — all believed lost for four centuries — have resurfaced in the last fortnight, and every one of them has vanished again.</p>
+
+        <p>I've been through the archive's sign-in records. One name keeps appearing at the wrong times. <strong>Harold Pryce</strong> — night archivist at the Lincoln Record Office. Twenty years in the post. No priors. But his finances tell a different story, and the timing doesn't sit right with me.</p>
+
+        <p>Bring him in. Ask him about the Vale research permits, and see how he handles the question.</p>
+
+        <p><em>You'll know the rest when you see it.</em></p>
+    </div>
+
+    <div class="memo-sign">
+        <div class="sign-name">— CI Ashworth</div>
+        <div class="sign-title">Chief Inspector</div>
+    </div>
+
+    <button class="continue-btn" id="continueBtn">Continue →</button>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    // Mark the memo as seen so it doesn't show again
+    try { localStorage.setItem('ashworth_memo_seen', '1'); } catch (e) {}
+
+    // Fade in
+    function markReady() { document.body.classList.add('ready'); }
+    window.addEventListener('load', markReady);
+    if (document.readyState === 'complete') markReady();
+
+    document.getElementById('continueBtn').addEventListener('click', function () {
+        document.body.style.transition = 'opacity .3s ease';
+        document.body.style.opacity = '0';
+        setTimeout(function () {
+            window.location.href = 'desk.html';
+        }, 320);
+    });
+})();
+</script>
+</body>
+</html>
