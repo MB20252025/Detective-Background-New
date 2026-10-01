@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Present Your Accusation</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+        min-height: 100vh;
+        background: #060a10;
+        font-family: 'Courier New', monospace;
+        color: #c8dae5;
+        overflow-x: hidden;
+    }
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px 20px;
+        opacity: 0;
+        transition: opacity .5s ease;
+    }
+    body.ready { opacity: 1; }
+
+    .accuse-stage {
+        max-width: 720px;
+        width: 100%;
+    }
+
+    /* ---------- CHOOSE SCREEN ---------- */
+    .accuse-choose {
+        text-align: center;
+    }
+    .accuse-choose h1 {
+        font-size: 1.5rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #eace9f;
+        margin-bottom: 12px;
+        text-shadow: 0 0 20px rgba(234, 206, 159, 0.3);
+    }
+    .accuse-choose .sub {
+        font-size: 0.85rem;
+        color: #8892ab;
+        letter-spacing: 0.04em;
+        line-height: 1.6;
+        margin-bottom: 32px;
+        max-width: 480px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .suspect-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 26px;
+    }
+
+    .suspect-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 18px 22px;
+        background: linear-gradient(160deg, #121a22 0%, #0b1218 100%);
+        border: 2px solid #1e3a4a;
+        border-radius: 14px;
+        cursor: pointer;
+        text-align: left;
+        transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+        color: inherit;
+        font-family: inherit;
+        width: 100%;
+    }
+    .suspect-card:hover {
+        transform: translateY(-2px);
+        border-color: #00e5ff;
+        box-shadow: 0 12px 30px -12px rgba(0, 229, 255, 0.35);
+    }
+    .suspect-card:active {
+        transform: translateY(0);
+    }
+
+    .suspect-card .initials {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #0f1a22;
+        border: 2px solid #2a4a5a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.05rem;
+        color: #b0d4e8;
+        flex-shrink: 0;
+    }
+    .suspect-card .info {
+        flex: 1;
+        min-width: 0;
+    }
+    .suspect-card .name {
+        font-size: 1rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #eace9f;
+        margin-bottom: 4px;
+        font-weight: bold;
+    }
+    .suspect-card .role {
+        font-size: 0.72rem;
+        color: #6a8a9a;
+        letter-spacing: 0.04em;
+    }
+    .suspect-card .arrow {
+        font-size: 1.4rem;
+        color: #4a8aaa;
+        flex-shrink: 0;
+    }
+
+    .back-link {
+        display: inline-block;
+        padding: 12px 28px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 10px;
+        color: #c8dae5;
+        text-decoration: none;
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        transition: background .15s ease;
+    }
+    .back-link:hover {
+        background: rgba(255,255,255,0.09);
+    }
+
+    /* ---------- ENDING SCREEN ---------- */
+    .ending {
+        display: none;
+        text-align: center;
+    }
+    .ending.active {
+        display: block;
+    }
+    .ending .badge {
+        display: inline-block;
+        padding: 6px 20px;
+        border-radius: 40px;
+        font-size: 0.68rem;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        font-weight: bold;
+        margin-bottom: 22px;
+    }
+    .ending.correct .badge {
+        background: #1f6e43;
+        color: #d6ffee;
+    }
+    .ending.wrong .badge {
+        background: #7a2f1f;
+        color: #ffd9cc;
+    }
+    .ending.insufficient .badge {
+        background: #4a3a12;
+        color: #ffd066;
+    }
+
+    .ending h2 {
+        font-size: 1.4rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        margin-bottom: 22px;
+        color: #eace9f;
+    }
+    .ending .body {
+        font-size: 0.92rem;
+        line-height: 1.75;
+        color: #a0b4c4;
+        margin-bottom: 24px;
+        text-align: left;
+        letter-spacing: 0.02em;
+    }
+    .ending .body p {
+        margin-bottom: 14px;
+    }
+    .ending .body strong {
+        color: #eace9f;
+    }
+    .ending .body em {
+        color: #b09a70;
+        font-style: italic;
+    }
+
+    .ending .actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .ending .actions a,
+    .ending .actions button {
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.82rem;
+        font-weight: bold;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform .08s ease, box-shadow .15s ease;
+    }
+    .ending .actions .primary {
+        background: linear-gradient(180deg, #ffd066, #d99a1a);
+        border: 1px solid #ffd066;
+        color: #1a1006;
+        box-shadow: 0 6px 20px rgba(240, 180, 41, 0.35);
+    }
+    .ending .actions .primary:active {
+        transform: translateY(2px);
+    }
+    .ending .actions .ghost {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.15);
+        color: #c8dae5;
+    }
+    .ending .actions .ghost:hover {
+        background: rgba(255,255,255,0.10);
+    }
+
+    @media (max-width: 500px) {
+        .accuse-choose h1 { font-size: 1.2rem; }
+        .suspect-card { padding: 16px 18px; gap: 14px; }
+        .suspect-card .initials { width: 44px; height: 44px; font-size: 0.95rem; }
+        .suspect-card .name { font-size: 0.9rem; }
+        .suspect-card .role { font-size: 0.68rem; }
+        .ending h2 { font-size: 1.15rem; }
+        .ending .body { font-size: 0.84rem; }
+    }
+</style>
+</head>
+<body>
+
+<div class="accuse-stage">
+
+    <!-- ---------- CHOOSE ---------- -->
+    <div class="accuse-choose" id="accuseChoose">
+        <h1>⚖️ Present Your Accusation</h1>
+        <p class="sub">You've gathered the evidence. Choose carefully — the case turns on this decision.</p>
+
+        <div class="suspect-list">
+            <button class="suspect-card" data-suspect="pryce">
+                <div class="initials">HP</div>
+                <div class="info">
+                    <div class="name">Harold Pryce</div>
+                    <div class="role">Night Archivist, Lincoln Record Office</div>
+                </div>
+                <div class="arrow">→</div>
+            </button>
+
+            <button class="suspect-card" data-suspect="walker">
+                <div class="initials">EW</div>
+                <div class="info">
+                    <div class="name">Edmund Walker</div>
+                    <div class="role">Owner, Walker's Jewellery Store, Stamford</div>
+                </div>
+                <div class="arrow">→</div>
+            </button>
+
+            <button class="suspect-card" data-suspect="sienna">
+                <div class="initials">SC</div>
+                <div class="info">
+                    <div class="name">Sienna Clarke</div>
+                    <div class="role">Vale's niece and research assistant</div>
+                </div>
+                <div class="arrow">→</div>
+            </button>
+        </div>
+
+        <a class="back-link" href="interrogation.htm">← Back to Interrogation</a>
+    </div>
+
+    <!-- ---------- ENDING: PRYCE (wrong) ---------- -->
+    <div class="ending wrong" id="endingPryce">
+        <div class="badge">❌ Case Closed — Unsolved</div>
+        <h2>Harold Pryce</h2>
+        <div class="body">
+            <p>Pryce is charged with bribery and misuse of archival access. Ashworth signs off on it. It sticks.</p>
+            <p>Three weeks later, a courier leaves a package at the station — the second stolen piece, no note, no return address.</p>
+            <p><strong>You chased the easy one, Detective.</strong> The real thief is still out there.</p>
+        </div>
+        <div class="actions">
+            <a class="primary" href="desk.html">Return to Desk</a>
+        </div>
+    </div>
+
+    <!-- ---------- ENDING: WALKER (wrong) ---------- -->
+    <div class="ending wrong" id="endingWalker">
+        <div class="badge">❌ Case Closed — Unsolved</div>
+        <h2>Edmund Walker</h2>
+        <div class="body">
+            <p>Walker is charged with receiving stolen goods. He takes the plea. His shop is shuttered, his name in the papers.</p>
+            <p>But the pieces don't come back. And no one can place him anywhere near Vale — or the vault.</p>
+            <p><strong>He's guilty of something, Detective. Just not what we needed him guilty of.</strong></p>
+        </div>
+        <div class="actions">
+            <a class="primary" href="desk.html">Return to Desk</a>
+        </div>
+    </div>
+
+    <!-- ---------- ENDING: SIENNA — INSUFFICIENT ---------- -->
+    <div class="ending insufficient" id="endingInsufficient">
+        <div class="badge">🔒 Insufficient Evidence</div>
+        <h2>Sienna Clarke</h2>
+        <div class="body">
+            <p>You've accused Sienna Clarke without the evidence to hold her.</p>
+            <p>She doesn't flinch. <em>"Interesting theory, Detective. I'd like to see you prove it."</em></p>
+            <p>The interview ends. She walks out.</p>
+            <p><strong>You're going to need more than instinct.</strong></p>
+        </div>
+        <div class="actions">
+            <button class="primary" id="returnToInterrogation">Continue Investigating</button>
+        </div>
+    </div>
+
+    <!-- ---------- ENDING: SIENNA — CORRECT ---------- -->
+    <div class="ending correct" id="endingCorrect">
+        <div class="badge">✅ Case Closed — Solved</div>
+        <h2>Sienna Clarke</h2>
+        <div class="body">
+            <p>Sienna Clarke doesn't flinch — until you place the locker photograph and the solved cryptogram on the table in front of her.</p>
+            <p>Then she does.</p>
+            <p><em>"...Then you already know everything that matters."</em></p>
+            <p>The confession takes forty minutes. The trail was deliberate — every theft a breadcrumb toward the vault beneath the New Theatre Royal. Arthur Vale's life work. Arthur Vale's obsession. Arthur Vale, who is now nowhere to be found.</p>
+            <p>The vault is opened. Six pieces of Captain Hale's collection, intact. A logbook — the captain's own, barely legible after four centuries — listing more. Much more.</p>
+            <p><strong>Sienna Clarke is remanded in custody. Arthur Vale remains missing.</strong> The logbook, they say, is the beginning of a longer story.</p>
+        </div>
+        <div class="actions">
+            <a class="primary" href="desk.html">Return to Desk</a>
+        </div>
+    </div>
+
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    function hasFlag(key) {
+        try { return localStorage.getItem(key) === '1'; }
+        catch (e) { return false; }
+    }
+
+    function show(id) {
+        document.querySelectorAll('.ending').forEach(function (el) {
+            el.classList.remove('active');
+        });
+        document.getElementById('accuseChoose').style.display = 'none';
+        var el = document.getElementById(id);
+        if (el) el.classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    function handleAccusation(sid) {
+        if (sid === 'pryce') {
+            try { localStorage.setItem('case_closed', 'pryce'); } catch (e) {}
+            show('endingPryce');
+            return;
+        }
+        if (sid === 'walker') {
+            try { localStorage.setItem('case_closed', 'walker'); } catch (e) {}
+            show('endingWalker');
+            return;
+        }
+        if (sid === 'sienna') {
+            var hasLocker = hasFlag('evidence_lockerPhoto');
+            var hasCrypto = hasFlag('evidence_cryptogram');
+            if (hasLocker && hasCrypto) {
+                try {
+                    localStorage.setItem('case_closed', 'sienna');
+                    localStorage.setItem('case_solved', '1');
+                } catch (e) {}
+                show('endingCorrect');
+            } else {
+                show('endingInsufficient');
+            }
+            return;
+        }
+    }
+
+    document.querySelectorAll('.suspect-card').forEach(function (card) {
+        card.addEventListener('click', function () {
+            handleAccusation(card.dataset.suspect);
+        });
+    });
+
+    var backBtn = document.getElementById('returnToInterrogation');
+    if (backBtn) {
+        backBtn.addEventListener('click', function () {
+            window.location.href = 'interrogation.htm';
+        });
+    }
+
+    function markReady() { document.body.classList.add('ready'); }
+    window.addEventListener('load', markReady);
+    if (document.readyState === 'complete') markReady();
+})();
+</script>
+</body>
+</html>
