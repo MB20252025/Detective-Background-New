@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Image Layout</title>
+<link rel="preload" as="image" href="Dback.jpg">
+<link rel="preload" as="image" href="cryptomemo.jpg">
+<link rel="preload" as="image" href="archivelog.jpg">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, sans-serif;
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+  body.ready { opacity: 1; }
+
+  .stage {
+    --ar: 1.7778;
+    position: relative;
+    width: min(100vw, calc(100vh * var(--ar)));
+    aspect-ratio: var(--ar);
+    background: #222 center / 100% 100% no-repeat;
+    overflow: hidden;
+  }
+
+  .layer {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+
+  .item {
+    position: absolute;
+    left: calc(var(--x) * 1%);
+    top:  calc(var(--y) * 1%);
+    width: calc(var(--w) * 1%);
+    height: auto;
+    transform: translate(-50%, -50%)
+               rotate(calc(var(--r) * 1deg))
+               scale(var(--s));
+    transform-origin: 50% 50%;
+    z-index: var(--z);
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .item.clickable {
+    pointer-events: auto;
+    cursor: pointer;
+    transition: filter .22s ease;
+  }
+  .item.clickable:hover {
+    filter: brightness(1.15) drop-shadow(0 0 14px rgba(255, 224, 160, .7));
+  }
+  .item.clickable:active {
+    filter: brightness(1.25) drop-shadow(0 0 22px rgba(255, 224, 160, .9));
+  }
+
+  .item.hidden-item {
+    opacity: 0;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: opacity .7s ease, filter .22s ease;
+  }
+  .item.hidden-item.revealed { opacity: 1; }
+  .item.hidden-item.revealed:hover {
+    filter: brightness(1.15) drop-shadow(0 0 14px rgba(255, 224, 160, .7));
+  }
+
+  /* ============================================================
+     STEP 1 — POPUP MESSAGE
+     ============================================================ */
+  .popup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99998;
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity .3s ease;
+  }
+  .popup-overlay.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  .popup-card {
+    max-width: 440px;
+    width: 100%;
+    padding: 34px 28px 26px;
+    background: linear-gradient(160deg, #1e3040 0%, #0f1d29 100%);
+    border: 2px solid #b68b5c;
+    border-radius: 16px;
+    box-shadow:
+      0 24px 60px rgba(0, 0, 0, 0.8),
+      0 0 40px rgba(240, 180, 41, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    text-align: center;
+    transform: translateY(14px) scale(0.96);
+    transition: transform .35s cubic-bezier(0.2, 0.9, 0.3, 1.05);
+  }
+  .popup-overlay.active .popup-card {
+    transform: translateY(0) scale(1);
+  }
+
+  .popup-icon {
+    font-size: 2.4rem;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 0 14px rgba(240, 180, 41, 0.55));
+  }
+
+  .popup-card h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #eace9f;
+    margin: 0 0 16px;
+  }
+
+  .popup-card p {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: #cdba92;
+    margin: 0 0 24px;
+    letter-spacing: 0.01em;
+  }
+
+  .popup-continue-btn {
+    display: inline-block;
+    padding: 14px 40px;
+    background: linear-gradient(180deg, #d99a1a, #a37812);
+    border: 1px solid #ffd066;
+    border-radius: 12px;
+    color: #1a1006;
+    font-family: 'Courier New', monospace;
+    font-size: 0.86rem;
+    font-weight: bold;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow:
+      0 8px 22px rgba(240, 180, 41, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease;
+    white-space: nowrap;
+  }
+  .popup-continue-btn:hover {
+    background: linear-gradient(180deg, #ffd066, #d99a1a);
+  }
+  .popup-continue-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 3px 12px rgba(240, 180, 41, 0.35);
+  }
+
+  /* ============================================================
+     STEP 2 — MEMO IMAGE
+     ============================================================ */
+  .memo-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .memo-overlay.active {
+    display: flex;
+  }
+
+  .memo-img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+    opacity: 0;
+    transition: opacity .45s ease;
+  }
+  .memo-overlay.active .memo-img {
+    opacity: 1;
+  }
+
+  :root {
+    --memo-btn-bottom: 5%;
+    --memo-btn-left:   50%;
+    --memo-btn-offset: 0;
+  }
+  .memo-desk-btn {
+    position: absolute;
+    bottom: var(--memo-btn-bottom);
+    left: calc(var(--memo-btn-left) + var(--memo-btn-offset) * 1px);
+    transform: translateX(-50%);
+    padding: 14px 42px;
+    background: linear-gradient(180deg, #d99a1a, #a37812);
+    border: 1px solid #ffd066;
+    border-radius: 12px;
+    color: #1a1006;
+    font-family: 'Courier New', monospace;
+    font-size: 0.88rem;
+    font-weight: bold;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow:
+      0 8px 22px rgba(0, 0, 0, 0.6),
+      0 0 24px rgba(240, 180, 41, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease,
+                opacity .45s ease;
+    z-index: 2;
+    white-space: nowrap;
+    opacity: 0;
+  }
+  .memo-overlay.active .memo-desk-btn {
+    opacity: 1;
+  }
+  .memo-desk-btn:hover {
+    background: linear-gradient(180deg, #ffd066, #d99a1a);
+  }
+  .memo-desk-btn:active {
+    transform: translateX(-50%) translateY(2px);
+    box-shadow: 0 3px 12px rgba(240, 180, 41, 0.4);
+  }
+
+  @media (max-width: 480px) {
+    .popup-card { padding: 26px 22px 20px; }
+    .popup-card h2 { font-size: 0.95rem; }
+    .popup-card p { font-size: 0.86rem; }
+    .popup-continue-btn { padding: 12px 30px; font-size: 0.78rem; }
+    .memo-desk-btn {
+      padding: 12px 30px;
+      font-size: 0.76rem;
+      letter-spacing: 0.16em;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="stage">
+    <div class="layer" id="layer"></div>
+  </div>
+
+  <!-- STEP 1 — popup message (content filled by JS) -->
+  <div class="popup-overlay" id="popupOverlay">
+    <div class="popup-card">
+      <div class="popup-icon" id="popupIcon">📋</div>
+      <h2 id="popupTitle">Evidence Recovered</h2>
+      <p id="popupMessage"></p>
+      <button class="popup-continue-btn" id="popupContinueBtn">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 — memo image (src filled by JS) -->
+  <div class="memo-overlay" id="memoOverlay">
+    <img class="memo-img" id="memoImg" src="" alt="Evidence memo" draggable="false">
+    <button class="memo-desk-btn" id="memoDeskBtn">← Desk</button>
+  </div>
+
+<script>
+/* ============================================================
+   ★★★ PUZZLE FILE ORDER — EDIT THESE FILENAMES ★★★
+   ============================================================ */
+const PUZZLE_FILES = [
+    'p1.html',
+    'p2.htm',
+    'p3.htm',
+    'p4.html',
+    'p5.html',
+    'p6.htm',
+    'p7.html'
+];
+/* ========================= END PUZZLE LIST ================= */
+
+
+/* ============================================================
+   IMAGE LAYOUT
+   ============================================================ */
+const CONFIG = {
+  background: 'Dback.jpg',
+
+  global: {
+    x: 0,
+    y: 0,
+    scale: 1
+  },
+
+  images: [
+    { file: 'D1.png',      x: 23,    y: 93.5, w: 14, z: 1,  scale: 1.2,  rotation: 0, link: 'interrogation.html' },
+    { file: 'D2.png',      x: 9.4,   y: 80,   w: 14, z: 4,  scale: 1.5,  rotation: 0, link: 'puzzles.html' },
+    { file: 'D3.png',      x: 55,    y: 74,   w: 14, z: 3,  scale: 3.0,  rotation: 0, link: 'newspaper.html' },
+    { file: 'D4.png',      x: 12.5,  y: 62,   w: 14, z: 2,  scale: 2.1,  rotation: 0, link: 'suspect.html' },
+    { file: 'D5.png',      x: 52,    y: 82,   w: 14, z: 5,  scale: 4.2,  rotation: 0, link: 'hanoi.html' },
+    { file: 'D6.png',      x: 82.5,  y: 21.5, w: 14, z: 6,  scale: 2.45, rotation: 0, link: 'cryptogram.html' },
+    { file: 'D7.png',      x: 51,    y: 53.1, w: 14, z: 7,  scale: 3.36, rotation: 0, link: 'p1.html' },
+    { file: 'D8.png',      x: 88,    y: 63,   w: 14, z: 8,  scale: 1.8,  rotation: 0, link: 'index.html' },
+    { file: 'D9.png',      x: 50.5,  y: 28,   w: 14, z: 9,  scale: 1.8,  rotation: 0, link: 'coffee.html' },
+    { file: 'D10.png',     x: 84,    y: 95,   w: 13, z: 10, scale: 2.3,  rotation: 0, link: 'casebook.html' },
+
+    { file: 'emptycup.png', x: 93.31, y: 84.33, w: 14, z: 11, scale: 0.965, rotation: 0,
+      hidden: true },
+
+    { file: 'mapboard.png', x: 17,    y: 28,   w: 14, z: 12, scale: 2.4,  rotation: 0, link: 'maps.html' },
+
+    { file: 'fullcup.png',  x: 93.31, y: 84.33, w: 14, z: 13, scale: 0.965, rotation: 0,
+      hidden: true }
+  ]
+};
+/* ========================= END OF CONFIG ==================== */
+
+
+const stage = document.querySelector('.stage');
+const layer = document.getElementById('layer');
+
+stage.style.backgroundImage = `url("${CONFIG.background}")`;
+
+const bgProbe = new Image();
+bgProbe.onload = () => {
+  const ar = bgProbe.naturalWidth / bgProbe.naturalHeight;
+  stage.style.setProperty('--ar', ar);
+};
+bgProbe.src = CONFIG.background;
+
+CONFIG.images.forEach(cfg => {
+  const img = document.createElement('img');
+  img.className = 'item';
+  img.src = cfg.file;
+  img.alt = cfg.link ? `Open ${cfg.link.replace('.html','')}` : '';
+  img.draggable = false;
+
+  img.style.setProperty('--x', cfg.x);
+  img.style.setProperty('--y', cfg.y);
+  img.style.setProperty('--w', cfg.w);
+  img.style.setProperty('--z', cfg.z ?? 1);
+  img.style.setProperty('--s', cfg.scale ?? 1);
+  img.style.setProperty('--r', cfg.rotation ?? 0);
+
+  if (cfg.link) {
+    img.dataset.link = cfg.link;
+    img.setAttribute('role', 'link');
+    img.setAttribute('tabindex', '0');
+  }
+
+  if (cfg.hidden) {
+    img.classList.add('hidden-item');
+    img.dataset.hidden = 'true';
+  } else if (cfg.link) {
+    img.classList.add('clickable');
+  }
+
+  layer.appendChild(img);
+});
+
+/* ============================================================
+   PROGRESS-AWARE LINKS
+   ============================================================ */
+(function progressLinks() {
+    function solved(key) {
+        try { return localStorage.getItem(key) === 'true'; }
+        catch (e) { return false; }
+    }
+
+    var d7 = layer.querySelector('img[src*="D7"]');
+    if (!d7) return;
+
+    var next = PUZZLE_FILES[0];
+    for (var i = 0; i < PUZZLE_FILES.length; i++) {
+        if (!solved('whitby_p' + (i + 1) + '_solved')) {
+            next = PUZZLE_FILES[i];
+            break;
+        }
+    }
+    if (solved('whitby_p7_solved')) {
+        next = PUZZLE_FILES[PUZZLE_FILES.length - 1];
+    }
+
+    d7.dataset.link = next;
+    d7.setAttribute('aria-label', 'Open ' + next);
+    console.log('%c[desk] D7 →', 'color:#0ff;font-weight:bold;', next);
+})();
+
+(function applyGlobal() {
+  const g = CONFIG.global;
+  layer.style.transform = `translate(${g.x}%, ${g.y}%) scale(${g.scale})`;
+})();
+
+/* ============================================================
+   OPEN LINK — with automatic .html ↔ .htm fallback
+   ============================================================ */
+function openLink(el) {
+  const url = el && el.dataset.link;
+  if (!url) return;
+
+  console.log('[desk] openLink →', url);
+
+  el.style.filter = 'brightness(1.4) drop-shadow(0 0 26px rgba(255,236,190,1))';
+
+  var alt = null;
+  if (/\.html$/i.test(url)) alt = url.replace(/\.html$/i, '.htm');
+  else if (/\.htm$/i.test(url)) alt = url.replace(/\.htm$/i, '.html');
+
+  document.body.style.transition = 'opacity .22s ease';
+  document.body.style.opacity = '0';
+
+  setTimeout(function () {
+    if (!alt) {
+      window.location.href = url;
+      return;
+    }
+
+    var navigated = false;
+    function go(target) {
+      if (navigated) return;
+      navigated = true;
+      console.log('[desk] navigating →', target);
+      window.location.href = target;
+    }
+
+    try {
+      fetch(url, { method: 'HEAD' })
+        .then(function (r) {
+          if (r.ok) { go(url); return; }
+          return fetch(alt, { method: 'HEAD' })
+            .then(function (r2) {
+              go(r2 && r2.ok ? alt : url);
+            });
+        })
+        .catch(function () { go(url); });
+    } catch (e) {
+      go(url);
+    }
+
+    setTimeout(function () { go(url); }, 700);
+  }, 220);
+}
+
+layer.addEventListener('click', (e) => {
+  const el = e.target.closest('.item');
+  if (!el) return;
+
+  if (el.classList.contains('hidden-item') && !el.classList.contains('revealed')) {
+    el.classList.add('revealed');
+    return;
+  }
+
+  if (el.dataset.link) openLink(el);
+});
+
+layer.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest('.item');
+  if (!el) return;
+
+  if (el.classList.contains('hidden-item') && !el.classList.contains('revealed')) {
+    e.preventDefault();
+    el.classList.add('revealed');
+    return;
+  }
+  if (el.dataset.link) { e.preventDefault(); openLink(el); }
+});
+
+/* ============================================================
+   MEMO SEQUENCES
+   ============================================================
+   Each entry maps a pending flag to the popup content and
+   memo image that should be shown when that flag is set.
+
+   To add another sequence:
+     1. Add a new entry below.
+     2. In the puzzle's win handler, set the flag and redirect
+        to desk.html.
+   ============================================================ */
+const MEMO_SEQUENCES = {
+    'whitby_pending_cryptomemo': {
+        icon: '📋',
+        title: 'Evidence Recovered',
+        message: 'The police found some muddy foot prints on the embankment and a message from the thief with a cryptogram puzzle.',
+        image: 'cryptomemo.jpg'
+    },
+    'whitby_pending_archivelog': {
+        icon: '📋',
+        title: 'Evidence Recovered',
+        message: 'An office at the embankment found this blowing in the wind.',
+        image: 'archivelog.jpg'
+    }
+};
+
+(function setupPopupAndMemo() {
+    'use strict';
+
+    var popupOverlay  = document.getElementById('popupOverlay');
+    var popupIcon     = document.getElementById('popupIcon');
+    var popupTitle    = document.getElementById('popupTitle');
+    var popupMessage  = document.getElementById('popupMessage');
+    var popupContinue = document.getElementById('popupContinueBtn');
+    var memoOverlay   = document.getElementById('memoOverlay');
+    var memoImg       = document.getElementById('memoImg');
+    var memoDeskBtn   = document.getElementById('memoDeskBtn');
+
+    /* Find the first pending flag (if any) */
+    var activeKey = null;
+    for (var key in MEMO_SEQUENCES) {
+        try {
+            if (localStorage.getItem(key) === '1') {
+                activeKey = key;
+                break;
+            }
+        } catch (e) {}
+    }
+
+    function clearPending() {
+        if (!activeKey) return;
+        try { localStorage.removeItem(activeKey); } catch (e) {}
+    }
+
+    function showPopup() { popupOverlay.classList.add('active'); }
+    function hidePopup() { popupOverlay.classList.remove('active'); }
+    function showMemo()  { memoOverlay.classList.add('active'); }
+    function hideMemo()  { memoOverlay.classList.remove('active'); }
+
+    /* If there's nothing pending, don't wire anything up */
+    if (!activeKey) {
+        console.log('[desk] No pending memo');
+        return;
+    }
+
+    var seq = MEMO_SEQUENCES[activeKey];
+    console.log('[desk] Pending memo:', activeKey, '→', seq.image);
+
+    /* Fill in the popup and memo content */
+    popupIcon.textContent    = seq.icon    || '📋';
+    popupTitle.textContent   = seq.title   || 'Evidence Recovered';
+    popupMessage.textContent = seq.message || '';
+    memoImg.src              = seq.image;
+    memoImg.alt              = seq.title   || 'Evidence memo';
+
+    /* Show the popup after a small delay so the desk has time to
+       fade in behind it */
+    setTimeout(showPopup, 380);
+
+    /* Advance from popup to memo — same frame, no desk flash */
+    var advancing = false;
+    function advanceToMemo() {
+        if (advancing) return;
+        advancing = true;
+        showMemo();
+        requestAnimationFrame(function () {
+            hidePopup();
+            advancing = false;
+        });
+    }
+
+    popupContinue.addEventListener('click', function (e) {
+        e.stopPropagation();
+        advanceToMemo();
+    });
+
+    memoDeskBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        hideMemo();
+        clearPending();
+    });
+
+    popupOverlay.addEventListener('click', function (e) {
+        if (e.target === popupOverlay) advanceToMemo();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && popupOverlay.classList.contains('active')) {
+            advanceToMemo();
+        }
+        if (e.key !== 'Escape') return;
+        if (memoOverlay.classList.contains('active')) {
+            hideMemo();
+            clearPending();
+        } else if (popupOverlay.classList.contains('active')) {
+            hidePopup();
+            clearPending();
+        }
+    });
+})();
+
+/* ============================================================
+   DEBUG: click both cups 5× each to solve all puzzles.
+   ============================================================ */
+(function setupDebugCups() {
+    'use strict';
+
+    var fullcup  = layer.querySelector('img[src*="fullcup"]');
+    var emptycup = layer.querySelector('img[src*="emptycup"]');
+    if (!fullcup || !emptycup) {
+        console.warn('[debug] cups not found in the layer');
+        return;
+    }
+
+    var CLICKS_NEEDED = 5;
+    var KEY_FULL  = 'debug_fullcup_clicks';
+    var KEY_EMPTY = 'debug_emptycup_clicks';
+
+    var ALL_FLAGS = [
+        'whitby_p1_solved',
+        'whitby_p2_solved',
+        'whitby_p3_solved',
+        'whitby_p4_solved',
+        'whitby_p5_solved',
+        'whitby_p6_solved',
+        'whitby_p7_solved',
+        'whitby_scalePartsUnlocked',
+        'evidence_archiveLog',
+        'evidence_braggersNote',
+        'evidence_lockerPhoto',
+        'evidence_cryptogram',
+        'evidence_postit5',
+        'evidence_postit6',
+        'evidence_postit7',
+        'ashworth_memo_seen'
+    ];
+
+    var SUPPRESS_POPUPS = [
+        // 'evidence_lockerPhoto_shown',
+        // 'evidence_archiveLog_shown',
+        // 'evidence_postit5_shown',
+        // 'evidence_postit6_shown',
+        // 'evidence_postit7_shown'
+    ];
+
+    fullcup.classList.add('revealed');
+    emptycup.classList.add('revealed');
+    fullcup.style.zIndex  = 100;
+    emptycup.style.zIndex = 99;
+
+    var indicator = document.createElement('div');
+    indicator.style.cssText =
+        'position:fixed;top:10px;left:50%;transform:translateX(-50%);' +
+        'background:rgba(0,0,0,0.88);color:#ffd066;border:1px solid #8a6e42;' +
+        'padding:6px 16px;border-radius:8px;font-family:"Courier New",monospace;' +
+        'font-size:13px;letter-spacing:0.08em;z-index:99999;pointer-events:none;' +
+        'opacity:0;transition:opacity 0.22s;white-space:nowrap;';
+    document.body.appendChild(indicator);
+
+    var indicatorTimer = null;
+    function flash(msg) {
+        indicator.textContent = msg;
+        indicator.style.opacity = '1';
+        clearTimeout(indicatorTimer);
+        indicatorTimer = setTimeout(function () {
+            indicator.style.opacity = '0';
+        }, 1400);
+    }
+
+    function getCount(key) {
+        return parseInt(localStorage.getItem(key) || '0', 10);
+    }
+    function setCount(key, n) {
+        localStorage.setItem(key, String(n));
+    }
+
+    function solveEverything() {
+        ALL_FLAGS.forEach(function (k) {
+            try { localStorage.setItem(k, '1'); } catch (e) {}
+        });
+        SUPPRESS_POPUPS.forEach(function (k) {
+            try { localStorage.setItem(k, '1'); } catch (e) {}
+        });
+        setCount(KEY_FULL, 0);
+        setCount(KEY_EMPTY, 0);
+        flash('✅ ALL PUZZLES SOLVED');
+        console.log('[debug] All flags set:', ALL_FLAGS);
+    }
+
+    fullcup.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var count = getCount(KEY_FULL) + 1;
+        setCount(KEY_FULL, count);
+        flash('Full cup: ' + count + ' / ' + CLICKS_NEEDED);
+        fullcup.style.zIndex  = 99;
+        emptycup.style.zIndex = 100;
+        if (count >= CLICKS_NEEDED && getCount(KEY_EMPTY) >= CLICKS_NEEDED) solveEverything();
+    });
+
+    emptycup.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var count = getCount(KEY_EMPTY) + 1;
+        setCount(KEY_EMPTY, count);
+        flash('Empty cup: ' + count + ' / ' + CLICKS_NEEDED);
+        emptycup.style.zIndex = 99;
+        fullcup.style.zIndex  = 100;
+        if (count >= CLICKS_NEEDED && getCount(KEY_FULL) >= CLICKS_NEEDED) solveEverything();
+    });
+
+    console.log('[debug] Cups ready — tap the stacked cups 10× to unlock everything.');
+})();
+
+window.addEventListener('load', function () { document.body.classList.add('ready'); });
+if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+</script>
+</body>
+</html>
