@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Whitby Constabulary — Memo</title>
+<link rel="preload" as="image" href="openmemo.jpg">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+        height: 100%;
+        background: #0a0705;
+        font-family: 'Courier New', monospace;
+        color: #d9c58f;
+        overflow: hidden;
+    }
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px 16px 90px;   /* bottom space for the Continue button */
+        opacity: 0;
+        transition: opacity .5s ease;
+        background:
+            radial-gradient(circle at 50% 30%, #1a130a 0%, #0a0705 70%);
+    }
+    body.ready { opacity: 1; }
+
+    /* =========================================================
+       MEMO IMAGE
+       ========================================================= */
+    .memo-img {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 6px;
+        box-shadow:
+            0 20px 60px rgba(0,0,0,0.75),
+            0 0 0 1px rgba(107, 74, 37, 0.35),
+            0 0 40px rgba(240, 180, 41, 0.08);
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+
+    /* =========================================================
+       CONTINUE BUTTON — pinned to the bottom
+       ========================================================= */
+    .continue-btn {
+        position: fixed;
+        bottom: 22px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 16px 48px;
+        background: linear-gradient(180deg, #d99a1a, #a37812);
+        border: 1px solid #ffd066;
+        border-radius: 12px;
+        color: #1a1006;
+        font-family: 'Courier New', monospace;
+        font-size: 0.88rem;
+        font-weight: bold;
+        letter-spacing: 0.20em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow:
+            0 10px 26px rgba(240, 180, 41, 0.40),
+            inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease;
+        z-index: 10;
+        white-space: nowrap;
+    }
+    .continue-btn:hover {
+        background: linear-gradient(180deg, #ffd066, #d99a1a);
+    }
+    .continue-btn:active {
+        transform: translateX(-50%) translateY(2px);
+        box-shadow: 0 3px 12px rgba(240, 180, 41, 0.35);
+    }
+
+    /* Larger tap target on phones */
+    @media (max-width: 480px) {
+        body { padding: 10px 10px 80px; }
+        .continue-btn {
+            padding: 14px 36px;
+            font-size: 0.78rem;
+            letter-spacing: 0.16em;
+            bottom: 16px;
+        }
+    }
+</style>
+</head>
+<body>
+
+    <img class="memo-img" src="openmemo.jpg" alt="Memo from Chief Inspector Ashworth" draggable="false">
+
+    <button class="continue-btn" id="continueBtn">Continue →</button>
+
+<script>
+(function () {
+    'use strict';
+
+    /* Mark the memo as seen so it doesn't show again on Continue */
+    try { localStorage.setItem('ashworth_memo_seen', '1'); } catch (e) {}
+
+    function markReady() { document.body.classList.add('ready'); }
+    window.addEventListener('load', markReady);
+    if (document.readyState === 'complete') markReady();
+
+    document.getElementById('continueBtn').addEventListener('click', function () {
+        document.body.style.transition = 'opacity .3s ease';
+        document.body.style.opacity = '0';
+        setTimeout(function () {
+            window.location.href = 'desk.html';
+        }, 320);
+    });
+})();
+</script>
+</body>
+</html>
