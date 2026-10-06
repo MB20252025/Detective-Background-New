@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vault — Whitby Case</title>
+<link rel="preload" as="image" href="vaultdoor.jpg">
+<link rel="preload" as="image" href="keypad.png">
+<link rel="preload" as="image" href="wheel.png">
+<link rel="preload" as="video" href="vaultopen.mp4">
+
+<style>
+  :root {
+    --door-x: 50;
+    --door-y: 50;
+    --door-scale: 1.0;
+
+    --keypad-x:     70.7;
+    --keypad-y:     43.5;
+    --keypad-w:     22;
+    --keypad-scale: 0.55;
+
+    --wheel-x:     50;
+    --wheel-y:     43.9;
+    --wheel-w:     30;
+    --wheel-scale: 0.8;
+
+    --warn: #ff6b6b;
+    --gold: #eace9f;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    overflow: hidden;
+    background: #0a0705;
+    font-family: 'Courier New', monospace;
+    color: #ece3d0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body { opacity: 0; transition: opacity .4s ease; }
+  body.ready { opacity: 1; }
+
+  .stage {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #0a0705;
+  }
+
+  .vault-door {
+    position: absolute;
+    left: calc(var(--door-x) * 1%);
+    top:  calc(var(--door-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--door-scale));
+    transform-origin: center center;
+    max-width: 100vw;
+    max-height: 100vh;
+    width: auto;
+    height: auto;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    filter: drop-shadow(0 30px 60px rgba(0,0,0,.75));
+  }
+
+  .overlay {
+    position: absolute;
+    height: auto;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
+    z-index: 10;
+    opacity: 0;
+  }
+
+  .keypad {
+    left: calc(var(--keypad-x) * 1%);
+    top:  calc(var(--keypad-y) * 1%);
+    width: calc(var(--keypad-w) * 1%);
+    transform: translate(-50%, -50%) scale(var(--keypad-scale));
+  }
+
+  .wheel {
+    left: calc(var(--wheel-x) * 1%);
+    top:  calc(var(--wheel-y) * 1%);
+    width: calc(var(--wheel-w) * 1%);
+    transform: translate(-50%, -50%) scale(var(--wheel-scale));
+    transform-origin: center center;
+  }
+
+  .notice {
+    position: fixed;
+    left: 50%;
+    top: 12%;
+    transform: translateX(-50%) translateY(-20px);
+    padding: 12px 28px;
+    background: rgba(20, 12, 8, 0.92);
+    border: 1px solid #8a4444;
+    border-radius: 40px;
+    color: var(--warn);
+    font-size: .85rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    z-index: 9000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.65);
+  }
+  .notice.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .back-to-desk,
+  .back-to-puzzles {
+    position: fixed;
+    top: 14px;
+    padding: 9px 20px;
+    border-radius: 40px;
+    font-family: 'Courier New', monospace;
+    font-size: .72rem;
+    font-weight: bold;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9999;
+    transition: background .18s ease, border-color .18s ease;
+  }
+  .back-to-puzzles {
+    left: 14px;
+    background: rgba(15,12,8,.85);
+    border: 1px solid #8a6e42;
+    color: var(--gold);
+  }
+  .back-to-puzzles:hover { background: rgba(60,40,15,.95); border-color: #d8ab6a; }
+  .back-to-desk {
+    right: 14px;
+    background: rgba(15,42,63,.85);
+    border: 1px solid rgba(182,139,92,.4);
+    color: var(--gold);
+  }
+  .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+
+  .video-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 9500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s ease;
+  }
+  .video-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .video-overlay video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: #000;
+  }
+  .skip-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 22px;
+    background: rgba(20, 15, 8, 0.85);
+    border: 1px solid #8a6e42;
+    border-radius: 40px;
+    color: var(--gold);
+    font-family: 'Courier New', monospace;
+    font-size: .72rem;
+    font-weight: bold;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    cursor: pointer;
+    z-index: 10;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: background .18s ease, border-color .18s ease;
+  }
+  .skip-btn:hover { background: rgba(90,60,20,.95); border-color: #d8ab6a; }
+
+  .congrats-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9800;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .45s ease;
+    padding: 24px;
+  }
+  .congrats-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .congrats-card {
+    max-width: 480px;
+    width: 100%;
+    padding: 40px 32px 34px;
+    background: linear-gradient(160deg, #1e170e 0%, #120c07 100%);
+    border: 2px solid #8a6e42;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow:
+      0 30px 80px rgba(0,0,0,.9),
+      0 0 40px rgba(234,206,159,.25),
+      inset 0 1px 0 rgba(255,255,255,.06);
+    transform: translateY(12px);
+    transition: transform .45s cubic-bezier(.2,.9,.3,1.05);
+  }
+  .congrats-overlay.active .congrats-card {
+    transform: translateY(0);
+  }
+  .congrats-card .eyebrow {
+    font-size: .68rem;
+    letter-spacing: .5em;
+    text-transform: uppercase;
+    color: #8a6e42;
+    margin: 0 0 14px;
+  }
+  .congrats-card h2 {
+    font-family: Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    letter-spacing: .1em;
+    color: #eace9f;
+    margin: 0 0 18px;
+    text-shadow: 0 3px 0 #0b0705, 0 0 30px rgba(234,206,159,.35);
+  }
+  .congrats-card p {
+    font-size: .9rem;
+    line-height: 1.7;
+    color: #cbbda1;
+    margin: 0 0 26px;
+  }
+  .congrats-card p strong {
+    color: #eace9f;
+    font-weight: 400;
+  }
+  .congrats-btn {
+    padding: 14px 42px;
+    background: linear-gradient(180deg, #3a2f22 0%, #241c13 100%);
+    border: 1px solid #8a6e42;
+    border-radius: 4px;
+    color: #eace9f;
+    font-family: 'Courier New', monospace;
+    font-size: .82rem;
+    font-weight: bold;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .18s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,.55);
+  }
+  .congrats-btn:hover {
+    background: linear-gradient(180deg, #55422b 0%, #32261a 100%);
+    color: #fff;
+    border-color: #d8ab6a;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,.7), 0 0 22px rgba(255,210,130,.28);
+  }
+  .congrats-btn:active { transform: translateY(1px); }
+
+  @media (max-width: 640px) {
+    .back-to-desk, .back-to-puzzles { font-size: .68rem; padding: 8px 14px; letter-spacing: .18em; }
+    .notice { font-size: .74rem; padding: 10px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<a class="back-to-puzzles" href="puzzles.html">← Puzzles</a>
+<a class="back-to-desk" href="desk.html">← Desk</a>
+
+<div class="notice" id="notice">✅ Vault already unlocked</div>
+
+<div class="stage">
+
+  <img class="vault-door" src="vaultdoor.jpg" alt="Vault door" draggable="false" />
+
+  <img class="overlay keypad" src="keypad.png" alt="Keypad"
+       draggable="false" id="keypad" />
+
+  <img class="overlay wheel" src="wheel.png" alt="Wheel"
+       draggable="false" id="wheel" />
+
+</div>
+
+<div class="video-overlay" id="videoOverlay">
+  <video id="vaultVideo" src="vaultopen.mp4" playsinline preload="auto"></video>
+  <button class="skip-btn" id="skipBtn">Skip ▶</button>
+</div>
+
+<div class="congrats-overlay" id="congratsOverlay">
+  <div class="congrats-card">
+    <p class="eyebrow">Case Closed</p>
+    <h2>🎉 Congratulations, Detective</h2>
+    <p>
+      You cracked the vault, recovered the evidence, and closed
+      Operation Lighthouse.<br><br>
+      The thief has nowhere left to hide. <strong>Well done.</strong>
+    </p>
+    <button class="congrats-btn" id="congratsBtn">Finish</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var VAULT_KEY        = 'whitby_vault_unlocked';    /* set by binary.html */
+  var SOLVED_KEY       = 'whitby_vault_solved';      /* for the desk story system */
+  var redirecting      = false;
+
+  var keypad          = document.getElementById('keypad');
+  var wheel           = document.getElementById('wheel');
+  var noticeEl        = document.getElementById('notice');
+  var videoOverlay    = document.getElementById('videoOverlay');
+  var vaultVideo      = document.getElementById('vaultVideo');
+  var skipBtn         = document.getElementById('skipBtn');
+  var congratsOverlay = document.getElementById('congratsOverlay');
+  var congratsBtn     = document.getElementById('congratsBtn');
+
+  /* ---- helpers ---- */
+  function hasFlag(k) {
+    try { return localStorage.getItem(k) === 'true' || localStorage.getItem(k) === '1'; }
+    catch (e) { return false; }
+  }
+  function setFlag(k) {
+    try { localStorage.setItem(k, '1'); } catch (e) {}
+  }
+  function redirectToDesk() {
+    if (redirecting) return;
+    redirecting = true;
+    document.body.style.transition = 'opacity .4s ease';
+    document.body.style.opacity = '0';
+    setTimeout(function () {
+      window.location.href = 'desk.html';
+    }, 450);
+  }
+
+  /* treat either old ('true') or new ('1') flag as unlocked */
+  function isUnlocked() {
+    return hasFlag(VAULT_KEY);
+  }
+
+  var noticeTimer = null;
+  function showNotice(msg) {
+    noticeEl.textContent = msg;
+    noticeEl.classList.add('show');
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(function () {
+      noticeEl.classList.remove('show');
+    }, 2200);
+  }
+
+  /* ── Keypad → binary puzzle ── */
+  keypad.addEventListener('click', function () {
+    if (isUnlocked()) {
+      showNotice('✅ Vault already unlocked');
+      return;
+    }
+    window.location.href = 'binary.html';
+  });
+
+  /* ── Wheel → play video (only if unlocked) ── */
+  wheel.addEventListener('click', function () {
+    if (!isUnlocked()) return;
+    playVideo();
+  });
+
+  /* ── Video overlay ── */
+  function playVideo() {
+    videoOverlay.classList.add('active');
+    vaultVideo.currentTime = 0;
+    var playPromise = vaultVideo.play();
+    if (playPromise && playPromise.catch) {
+      playPromise.catch(function () {
+        vaultVideo.muted = true;
+        vaultVideo.play().catch(function () {
+          showNotice('Tap the video to play');
+        });
+      });
+    }
+  }
+
+  function stopVideo() {
+    try { vaultVideo.pause(); } catch (e) {}
+    videoOverlay.classList.remove('active');
+  }
+
+  /* When the video finishes: mark solved + show congrats */
+  function onVaultOpened() {
+    setFlag(SOLVED_KEY);
+    showCongrats();
+  }
+
+  vaultVideo.addEventListener('ended', function () {
+    stopVideo();
+    onVaultOpened();
+  });
+
+  skipBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    stopVideo();
+    onVaultOpened();
+  });
+
+  vaultVideo.addEventListener('click', function () {
+    stopVideo();
+    onVaultOpened();
+  });
+
+  /* ── Congratulations popup ── */
+  function showCongrats() {
+    congratsOverlay.classList.add('active');
+  }
+
+  /* Finish → fade → desk.html (which shows the "Case Closed" complete step) */
+  congratsBtn.addEventListener('click', function () {
+    congratsOverlay.classList.remove('active');
+    redirectToDesk();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && congratsOverlay.classList.contains('active')) {
+      congratsOverlay.classList.remove('active');
+    }
+  });
+
+  /* If already solved in a prior session, jump straight to congrats view when
+     the player watches the video (doesn't hurt to re-watch) */
+  if (hasFlag(SOLVED_KEY)) {
+    /* nothing special to do on load — the video still plays normally */
+  }
+
+})();
+
+window.addEventListener('load', function () { document.body.classList.add('ready'); });
+if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+</script>
+</body>
+</html>
