@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evidence</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a1319; --panel:#0f1d29; --panel-light:#142838;
+    --border:#1e3a4a; --gold:#eace9f; --gold-hi:#ffd066; --gold-lo:#b68b5c;
+    --text:#c8dae5; --text-dim:#8aa8ba;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: radial-gradient(ellipse at 50% 0%, #12283a, #060b10 70%), #060b10;
+    color: var(--text);
+    font-family: 'Courier Prime','Courier New',monospace;
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+  body.ready { opacity: 1; }
+
+  .back-to-desk {
+    position: fixed; top: 14px; left: 14px;
+    padding: 9px 20px;
+    background: rgba(15,42,63,.85);
+    border: 1px solid rgba(182,139,92,.4);
+    border-radius: 40px;
+    color: var(--gold);
+    font-family: 'Courier New', monospace;
+    font-size: .72rem; font-weight: bold;
+    letter-spacing: .22em; text-transform: uppercase;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9999;
+    transition: background .18s, border-color .18s;
+  }
+  .back-to-desk:hover { background:#2a5a6a; border-color: var(--gold); }
+
+  .evidence {
+    width: 100%; max-width: 900px; height: 100%;
+    margin: 0 auto;
+    display: flex; flex-direction: column;
+    padding: 70px 20px 20px;
+  }
+
+  .evidence-header {
+    display: flex; align-items: center; gap: 14px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 18px;
+  }
+  .evidence-header .stamp {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem; font-weight: 700;
+    color: var(--gold);
+    letter-spacing: .12em; text-transform: uppercase;
+    text-shadow: 0 3px 0 rgba(0,0,0,.7), 0 0 24px rgba(234,206,159,.35);
+  }
+  .evidence-header .subtitle {
+    flex: 1;
+    font-size: .68rem; color: var(--text-dim);
+    letter-spacing: .28em; text-transform: uppercase;
+  }
+  .evidence-header .badge {
+    font-size: .68rem; padding: 4px 12px;
+    border-radius: 30px;
+    background: rgba(234,206,159,.12);
+    border: 1px solid rgba(234,206,159,.35);
+    color: var(--gold);
+    letter-spacing: .16em; text-transform: uppercase;
+  }
+
+  .tabs {
+    display: flex; gap: 6px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 18px;
+  }
+  .tab {
+    flex: 1;
+    background: transparent; border: none;
+    color: var(--text-dim);
+    font-family: 'Courier Prime', monospace;
+    font-size: .78rem; font-weight: 700;
+    letter-spacing: .18em; text-transform: uppercase;
+    padding: 12px 8px 10px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color .15s, border-color .15s;
+  }
+  .tab:hover { color: #c8dae5; }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .tab .count {
+    display: inline-block; margin-left: 6px;
+    font-size: .68rem; color: var(--text-dim);
+    background: rgba(255,255,255,.05);
+    padding: 1px 7px; border-radius: 20px;
+  }
+  .tab.active .count {
+    color: var(--gold-hi);
+    background: rgba(234,206,159,.15);
+  }
+
+  .gallery-container {
+    flex: 1; position: relative;
+    display: flex; flex-direction: column;
+    background: linear-gradient(160deg, var(--panel-light), var(--panel));
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px -20px rgba(0,0,0,.9);
+  }
+
+  .gallery-counter {
+    position: absolute; top: 14px; left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 16px;
+    background: rgba(0,0,0,.7);
+    border: 1px solid rgba(234,206,159,.3);
+    border-radius: 30px;
+    color: var(--gold);
+    font-size: .72rem; font-weight: 700;
+    letter-spacing: .16em;
+    z-index: 5;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .gallery-view {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    padding: 50px 70px;
+  }
+
+  .gallery-media {
+    max-width: 100%; max-height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity .3s, transform .3s;
+    touch-action: pan-y;
+  }
+  .gallery-media img {
+    max-width: 100%; max-height: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+    box-shadow: 0 12px 40px -12px rgba(0,0,0,.9);
+    cursor: zoom-in;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .gallery-media video {
+    max-width: 100%; max-height: 100%;
+    border-radius: 6px;
+    box-shadow: 0 12px 40px -12px rgba(0,0,0,.9);
+    background: #000;
+  }
+
+  .gallery-nav {
+    position: absolute; top: 50%;
+    transform: translateY(-50%);
+    width: 52px; height: 52px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.6);
+    border: 1px solid rgba(234,206,159,.35);
+    border-radius: 50%;
+    color: var(--gold);
+    font-size: 1.5rem; font-weight: bold;
+    cursor: pointer;
+    z-index: 4;
+    user-select: none;
+    transition: background .15s, transform .1s, border-color .15s;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .gallery-nav:hover {
+    background: rgba(234,206,159,.2);
+    border-color: var(--gold);
+  }
+  .gallery-nav:active { transform: translateY(-50%) scale(.9); }
+  .gallery-nav:disabled { opacity: .3; cursor: not-allowed; pointer-events: none; }
+  .gallery-nav.prev { left: 14px; }
+  .gallery-nav.next { right: 14px; }
+
+  .gallery-caption {
+    padding: 12px 18px 16px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    background: rgba(0,0,0,.25);
+  }
+  .gallery-title {
+    font-family: 'Cinzel', serif;
+    font-size: .95rem; font-weight: 600;
+    color: var(--gold);
+    letter-spacing: .12em;
+    margin-bottom: 4px;
+  }
+  .gallery-type {
+    font-size: .68rem;
+    color: var(--text-dim);
+    letter-spacing: .22em;
+    text-transform: uppercase;
+  }
+
+  .empty-state {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .empty-state .icon {
+    font-size: 3rem; opacity: .35; margin-bottom: 16px;
+  }
+  .empty-state h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    letter-spacing: .18em; text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .empty-state p {
+    font-size: .82rem; color: #5a7a8a;
+    line-height: 1.6; max-width: 340px;
+  }
+
+  .photo-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.95);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 20000;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity .3s;
+  }
+  .photo-modal.active { display: flex; opacity: 1; }
+  .photo-modal img {
+    max-width: 95vw; max-height: 95vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.9);
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .photo-modal-close {
+    position: absolute; top: 20px; right: 20px;
+    width: 48px; height: 48px;
+    background: rgba(0,0,0,.75); color: #fff;
+    border: 2px solid rgba(255,255,255,.5);
+    border-radius: 50%;
+    font-size: 1.5rem; font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+    transition: background .15s, transform .1s;
+  }
+  .photo-modal-close:hover { background: #c00; transform: scale(1.08); }
+  .photo-modal-close:active { transform: scale(.94); }
+
+  @media (max-width: 640px) {
+    .evidence { padding: 62px 12px 12px; }
+    .evidence-header .stamp { font-size: 1.4rem; }
+    .evidence-header .subtitle { display: none; }
+    .tab { font-size: .68rem; letter-spacing: .12em; padding: 10px 4px 8px; }
+    .tab .count { display: none; }
+    .gallery-view { padding: 50px 62px; }
+    .gallery-nav { width: 44px; height: 44px; font-size: 1.2rem; }
+    .gallery-nav.prev { left: 8px; }
+    .gallery-nav.next { right: 8px; }
+    .gallery-title { font-size: .82rem; }
+  }
+</style>
+</head>
+<body>
+
+<a class="back-to-desk" href="desk.html">← Desk</a>
+
+<div class="evidence">
+  <header class="evidence-header">
+    <div class="stamp">EVIDENCE</div>
+    <div class="subtitle">Collected Material</div>
+    <div class="badge" id="progressBadge">0 / 8</div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="all">All <span class="count" id="countAll">0</span></button>
+    <button class="tab" data-tab="photos">Photos <span class="count" id="countPhotos">0</span></button>
+    <button class="tab" data-tab="videos">Videos <span class="count" id="countVideos">0</span></button>
+  </nav>
+
+  <div class="gallery-container" id="galleryContainer"></div>
+</div>
+
+<div class="photo-modal" id="photoModal">
+  <button class="photo-modal-close" id="photoModalClose">✕</button>
+  <img src="" alt="" id="photoModalImg">
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  /* =========================================================
+     EVIDENCE CATALOGUE
+     Set `flag: null` for items that are always unlocked.
+     ========================================================= */
+  const EVIDENCE = [
+    { id:'openmemo',   file:'Openmemo.jpg',        name:'Case Opener Memo',       type:'photo', flag:null },
+    { id:'cryptomemo', file:'cryptomemo.jpg',      name:'Cryptogram Memo',        type:'photo', flag:'whitby_p1_solved' },
+    { id:'archivelog', file:'archivelog.jpg',      name:'Archive Sign-Out Log',   type:'photo', flag:'whitby_braggers_solved' },
+    { id:'appraisal1', file:'appraisal1.png',      name:'Appraisal Letter',       type:'photo', flag:'whitby_scale_solved' },
+    { id:'appraisal2', file:'appraisal2.png',      name:'Appraisal Document',     type:'photo', flag:'whitby_scale_solved' },
+    { id:'sclarke',    file:'sclarkeevidence.jpg', name:'S. Clarke — Evidence',   type:'photo', flag:'whitby_p3_solved' },
+    { id:'cctvpic',    file:'cctvpic.jpg',         name:'CCTV Still',             type:'photo', flag:'whitby_locker_solved' },
+    { id:'cctvvid',    file:'cctvvid.mp4',         name:'CCTV Footage',           type:'video', flag:'whitby_bookshelf_solved' }
+  ];
+
+  function hasFlag(k) {
+    if (!k) return true;
+    try { return localStorage.getItem(k) === '1'; } catch(e) { return false; }
+  }
+  function getUnlocked() { return EVIDENCE.filter(e => hasFlag(e.flag)); }
+  function getPhotos()   { return getUnlocked().filter(e => e.type === 'photo'); }
+  function getVideos()   { return getUnlocked().filter(e => e.type === 'video'); }
+
+  var currentTab = 'all';
+  var currentIndex = 0;
+  var currentList = [];
+
+  var galleryEl     = document.getElementById('galleryContainer');
+  var photoModal    = document.getElementById('photoModal');
+  var photoModalImg = document.getElementById('photoModalImg');
+
+  function renderGallery() {
+    if (currentTab === 'all')         currentList = getUnlocked();
+    else if (currentTab === 'photos') currentList = getPhotos();
+    else                              currentList = getVideos();
+
+    if (currentIndex >= currentList.length) currentIndex = Math.max(0, currentList.length - 1);
+
+    if (currentList.length === 0) {
+      var label = currentTab === 'videos' ? 'video evidence'
+                : currentTab === 'photos' ? 'photographic evidence'
+                : 'evidence';
+      galleryEl.innerHTML =
+        '<div class="empty-state">' +
+          '<div class="icon">📷</div>' +
+          '<h3>No ' + label + ' yet</h3>' +
+          '<p>Continue the investigation. New evidence will appear here as you progress.</p>' +
+        '</div>';
+      return;
+    }
+
+    var item = currentList[currentIndex];
+    var counterText = (currentIndex + 1) + ' / ' + currentList.length;
+    var typeLabel = item.type === 'video' ? 'Video Evidence' : 'Photographic Evidence';
+
+    var mediaHtml;
+    if (item.type === 'video') {
+      mediaHtml = '<video src="' + item.file + '" controls playsinline preload="metadata"></video>';
+    } else {
+      mediaHtml = '<img src="' + item.file + '" alt="' + item.name + '" draggable="false" data-photo="' + item.file + '">';
+    }
+
+    var navDisabled = currentList.length <= 1 ? 'disabled' : '';
+
+    galleryEl.innerHTML =
+      '<div class="gallery-counter">' + counterText + '</div>' +
+      '<div class="gallery-view">' +
+        '<button class="gallery-nav prev" ' + navDisabled + ' data-dir="-1" aria-label="Previous">‹</button>' +
+        '<div class="gallery-media" id="galleryMedia">' + mediaHtml + '</div>' +
+        '<button class="gallery-nav next" ' + navDisabled + ' data-dir="1" aria-label="Next">›</button>' +
+      '</div>' +
+      '<div class="gallery-caption">' +
+        '<div class="gallery-title">' + item.name + '</div>' +
+        '<div class="gallery-type">' + typeLabel + '</div>' +
+      '</div>';
+
+    galleryEl.querySelectorAll('.gallery-nav').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        navigate(parseInt(this.dataset.dir, 10));
+      });
+    });
+
+    var mediaEl = document.getElementById('galleryMedia');
+    if (mediaEl) {
+      var img = mediaEl.querySelector('img[data-photo]');
+      if (img) img.addEventListener('click', function() {
+        openPhotoModal(this.dataset.photo, item.name);
+      });
+      attachSwipe(mediaEl);
+    }
+  }
+
+  function navigate(dir) {
+    if (currentList.length <= 1) return;
+    currentIndex = (currentIndex + dir + currentList.length) % currentList.length;
+    renderGallery();
+  }
+
+  function attachSwipe(el) {
+    var startX = 0, startY = 0, tracking = false;
+    var THRESHOLD = 50;
+    el.addEventListener('touchstart', function(e) {
+      if (e.touches.length !== 1) return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      tracking = true;
+    }, { passive: true });
+    el.addEventListener('touchend', function(e) {
+      if (!tracking) return;
+      tracking = false;
+      var t = e.changedTouches[0];
+      if (!t) return;
+      var dx = t.clientX - startX;
+      var dy = t.clientY - startY;
+      if (Math.abs(dx) < THRESHOLD) return;
+      if (Math.abs(dy) > Math.abs(dx)) return;
+      if (dx < 0) navigate(1);
+      else        navigate(-1);
+    }, { passive: true });
+  }
+
+  function openPhotoModal(src, alt) {
+    photoModalImg.src = src;
+    photoModalImg.alt = alt || '';
+    photoModal.classList.add('active');
+  }
+  function closePhotoModal() {
+    photoModal.classList.remove('active');
+    photoModalImg.src = '';
+  }
+
+  document.getElementById('photoModalClose').addEventListener('click', closePhotoModal);
+  photoModal.addEventListener('click', function(e) {
+    if (e.target === photoModal) closePhotoModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && photoModal.classList.contains('active')) closePhotoModal();
+    if (!photoModal.classList.contains('active')) {
+      if (e.key === 'ArrowLeft')  navigate(-1);
+      if (e.key === 'ArrowRight') navigate(1);
+    }
+  });
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      var name = this.dataset.tab;
+      if (name === currentTab) return;
+      currentTab = name;
+      currentIndex = 0;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      renderGallery();
+    });
+  });
+
+  function updateCounts() {
+    var a = getUnlocked().length;
+    var p = getPhotos().length;
+    var v = getVideos().length;
+    document.getElementById('countAll').textContent    = a;
+    document.getElementById('countPhotos').textContent = p;
+    document.getElementById('countVideos').textContent = v;
+    document.getElementById('progressBadge').textContent = a + ' / ' + EVIDENCE.length;
+  }
+
+  updateCounts();
+  renderGallery();
+
+  window.addEventListener('load', function() { document.body.classList.add('ready'); });
+  if (document.readyState === 'complete') document.body.classList.add('ready');
+})();
+</script>
+</body>
+</html>
