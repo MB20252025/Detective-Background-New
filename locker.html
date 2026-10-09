@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Locker Padlocks – Clue Puzzle</title>
+    <link rel="preload" as="image" href="lockerbackground.jpg">
+    <link rel="preload" as="image" href="newlocker.png">
+    <link rel="preload" as="image" href="football.png">
+    <link rel="preload" as="image" href="Padlock.png">
+    <link rel="preload" as="image" href="cctvpicsmall.jpg">
+    <link rel="preload" as="image" href="appraisal2small.png">
+    <link rel="preload" as="image" href="cctvpic.jpg">
+    <link rel="preload" as="image" href="appraisal2.png">
+    <style>
+        :root {
+            --bg-scale: 1.0;
+            --locker-scale: 0.75;
+            --locker-x: -55px;
+            --locker-y: 70px;
+            --ball-size: 90px;
+            --ball-bottom: 8vh;
+            --ball-speed: 31.2s;
+
+            --cctv-small-x: 30%;
+            --cctv-small-y: 55%;
+            --cctv-small-w: 16%;
+
+            --appraisal-small-x: 70%;
+            --appraisal-small-y: 55%;
+            --appraisal-small-w: 16%;
+
+            --cctv-full-max-w: 92%;
+            --cctv-full-max-h: 88vh;
+            --cctv-full-scale: 1;
+            --cctv-full-x: 0px;
+            --cctv-full-y: 0px;
+
+            --appraisal-full-max-w: 92%;
+            --appraisal-full-max-h: 88vh;
+            --appraisal-full-scale: 1;
+            --appraisal-full-x: 0px;
+            --appraisal-full-y: 0px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #1e2a36;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            transition: opacity .4s ease;
+        }
+        body.ready { opacity: 1; }
+
+        /* Only the Desk link at top-right. No Puzzles button. */
+        .back-to-desk {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            padding: 9px 20px;
+            background: rgba(15,42,63,.85);
+            border: 1px solid rgba(182,139,92,.4);
+            border-radius: 40px;
+            color: #eace9f;
+            font-family: 'Courier New', monospace;
+            font-size: .72rem;
+            font-weight: bold;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            text-decoration: none;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9999;
+            transition: background .18s ease, border-color .18s ease, opacity .2s ease;
+        }
+        .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+
+        /* Hide the corner button while a modal is open */
+        body.modal-open .back-to-desk {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #returnToDeskBtn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 13px 34px;
+            background: linear-gradient(180deg, #5cd88a, #2e8b57);
+            color: #062a1a;
+            border: 1px solid rgba(92,216,138,0.75);
+            border-radius: 40px;
+            font-family: 'Courier New', monospace;
+            font-size: .84rem;
+            font-weight: bold;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            cursor: pointer;
+            z-index: 9999;
+            display: none;
+            box-shadow:
+                0 8px 22px rgba(0,0,0,0.7),
+                0 0 22px rgba(92,216,138,0.5);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            animation: returnPulse 2.2s ease-in-out infinite;
+            transition: background .18s ease, transform .12s ease;
+        }
+        #returnToDeskBtn.visible { display: inline-block; }
+        #returnToDeskBtn:hover {
+            background: linear-gradient(180deg, #7ee5a8, #34a96b);
+            transform: translateX(-50%) translateY(-1px);
+        }
+        #returnToDeskBtn:active { transform: translateX(-50%) translateY(1px); }
+        @keyframes returnPulse {
+            0%, 100% { box-shadow: 0 8px 22px rgba(0,0,0,0.7), 0 0 18px rgba(92,216,138,0.40); }
+            50%      { box-shadow: 0 8px 22px rgba(0,0,0,0.7), 0 0 32px rgba(92,216,138,0.75); }
+        }
+
+        .bg-layer {
+            position: fixed;
+            inset: 0;
+            background: #1e2a36 url('lockerbackground.jpg') center center / cover no-repeat;
+            transform: scale(var(--bg-scale));
+            transform-origin: center center;
+            z-index: -1;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .football {
+            position: fixed;
+            bottom: var(--ball-bottom);
+            left: 0;
+            width: var(--ball-size);
+            height: auto;
+            z-index: 500;
+            pointer-events: none;
+            user-select: none;
+            transform-origin: center center;
+            will-change: transform;
+            animation: footballRoll var(--ball-speed) linear infinite;
+        }
+
+        @keyframes footballRoll {
+            0% { transform: translateX(-120px) rotate(0deg); }
+            17.95% { transform: translateX(calc(100vw + 120px)) rotate(2880deg); }
+            50% { transform: translateX(calc(100vw + 120px)) rotate(2880deg); }
+            67.95% { transform: translateX(-120px) rotate(0deg); }
+            100% { transform: translateX(-120px) rotate(0deg); }
+        }
+
+        .locker-wrapper {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+            user-select: none;
+            transform: translate(var(--locker-x), var(--locker-y)) scale(var(--locker-scale));
+            transform-origin: center center;
+        }
+        .locker-wrapper>img.bg {
+            display: block;
+            max-width: 92vw;
+            max-height: 92vh;
+            height: auto;
+            width: auto;
+            pointer-events: none;
+        }
+
+        .clue-plate {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            border-radius: 6px;
+            padding: 4px 6px;
+            background: rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(180, 160, 130, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 5;
+        }
+        .clue-plate:hover {
+            transform: translate(-50%, -50%) scale(1.04);
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+        .clue-plate img { display: block; width: 100%; height: auto; border-radius: 3px; pointer-events: none; user-select: none; }
+        .clue-plate::after, .clue-plate::before {
+            content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+            width: 8px; height: 8px; border-radius: 50%;
+            background: radial-gradient(circle at 40% 35%, #ddd, #888);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+        }
+        .clue-plate::after { top: -4px; }
+        .clue-plate::before { bottom: -4px; }
+
+        #clue1 { top: 7%; left: 17%; width: 16%; max-width: 130px; }
+        #clue2 { top: 7%; left: 50%; width: 16%; max-width: 130px; }
+        #clue3 { top: 7%; left: 83%; width: 16%; max-width: 130px; }
+        #clue4 { top: 50%; left: 17%; width: 16%; max-width: 130px; }
+        #clue5 { top: 50%; left: 50%; width: 16%; max-width: 130px; }
+        #clue6 { top: 50%; left: 83%; width: 16%; max-width: 130px; }
+
+        .locker-door {
+            position: absolute;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 8;
+            pointer-events: none;
+            display: none;
+            transition: background 0.2s ease;
+            background: transparent;
+            border: none;
+        }
+        .locker-door.active-door {
+            display: block;
+            pointer-events: auto;
+        }
+
+        #door1 { width: 120px; height: 150px; top: 130px; left: 20px; }
+        #door2 { width: 120px; height: 150px; top: 100px; left: 300px; }
+        #door3 { width: 120px; height: 150px; top: 100px; left: 550px; }
+        #door4 { width: 120px; height: 150px; top: 400px; left: 50px; }
+        #door5 { width: 120px; height: 150px; top: 400px; left: 300px; }
+        #door6 { width: 120px; height: 150px; top: 400px; left: 550px; }
+
+        .locker-padlock {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 5.2%;
+            min-width: 28px;
+            max-width: 55px;
+            height: auto;
+            cursor: pointer;
+            transition: transform 0.15s ease, filter 0.15s ease, opacity 0.4s ease;
+            padding: 3px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 215, 0, 0.10);
+            background: rgba(0, 0, 0, 0.05);
+            z-index: 10;
+            pointer-events: auto;
+        }
+        .locker-padlock:hover {
+            transform: translate(-50%, -50%) scale(1.18);
+            filter: drop-shadow(0 0 18px rgba(255, 215, 0, 0.55));
+            border-color: rgba(255, 215, 0, 0.4);
+            background: rgba(0, 0, 0, 0.10);
+        }
+        .locker-padlock:active { transform: translate(-50%, -50%) scale(0.88); }
+        .locker-padlock img { display: block; width: 100%; height: auto; border-radius: 4px; pointer-events: none; user-select: none; }
+        .locker-padlock.hidden-padlock { display: none !important; }
+
+        /* Highlight the important padlock (locker 5, code 638) subtly */
+        .locker-padlock.key-lock {
+            border-color: rgba(255, 215, 0, 0.35);
+            box-shadow: 0 0 14px rgba(255, 215, 0, 0.25);
+        }
+
+        #lock1 { top: 25%; left: 5.0%; }
+        #lock2 { top: 25%; left: 37.9%; }
+        #lock3 { top: 25%; left: 71%; }
+        #lock4 { top: 68%; left: 5.0%; }
+        #lock5 { top: 68%; left: 37.9%; }
+        #lock6 { top: 68%; left: 70.5%; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content { position: relative; max-width: 440px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+        .modal-close {
+            position: absolute; top: -20px; right: -20px;
+            width: 46px; height: 46px;
+            background: #e74c3c; color: #fff; border: none; border-radius: 50%;
+            font-size: 28px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+            transition: transform 0.12s ease, background 0.2s ease;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1; z-index: 10;
+        }
+        .modal-close:hover { transform: scale(1.10); background: #c0392b; }
+        .modal-close:active { transform: scale(0.90); }
+
+        .modal-padlock-wrapper {
+            position: relative; display: inline-block; width: 100%;
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85); background: #111;
+        }
+        .modal-padlock-wrapper img { display: block; width: 100%; height: auto; border-radius: 0; transition: opacity 0.3s ease; }
+
+        /* X button INSIDE the padlock image, top-right corner */
+        .modal-padlock-wrapper .modal-close {
+            top: 10px;
+            right: 10px;
+            width: 42px;
+            height: 42px;
+            font-size: 24px;
+            background: rgba(231, 76, 60, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            z-index: 25;
+        }
+
+        .modal-dial {
+            position: absolute; top: 69.2%; width: 14%; height: 16%; transform: translate(-50%, -50%);
+            text-align: center; font-size: clamp(28px, 6vw, 50px); font-weight: 700; font-family: 'Segoe UI', Arial, sans-serif;
+            color: #000; text-shadow: 0 2px 10px rgba(255, 255, 255, 0.25);
+            background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 0 !important;
+            cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.08s ease, opacity 0.3s ease; line-height: 1; z-index: 5; pointer-events: auto;
+        }
+        #modalDial1 { left: 29%; }
+        #modalDial2 { left: 50.6%; }
+        #modalDial3 { left: 73%; }
+        .modal-dial.unlocked { top: 70.7%; cursor: default; pointer-events: none; }
+        .modal-dial:active { transform: translate(-50%, -50%) scale(0.86); }
+        .modal-dial:hover { filter: brightness(1.6); }
+        .modal-dial.unlocked:hover { filter: none; }
+
+        .modal-message {
+            margin-top: 18px; font-size: 26px; font-weight: 700; color: #2ecc71;
+            text-shadow: 0 2px 16px rgba(0, 0, 0, 0.95); min-height: 44px; text-align: center;
+            opacity: 0; transition: opacity 0.35s ease; letter-spacing: 1px;
+        }
+        .modal-message.show { opacity: 1; }
+        .modal-locker-label {
+            color: rgba(255, 255, 255, 0.6); font-size: 14px; font-weight: 400; letter-spacing: 2px;
+            text-transform: uppercase; margin-bottom: 10px; background: rgba(0, 0, 0, 0.4);
+            padding: 6px 18px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .clue-modal-content { position: relative; max-width: 700px; width: 90%; display: flex; flex-direction: column; align-items: center; }
+        .clue-modal-content .modal-close { top: -18px; right: -18px; }
+        .clue-modal-content img { width: 100%; height: auto; border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9); background: #1a1a1a; border: 2px solid rgba(255, 255, 255, 0.05); }
+
+        .inside-modal-content {
+            position: relative;
+            max-width: 700px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .inside-modal-content .modal-close { top: -18px; right: -18px; }
+
+        .inside-img-wrapper {
+            position: relative;
+            display: block;
+            width: 100%;
+            line-height: 0;
+            border-radius: 12px;
+        }
+
+        #insideModalImg {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+            background: #1a1a1a;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            cursor: default;
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+        #insideModalImg.clickable-inside { cursor: pointer; }
+        #insideModalImg.clickable-inside:hover { transform: scale(1.01); filter: brightness(1.05); }
+
+        .inside-overlay-item {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            height: auto;
+            cursor: pointer;
+            display: none;
+            z-index: 6;
+            border-radius: 4px;
+            transition: transform 0.15s ease, filter 0.15s ease;
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+        }
+        .inside-overlay-item.visible { display: block; }
+        .inside-overlay-item:hover {
+            transform: translate(-50%, -50%) scale(1.06);
+            filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.85)) brightness(1.08);
+        }
+
+        #cctvSmall { left: var(--cctv-small-x); top: var(--cctv-small-y); width: var(--cctv-small-w); }
+        #appraisalSmall { left: var(--appraisal-small-x); top: var(--appraisal-small-y); width: var(--appraisal-small-w); }
+
+        .viewer-modal-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #viewerImg {
+            display: block;
+            max-width: 92%;
+            max-height: 88vh;
+            width: auto;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+            background: #1a1a1a;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s ease;
+        }
+        #viewerModal.viewer-cctv #viewerImg {
+            max-width: var(--cctv-full-max-w);
+            max-height: var(--cctv-full-max-h);
+            transform: translate(var(--cctv-full-x), var(--cctv-full-y))
+                       scale(var(--cctv-full-scale));
+        }
+        #viewerModal.viewer-appraisal #viewerImg {
+            max-width: var(--appraisal-full-max-w);
+            max-height: var(--appraisal-full-max-h);
+            transform: translate(var(--appraisal-full-x), var(--appraisal-full-y))
+                       scale(var(--appraisal-full-scale));
+        }
+        .viewer-modal-content .modal-close { top: 20px; right: 20px; }
+
+        @media (max-width: 700px) {
+            :root { --ball-size: 60px; --ball-bottom: 5vh; }
+            .clue-plate { padding: 2px 3px; border-radius: 4px; }
+            .locker-padlock { min-width: 20px; padding: 2px; border-width: 1.5px; }
+            .modal-close { top: -14px; right: -14px; width: 38px; height: 38px; font-size: 22px; }
+            .modal-padlock-wrapper .modal-close { top: 8px; right: 8px; width: 36px; height: 36px; font-size: 20px; }
+            .modal-dial { font-size: clamp(20px, 5vw, 34px); }
+            #door1 { width: 200px !important; height: 250px !important; top: 80px !important; left: 30px !important; }
+            #door2 { width: 200px !important; height: 250px !important; top: 80px !important; left: 230px !important; }
+            #door3 { width: 200px !important; height: 250px !important; top: 80px !important; left: 430px !important; }
+            #door4 { width: 200px !important; height: 250px !important; top: 300px !important; left: 30px !important; }
+            #door5 { width: 200px !important; height: 250px !important; top: 300px !important; left: 230px !important; }
+            #door6 { width: 200px !important; height: 250px !important; top: 300px !important; left: 430px !important; }
+            #returnToDeskBtn { font-size: .72rem; padding: 11px 26px; letter-spacing: .18em; }
+        }
+        @media (max-width: 480px) {
+            :root { --ball-size: 45px; --ball-bottom: 3vh; }
+            .locker-padlock { min-width: 16px; padding: 1px; border-width: 1px; }
+            .modal-dial { font-size: clamp(16px, 4.5vw, 26px); }
+            .modal-message { font-size: 20px; }
+            .clue-modal-content, .inside-modal-content { width: 95%; }
+            #door1 { width: 100px !important; height: 180px !important; top: 80px !important; left: 10px !important; }
+            #door2 { width: 100px !important; height: 180px !important; top: 80px !important; left: 140px !important; }
+            #door3 { width: 100px !important; height: 180px !important; top: 80px !important; left: 270px !important; }
+            #door4 { width: 100px !important; height: 180px !important; top: 265px !important; left: 10px !important; }
+            #door5 { width: 100px !important; height: 180px !important; top: 265px !important; left: 140px !important; }
+            #door6 { width: 100px !important; height: 180px !important; top: 265px !important; left: 270px !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <a class="back-to-desk" href="desk.html">← Desk</a>
+    <button id="returnToDeskBtn" type="button">→ Return to Desk</button>
+
+    <div class="bg-layer"></div>
+    <img class="football" src="football.png" alt="Football" />
+
+    <div class="locker-wrapper">
+        <img class="bg" src="newlocker.png" alt="Lockers 1–6" />
+
+        <div class="clue-plate" id="clue1" data-clue="1"><img src="c1.png" alt="Clue 1" /></div>
+        <div class="clue-plate" id="clue2" data-clue="2"><img src="c2.png" alt="Clue 2" /></div>
+        <div class="clue-plate" id="clue3" data-clue="3"><img src="c3.png" alt="Clue 3" /></div>
+        <div class="clue-plate" id="clue4" data-clue="4"><img src="c4.png" alt="Clue 4" /></div>
+        <div class="clue-plate" id="clue5" data-clue="5"><img src="c5.png" alt="Clue 5" /></div>
+        <div class="clue-plate" id="clue6" data-clue="6"><img src="c6.png" alt="Clue 6" /></div>
+
+        <div class="locker-door" id="door1" data-locker="1"></div>
+        <div class="locker-door" id="door2" data-locker="2"></div>
+        <div class="locker-door" id="door3" data-locker="3"></div>
+        <div class="locker-door" id="door4" data-locker="4"></div>
+        <div class="locker-door" id="door5" data-locker="5"></div>
+        <div class="locker-door" id="door6" data-locker="6"></div>
+
+        <div class="locker-padlock" id="lock1" data-locker="1" data-code="741"><img src="Padlock.png" alt="Padlock" /></div>
+        <div class="locker-padlock" id="lock2" data-locker="2" data-code="286"><img src="Padlock.png" alt="Padlock" /></div>
+        <div class="locker-padlock" id="lock3" data-locker="3" data-code="396"><img src="Padlock.png" alt="Padlock" /></div>
+        <div class="locker-padlock" id="lock4" data-locker="4" data-code="529"><img src="Padlock.png" alt="Padlock" /></div>
+        <div class="locker-padlock key-lock" id="lock5" data-locker="5" data-code="638"><img src="Padlock.png" alt="Padlock" /></div>
+        <div class="locker-padlock" id="lock6" data-locker="6" data-code="418"><img src="Padlock.png" alt="Padlock" /></div>
+    </div>
+
+    <div class="modal-overlay" id="padlockModal">
+        <div class="modal-content">
+            <div class="modal-locker-label" id="modalLockerLabel">Locker 1</div>
+            <div class="modal-padlock-wrapper">
+                <button class="modal-close" id="padlockModalClose" aria-label="Close">✕</button>
+                <img src="Padlock.png" alt="Padlock" id="padlockImg" />
+                <div class="modal-dial" id="modalDial1">0</div>
+                <div class="modal-dial" id="modalDial2">0</div>
+                <div class="modal-dial" id="modalDial3">0</div>
+            </div>
+            <div class="modal-message" id="modalMessage"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="clueModal">
+        <div class="clue-modal-content">
+            <button class="modal-close" id="clueModalClose" aria-label="Close">✕</button>
+            <img src="" alt="Enlarged clue" id="clueModalImg" />
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="insideModal">
+        <div class="inside-modal-content">
+            <button class="modal-close" id="insideModalClose" aria-label="Close">✕</button>
+            <div class="inside-img-wrapper" id="insideImgWrapper">
+                <img src="" alt="Inside view" id="insideModalImg" />
+                <img class="inside-overlay-item" id="cctvSmall"
+                     src="cctvpicsmall.jpg" alt="CCTV" draggable="false" />
+                <img class="inside-overlay-item" id="appraisalSmall"
+                     src="appraisal2small.png" alt="Appraisal" draggable="false" />
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewerModal">
+        <div class="viewer-modal-content">
+            <button class="modal-close" id="viewerModalClose" aria-label="Close">✕</button>
+            <img src="" alt="" id="viewerImg" />
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            /* ============================================================
+               PERSISTENCE
+               ------------------------------------------------------------
+               The puzzle is solved the moment locker 5 (code 638) is opened.
+               The other 5 padlocks still work as optional lore but are not
+               required. Per-locker keys prevent resets.
+               ============================================================ */
+            var MASTER_KEY = 'whitby_locker_solved';   /* set when locker 5 is done */
+            var KEY_LOCKER = 5;                         /* the required padlock */
+
+            function lockerKey(n) { return 'whitby_locker_' + n + '_done'; }
+
+            function hasFlag(k) {
+                try { return localStorage.getItem(k) === '1'; } catch (e) { return false; }
+            }
+            function setFlag(k) {
+                try { localStorage.setItem(k, '1'); } catch (e) {}
+            }
+            function isLockerDone(n) { return hasFlag(lockerKey(n)); }
+
+            var redirecting = false;
+            function redirectToDesk() {
+                if (redirecting) return;
+                redirecting = true;
+                document.body.style.transition = 'opacity .4s ease';
+                document.body.style.opacity = '0';
+                setTimeout(function () {
+                    window.location.href = 'desk.html';
+                }, 450);
+            }
+
+            /* ============================================================
+               ELEMENTS
+               ============================================================ */
+            var padlockOverlay = document.getElementById('padlockModal');
+            var padlockClose   = document.getElementById('padlockModalClose');
+            var padlockImg     = document.getElementById('padlockImg');
+            var padlockIcons   = document.querySelectorAll('.locker-padlock');
+            var dials = [
+                document.getElementById('modalDial1'),
+                document.getElementById('modalDial2'),
+                document.getElementById('modalDial3')
+            ];
+            var messageEl     = document.getElementById('modalMessage');
+            var lockerLabel   = document.getElementById('modalLockerLabel');
+
+            var clueOverlay = document.getElementById('clueModal');
+            var clueClose   = document.getElementById('clueModalClose');
+            var clueImg     = document.getElementById('clueModalImg');
+            var cluePlates  = document.querySelectorAll('.clue-plate');
+
+            var insideOverlay  = document.getElementById('insideModal');
+            var insideClose    = document.getElementById('insideModalClose');
+            var insideImg      = document.getElementById('insideModalImg');
+            var cctvSmall      = document.getElementById('cctvSmall');
+            var appraisalSmall = document.getElementById('appraisalSmall');
+
+            var viewerOverlay = document.getElementById('viewerModal');
+            var viewerClose   = document.getElementById('viewerModalClose');
+            var viewerImg     = document.getElementById('viewerImg');
+
+            var doorOverlays = document.querySelectorAll('.locker-door');
+
+            var returnToDeskBtn = document.getElementById('returnToDeskBtn');
+            returnToDeskBtn.addEventListener('click', redirectToDesk);
+
+            /* ============================================================
+               MODAL HELPERS
+               ============================================================ */
+            function openModal(el) {
+                el.classList.add('active');
+                document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeModal(el) {
+                el.classList.remove('active');
+                if (!document.querySelector('.modal-overlay.active')) {
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            /* ============================================================
+               VISUALS
+               ============================================================ */
+            function applyVisualForLocker(n) {
+                var lockEl = document.querySelector('.locker-padlock[data-locker="' + n + '"]');
+                if (lockEl) lockEl.classList.add('hidden-padlock');
+                var doorEl = document.getElementById('door' + n);
+                if (doorEl) doorEl.classList.add('active-door');
+            }
+
+            /* ============================================================
+               BOOT — restore any previously solved lockers
+               ============================================================ */
+            for (var i = 1; i <= 6; i++) {
+                if (isLockerDone(i)) applyVisualForLocker(i);
+            }
+
+            /* If locker 5 is done, the puzzle is solved */
+            if (isLockerDone(KEY_LOCKER)) {
+                setFlag(MASTER_KEY);
+                returnToDeskBtn.classList.add('visible');
+            }
+
+            /* ============================================================
+               PADLOCK MODALS
+               ============================================================ */
+            var currentSecretCode = [0, 0, 0];
+            var isUnlocked = false;
+            var currentLockerNumber = 1;
+
+            padlockIcons.forEach(function(icon) {
+                icon.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var lockerNum = this.dataset.locker || '1';
+                    currentLockerNumber = parseInt(lockerNum, 10);
+                    lockerLabel.textContent = 'Locker ' + currentLockerNumber;
+
+                    if (isLockerDone(currentLockerNumber)) {
+                        padlockImg.src = 'Padlock2.png';
+                        dials.forEach(function(dial) {
+                            dial.classList.add('unlocked');
+                            dial.textContent = '0';
+                            dial.dataset.value = '0';
+                            dial.style.pointerEvents = 'none';
+                            dial.style.cursor = 'default';
+                        });
+                        messageEl.textContent = '🔓 Unlocked!';
+                        messageEl.classList.add('show');
+                        isUnlocked = true;
+                        openModal(padlockOverlay);
+                        return;
+                    }
+
+                    var codeStr = this.dataset.code;
+                    if (codeStr && codeStr.length === 3) {
+                        currentSecretCode = codeStr.split('').map(Number);
+                    } else {
+                        currentSecretCode = [0, 0, 0];
+                    }
+
+                    padlockImg.src = 'Padlock.png';
+                    dials.forEach(function(dial) {
+                        dial.classList.remove('unlocked');
+                        dial.textContent = '0';
+                        dial.dataset.value = '0';
+                        dial.style.pointerEvents = 'auto';
+                        dial.style.cursor = 'pointer';
+                    });
+                    messageEl.textContent = '';
+                    messageEl.classList.remove('show');
+                    isUnlocked = false;
+
+                    openModal(padlockOverlay);
+                });
+            });
+
+            function closePadlockModal() { closeModal(padlockOverlay); }
+            padlockClose.addEventListener('click', closePadlockModal);
+            padlockOverlay.addEventListener('click', function(e) {
+                if (e.target === padlockOverlay) closePadlockModal();
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (viewerOverlay.classList.contains('active')) closeViewer();
+                    else if (insideOverlay.classList.contains('active')) closeInsideModal();
+                    else if (padlockOverlay.classList.contains('active')) closePadlockModal();
+                    else if (clueOverlay.classList.contains('active')) closeClueModal();
+                }
+            });
+
+            function checkAndUnlock() {
+                if (isUnlocked) return;
+                var currentCode = dials.map(function(d) { return parseInt(d.dataset.value, 10); });
+                var isCorrect = currentCode.length === currentSecretCode.length &&
+                    currentCode.every(function(v, i) { return v === currentSecretCode[i]; });
+
+                if (!isCorrect) return;
+
+                isUnlocked = true;
+                padlockImg.src = 'Padlock2.png';
+                dials.forEach(function(dial) {
+                    dial.classList.add('unlocked');
+                    dial.style.pointerEvents = 'none';
+                    dial.style.cursor = 'default';
+                });
+                messageEl.textContent = '🔓 Unlocked!';
+                messageEl.classList.add('show');
+
+                /* Persist this locker immediately */
+                setFlag(lockerKey(currentLockerNumber));
+                applyVisualForLocker(currentLockerNumber);
+
+                /* ---- The ONLY required locker is #5 ---- */
+                if (currentLockerNumber === KEY_LOCKER) {
+                    setFlag(MASTER_KEY);
+                    returnToDeskBtn.classList.add('visible');
+                    console.log('[locker] ✅ Key locker unlocked — puzzle solved');
+                }
+            }
+
+            dials.forEach(function(dial) {
+                var val = parseInt(dial.textContent, 10);
+                if (isNaN(val) || val < 0 || val > 9) val = 0;
+                dial.dataset.value = val;
+
+                dial.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (isUnlocked) return;
+                    var v = parseInt(this.dataset.value, 10);
+                    v = (v + 1) % 10;
+                    this.dataset.value = v;
+                    this.textContent = v;
+                    checkAndUnlock();
+                });
+
+                dial.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    if (isUnlocked) return;
+                    var v = parseInt(this.dataset.value, 10);
+                    v = (v + 1) % 10;
+                    this.dataset.value = v;
+                    this.textContent = v;
+                    checkAndUnlock();
+                }, { passive: false });
+            });
+
+            /* ============================================================
+               CLUE PLATES
+               ============================================================ */
+            cluePlates.forEach(function(plate) {
+                plate.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var img = this.querySelector('img');
+                    if (img) {
+                        clueImg.src = img.getAttribute('src');
+                        clueImg.alt = img.alt || 'Clue enlarged';
+                        openModal(clueOverlay);
+                    }
+                });
+            });
+            function closeClueModal() { closeModal(clueOverlay); }
+            clueClose.addEventListener('click', closeClueModal);
+            clueOverlay.addEventListener('click', function(e) {
+                if (e.target === clueOverlay) closeClueModal();
+            });
+
+            /* ============================================================
+               LOCKER DOORS
+               ============================================================ */
+            doorOverlays.forEach(function(door) {
+                door.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var lockerNum = parseInt(this.dataset.locker, 10);
+                    if (isNaN(lockerNum)) return;
+
+                    insideImg.classList.remove('clickable-inside');
+                    insideImg.onclick = null;
+                    cctvSmall.classList.remove('visible');
+                    appraisalSmall.classList.remove('visible');
+
+                    if (lockerNum === 5) {
+                        /* Locker 5 is the key locker — reveals the evidence */
+                        try { localStorage.setItem('evidence_lockerPhoto', '1'); } catch (err) {}
+
+                        insideImg.src = 'insideb.jpg';
+                        insideImg.alt = 'Inside B';
+                        insideImg.classList.add('clickable-inside');
+                        insideImg.onclick = function(ev) {
+                            ev.stopPropagation();
+                            insideImg.src = 'insidebo.jpg';
+                            insideImg.alt = 'Inside BO';
+                            insideImg.classList.remove('clickable-inside');
+                            insideImg.onclick = null;
+                            cctvSmall.classList.add('visible');
+                            appraisalSmall.classList.add('visible');
+                        };
+                    } else {
+                        insideImg.src = 'inside.jpg';
+                        insideImg.alt = 'Inside view';
+                    }
+
+                    openModal(insideOverlay);
+                });
+            });
+
+            function closeInsideModal() {
+                closeModal(insideOverlay);
+                insideImg.classList.remove('clickable-inside');
+                insideImg.onclick = null;
+                cctvSmall.classList.remove('visible');
+                appraisalSmall.classList.remove('visible');
+            }
+            insideClose.addEventListener('click', closeInsideModal);
+            insideOverlay.addEventListener('click', function(e) {
+                if (e.target === insideOverlay) closeInsideModal();
+            });
+
+            /* ============================================================
+               VIEWER (fullscreen overlays from inside-locker)
+               ============================================================ */
+            function openViewer(src, alt, variantClass) {
+                viewerImg.src = src;
+                viewerImg.alt = alt || '';
+                viewerModalClasses(variantClass);
+                openModal(viewerOverlay);
+            }
+            function viewerModalClasses(variant) {
+                viewerOverlay.classList.remove('viewer-cctv', 'viewer-appraisal');
+                if (variant) viewerOverlay.classList.add(variant);
+            }
+            function closeViewer() {
+                viewerOverlay.classList.remove('viewer-cctv', 'viewer-appraisal');
+                viewerImg.src = '';
+                closeModal(viewerOverlay);
+            }
+            cctvSmall.addEventListener('click', function(e) {
+                e.stopPropagation();
+                openViewer('cctvpic.jpg', 'CCTV footage', 'viewer-cctv');
+            });
+            appraisalSmall.addEventListener('click', function(e) {
+                e.stopPropagation();
+                openViewer('appraisal2.png', 'Appraisal document', 'viewer-appraisal');
+            });
+            viewerClose.addEventListener('click', closeViewer);
+            viewerOverlay.addEventListener('click', function(e) {
+                if (e.target === viewerOverlay) closeViewer();
+            });
+
+            /* Debug log */
+            console.log('[locker] Boot — locker 5 done:', isLockerDone(5),
+                        '| master flag:', hasFlag(MASTER_KEY));
+
+        })();
+
+        window.addEventListener('load', function () { document.body.classList.add('ready'); });
+        if (document.readyState === 'complete') { document.body.classList.add('ready'); }
+    </script>
+</body>
+</html>
