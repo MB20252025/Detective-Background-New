@@ -23,28 +23,6 @@
         }
         body.ready { opacity: 1; }
 
-        .back-to-desk {
-            position: fixed;
-            top: 14px;
-            left: 14px;
-            padding: 9px 20px;
-            background: rgba(15, 42, 63, 0.85);
-            border: 1px solid rgba(182, 139, 92, 0.4);
-            border-radius: 40px;
-            color: #eace9f;
-            font-family: 'Courier New', monospace;
-            font-size: .72rem;
-            font-weight: bold;
-            letter-spacing: .22em;
-            text-transform: uppercase;
-            text-decoration: none;
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            z-index: 9999;
-            transition: background .18s ease, border-color .18s ease;
-        }
-        .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
-
         /* =========================================================
            SESSION BANNER — appears when 3 questions are asked
            ========================================================= */
@@ -73,13 +51,18 @@
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             opacity: 0;
-            transition: opacity .4s ease, transform .4s cubic-bezier(.2,.9,.3,1.05);
+            visibility: hidden;
+            transition: opacity .4s ease, transform .4s cubic-bezier(.2,.9,.3,1.05),
+                        visibility 0s linear .4s;
             pointer-events: none;
         }
         .session-banner.active {
             opacity: 1;
+            visibility: visible;
             transform: translateX(-50%) translateY(0);
             pointer-events: auto;
+            transition: opacity .4s ease, transform .4s cubic-bezier(.2,.9,.3,1.05),
+                        visibility 0s linear 0s;
         }
         .session-banner .msg {
             display: inline-flex;
@@ -483,7 +466,6 @@
         }
         .branch-tab.active .count { color: #6aa8c0; }
 
-        /* ---- Accuse button ---- */
         .accuse-btn-main {
             display: block;
             width: 100%;
@@ -633,9 +615,7 @@
 </head>
 <body>
 
-    <a class="back-to-desk" href="desk.html">← Desk</a>
-
-    <!-- Session banner (appears when 3 questions have been asked) -->
+    <!-- Session banner (appears only when 3 questions have been asked AND a suspect is active) -->
     <div class="session-banner" id="sessionBanner">
         <span class="msg"><span class="check">✓</span> Interview complete — 3 questions asked</span>
         <a class="return-btn" href="desk.html">← Return to Desk</a>
@@ -655,9 +635,6 @@
     (function () {
         "use strict";
 
-        /* =========================================================
-           SESSION LIMIT — 3 questions per visit
-           ========================================================= */
         const SESSION_QUESTION_LIMIT = 3;
         let questionsAsked = 0;
         let sessionEnded = false;
@@ -673,9 +650,6 @@
             }
         }
 
-        /* =========================================================
-           EVIDENCE FLAGS
-           ========================================================= */
         let FORCE_ALL_EVIDENCE = false;
         try {
             const params = new URLSearchParams(location.search);
@@ -688,22 +662,15 @@
             catch (e) { return false; }
         }
 
-        /* =========================================================
-           SUSPECT UNLOCKING
-           Neil Down appears after The Bragger's Note is solved.
-           Vincent Hall and Sienna Clarke appear after The Scale Room.
-           ========================================================= */
         function isSuspectUnlocked(sid) {
             if (FORCE_ALL_EVIDENCE) return true;
 
             if (sid === 'pryce') {
-                /* Neil Down — unlocked once The Bragger's Note is solved */
                 try { return localStorage.getItem('whitby_braggers_solved') === '1'; }
                 catch (e) { return false; }
             }
 
             if (sid === 'walker' || sid === 'sienna') {
-                /* Vincent Hall + Sienna Clarke — unlocked once The Scale Room is solved */
                 try { return localStorage.getItem('whitby_scale_solved') === '1'; }
                 catch (e) { return false; }
             }
@@ -714,9 +681,6 @@
             return SUSPECTS.every(s => isSuspectUnlocked(s.id));
         }
 
-        /* =========================================================
-           SUSPECT DATA
-           ========================================================= */
         const SUSPECTS = [
             {
                 id: 'pryce',
@@ -1077,9 +1041,6 @@
             }
         ];
 
-        /* =========================================================
-           STATE
-           ========================================================= */
         const state = {
             currentSuspectId: 'pryce',
             currentBranch: { pryce: 'A', walker: 'A', sienna: 'A' },
@@ -1110,9 +1071,6 @@
             return null;
         }
 
-        /* =========================================================
-           PERSISTENCE
-           ========================================================= */
         const SAVE_KEY = 'interrogation_state';
 
         function saveState() {
@@ -1157,9 +1115,6 @@
             } catch (e) {}
         }
 
-        /* =========================================================
-           HELPERS
-           ========================================================= */
         const STRESS_DELTA = {
             calm:     1,
             mild:     4,
@@ -1221,9 +1176,6 @@
             return { answered, total };
         }
 
-        /* =========================================================
-           ECG
-           ========================================================= */
         const MIN_SPEED = 0.06;
         const MAX_SPEED = 0.18;
         const AMPLITUDE_SCALE = 0.30;
@@ -1316,13 +1268,9 @@
             ctx.shadowBlur = 0;
         }
 
-        /* =========================================================
-           TREE RENDERER
-           ========================================================= */
         function renderNodeHTML(node, depth, sid, parentAnswered) {
             const answered = isAnswered(sid, node.id);
             const reqMet = !node.requires || hasFlag(node.requires);
-            /* Session limit: no new questions once 3 asked */
             const askable = parentAnswered && !answered && reqMet && !sessionEnded;
 
             let cls = 'note-entry';
@@ -1379,18 +1327,17 @@
             return html;
         }
 
-        /* =========================================================
-           RENDER
-           ========================================================= */
         function render() {
             const dashboard = document.getElementById('dashboard');
             const noSuspects = document.getElementById('noSuspects');
+            const banner = document.getElementById('sessionBanner');
 
-            /* --- If no suspects are unlocked yet, show the empty state --- */
             var anyUnlocked = SUSPECTS.some(function(s) { return isSuspectUnlocked(s.id); });
             if (!anyUnlocked) {
+                /* No suspects — hide dashboard + banner, show only the empty state */
                 dashboard.innerHTML = '';
                 dashboard.style.display = 'none';
+                if (banner) banner.classList.remove('active');
                 noSuspects.classList.add('visible');
                 return;
             }
@@ -1413,7 +1360,6 @@
             const ringColor = getStressColor(stress);
             const stressClass = getStressClass(stress);
 
-            /* --- Suspect switcher --- */
             let dotsHtml = '';
             for (const s of SUSPECTS) {
                 if (!isSuspectUnlocked(s.id)) continue;
@@ -1429,7 +1375,6 @@
                     </div>`;
             }
 
-            /* --- Portrait --- */
             const isStressed = stress > 80;
             const imgSrc = suspect.image[isStressed ? 'stressed' : 'calm'];
             const avatarHtml = `
@@ -1439,13 +1384,11 @@
             const circumference = 2 * Math.PI * 72;
             const offsetRing = circumference * (1 - Math.min(stress, 100) / 100);
 
-            /* --- Vitals --- */
             const hr = calculateBPM(stress);
             const skinCond = stress > 70 ? 'HIGH' : (stress > 40 ? 'MEDIUM' : 'LOW');
             const resp = Math.round(12 + (stress / 100) * 8);
             const stressIdx = Math.round(stress);
 
-            /* --- Branch tabs --- */
             const branchKey = state.currentBranch[sid];
             const BRANCH_LABELS = { A: 'Alibi', B: 'Knowledge', C: 'Relationship' };
             let tabsHtml = '<div class="branch-tabs">';
@@ -1456,19 +1399,16 @@
             }
             tabsHtml += '</div>';
 
-            /* --- Evidence + tree --- */
             const evidenceHtml = renderEvidenceHTML(sid);
             const branch = suspect.branches[branchKey];
             const treeHtml = renderNodeHTML(branch, 0, sid, true);
 
             const prog = suspectProgress(sid);
 
-            /* --- Question counter badge --- */
             const remaining = Math.max(0, SESSION_QUESTION_LIMIT - questionsAsked);
             const counterCls = remaining <= 1 ? 'q-counter danger' : 'q-counter';
             const counterHtml = `<span class="${counterCls}">Q: ${questionsAsked}/${SESSION_QUESTION_LIMIT}</span>`;
 
-            /* --- Accuse button (gated on cryptogram solved) --- */
             var cryptogramSolved = hasFlag('whitby_cryptogram_solved');
             var accuseButtonHtml = (allSuspectsUnlocked() && cryptogramSolved)
                 ? '<button class="accuse-btn-main" id="accuseBtnMain">⚖️ Present Accusation</button>'
@@ -1525,9 +1465,6 @@
             attachListeners();
         }
 
-        /* =========================================================
-           EVENT WIRING
-           ========================================================= */
         function attachListeners() {
             const sid = state.currentSuspectId;
 
@@ -1553,7 +1490,6 @@
                 });
             });
 
-            /* --- Ask a question --- */
             document.querySelectorAll('.note-entry.askable:not(.evidence-btn)').forEach(entry => {
                 entry.addEventListener('click', () => {
                     if (sessionEnded) return;
@@ -1570,7 +1506,6 @@
                 });
             });
 
-            /* --- Present evidence (also counts as one question) --- */
             document.querySelectorAll('.evidence-btn').forEach(entry => {
                 entry.addEventListener('click', () => {
                     if (sessionEnded) return;
@@ -1587,7 +1522,6 @@
                 });
             });
 
-            /* --- Present Accusation --- */
             var accuseBtn = document.getElementById('accuseBtnMain');
             if (accuseBtn) {
                 accuseBtn.addEventListener('click', function () {
@@ -1596,12 +1530,8 @@
             }
         }
 
-        /* =========================================================
-           BOOTSTRAP
-           ========================================================= */
         function init() {
             loadState();
-            /* Reset the session counter on entry — each visit gets 3 questions */
             questionsAsked = 0;
             sessionEnded = false;
             const banner = document.getElementById('sessionBanner');
@@ -1619,4 +1549,4 @@
     })();
     </script>
 </body>
-  </html>
+</html>
