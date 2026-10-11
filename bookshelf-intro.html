@@ -3,8 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Approaching the Vault — Whitby Case</title>
-<link rel="preload" as="video" href="vaultvid1.mp4">
 <link rel="preload" as="image" href="vaultentrance.jpg">
 <link rel="preload" as="image" href="bookcaselink.png">
 
@@ -187,7 +189,7 @@
 </head>
 <body>
 
-<a class="back-to-puzzles" href="puzzles.html">← Puzzles</a>
+<a class="back-to-puzzles" href="casefile.html">← Puzzles</a>
 <a class="back-to-desk" href="desk.html">← Desk</a>
 
 <div class="stage">
@@ -237,6 +239,10 @@
   }
 
   introVideo.addEventListener('ended', showEntrance);
+
+  /* If the video fails to load (404, bad codec, etc.) fall straight through
+     to the still image so the player is never stuck on a black stage. */
+  introVideo.addEventListener('error', showEntrance);
 
   skipBtn.addEventListener('click', function (e) {
     e.stopPropagation();
