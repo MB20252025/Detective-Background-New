@@ -43,8 +43,8 @@
     --hintlist-x: 76.0; --hintlist-y: 40; --hintlist-scale: 0.55; --hintlist-width: 680px;
 
     /* ---- ENLARGED DESCRIPTION OVERLAY ---- */
-    --zoom-font-size: 1.6rem;      /* font size inside the enlarged view */
-    --zoom-max-width: 800px;       /* max width of the enlarged card */
+    --zoom-font-size: 1.6rem;
+    --zoom-max-width: 800px;
     --zoom-line-height: 1.75;
   }
 
@@ -90,7 +90,7 @@
     border-left-color: #eace9f;
     transform: scale(1.01);
   }
-  /* Little magnifier hint in the top-right corner */
+  /* Little magnifier hint in the top-right corner of the description */
   .puzzle-desc::after {
     content: '🔍';
     position: absolute;
@@ -101,6 +101,24 @@
     pointer-events: none;
   }
   .puzzle-desc:hover::after { opacity: 1; }
+
+  /* ---- "CLICK TO ENLARGE" LABEL ABOVE DESCRIPTION ---- */
+  .puzzle-desc-hint {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #cdba92;
+    opacity: 0.55;
+    text-align: right;
+    margin-bottom: 4px;
+    padding-right: 4px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    transition: opacity .18s;
+    pointer-events: none;
+    user-select: none;
+  }
+  .desc-block:hover .puzzle-desc-hint { opacity: 0.9; }
 
   /* ---- OPTIONS — GROUP CONTAINER ---- */
   .options-block {
@@ -291,6 +309,7 @@
   @media (max-width: 640px) {
     .puzzle-title { font-size: 1.1rem; }
     .puzzle-desc { font-size: 0.9rem; padding: 10px 12px; }
+    .puzzle-desc-hint { font-size: 0.6rem; }
     .option { font-size: 0.85rem; padding: 4px 10px 4px 8px; }
     .option .letter { width: 22px; height: 22px; font-size: 0.7rem; }
 
@@ -313,6 +332,7 @@
 
   <!-- ═══════════ DESCRIPTION (click to enlarge) ═══════════ -->
   <div class="block desc-block">
+    <div class="puzzle-desc-hint">🔍 Click to enlarge</div>
     <div class="puzzle-desc" id="puzzleDesc" role="button" tabindex="0" aria-label="Click to enlarge description">Tracing the thief's possible escape route on a map. They were last seen heading south, heading south on the River Witham. Which town along the river could the thief have stopped at for coffee?</div>
   </div>
 
@@ -388,10 +408,8 @@
       if (!descEl || !overlay || !zoomText || !closeBtn) return;
 
       function openZoom() {
-        /* Copy the exact text from the description into the overlay */
         zoomText.textContent = descEl.textContent.trim();
         overlay.classList.add('active');
-        /* Small delay so focus happens after the fade-in */
         setTimeout(function () { closeBtn.focus(); }, 60);
       }
 
@@ -410,12 +428,10 @@
 
       closeBtn.addEventListener('click', closeZoom);
 
-      /* Click on the dark backdrop (not the card) closes it */
       overlay.addEventListener('click', function (e) {
         if (e.target === overlay) closeZoom();
       });
 
-      /* ESC closes it */
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && overlay.classList.contains('active')) {
           closeZoom();
