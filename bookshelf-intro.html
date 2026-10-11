@@ -148,11 +148,11 @@
   .skip-btn:hover { background: rgba(90,60,20,.95); border-color: #d8ab6a; }
   .skip-btn.hidden { opacity: 0; pointer-events: none; }
 
-  /* ── Back buttons ── */
-  .back-to-desk,
-  .back-to-puzzles {
+  /* ── Back to Desk (top-right) ── */
+  .back-to-desk {
     position: fixed;
     top: 14px;
+    right: 14px;
     padding: 9px 20px;
     border-radius: 40px;
     font-family: 'Courier New', monospace;
@@ -165,16 +165,6 @@
     -webkit-backdrop-filter: blur(6px);
     z-index: 9999;
     transition: background .18s ease, border-color .18s ease;
-  }
-  .back-to-puzzles {
-    left: 14px;
-    background: rgba(15,12,8,.85);
-    border: 1px solid #8a6e42;
-    color: var(--gold);
-  }
-  .back-to-puzzles:hover { background: rgba(60,40,15,.95); border-color: #d8ab6a; }
-  .back-to-desk {
-    right: 14px;
     background: rgba(15,42,63,.85);
     border: 1px solid rgba(182,139,92,.4);
     color: var(--gold);
@@ -182,14 +172,13 @@
   .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
 
   @media (max-width: 640px) {
-    .back-to-desk, .back-to-puzzles { font-size: .68rem; padding: 8px 14px; letter-spacing: .18em; }
+    .back-to-desk { font-size: .68rem; padding: 8px 14px; letter-spacing: .18em; }
     .skip-btn { font-size: .68rem; padding: 8px 16px; bottom: 14px; right: 14px; }
   }
 </style>
 </head>
 <body>
 
-<a class="back-to-puzzles" href="casefile.html">← Puzzles</a>
 <a class="back-to-desk" href="desk.html">← Desk</a>
 
 <div class="stage">
