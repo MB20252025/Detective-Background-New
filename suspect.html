@@ -51,9 +51,9 @@ body{
 body.ready { opacity: 1; }
 
 /* ============================================================
-   BACK TO DESK
+   BACK TO CASE FILE
    ============================================================ */
-.back-to-desk {
+.back-to-casefile {
   position: fixed;
   top: 14px;
   left: 14px;
@@ -73,7 +73,7 @@ body.ready { opacity: 1; }
   z-index: 9999;
   transition: background .18s ease, border-color .18s ease;
 }
-.back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+.back-to-casefile:hover { background: #2a5a6a; border-color: #eace9f; }
 
 /* ============================================================
    PAGE HEADER
@@ -221,9 +221,6 @@ body.ready { opacity: 1; }
   pointer-events: none;
 }
 
-/* ----------------------------------------------
-   Paperclip
-   ---------------------------------------------- */
 .paperclip{
   position: absolute;
   top: -17px;
@@ -237,9 +234,6 @@ body.ready { opacity: 1; }
 .sheet--2 .paperclip{ left: auto; right: 30px; transform: scaleX(-1) rotate(6deg); }
 .sheet--3 .paperclip{ left: 44px; transform: rotate(-5deg); }
 
-/* ----------------------------------------------
-   Coffee stain (removed from Sienna / sheet--2)
-   ---------------------------------------------- */
 .coffee-stain{
   position: absolute;
   width: 96px; height: 96px;
@@ -254,9 +248,6 @@ body.ready { opacity: 1; }
 .sheet--2 .coffee-stain{ display: none; }
 .sheet--3 .coffee-stain{ bottom: 120px; right: -30px; width: 84px; height: 84px; }
 
-/* ----------------------------------------------
-   Red stamp
-   ---------------------------------------------- */
 .stamp{
   position: absolute;
   font-family: 'Cinzel', serif;
@@ -278,9 +269,6 @@ body.ready { opacity: 1; }
 .stamp--tr{ top: 78px; right: 14px; }
 .stamp--br{ bottom: 92px; right: 18px; transform: rotate(8deg); }
 
-/* ============================================================
-   SHEET HEADER
-   ============================================================ */
 .sheet__head{
   position: relative;
   z-index: 2;
@@ -346,9 +334,6 @@ body.ready { opacity: 1; }
   opacity: .55;
 }
 
-/* ============================================================
-   TOP BLOCK — MUGSHOT + BIO
-   ============================================================ */
 .sheet__body{
   position: relative;
   z-index: 2;
@@ -406,7 +391,6 @@ body.ready { opacity: 1; }
   background: #b5b0a2;
 }
 
-/* The mugshot image sits on top of the height chart */
 .photo-window img{
   position: absolute;
   inset: 0;
@@ -444,9 +428,6 @@ body.ready { opacity: 1; }
   color: #5c5648;
 }
 
-/* ----------------------------------------------
-   HEIGHT CHART — behind the photo, filled by JS
-   ---------------------------------------------- */
 .height-chart{
   position: absolute;
   inset: 0;
@@ -595,9 +576,6 @@ body.ready { opacity: 1; }
 .threat--mid  .threat__label b{ color:#b3711f; }
 .threat--high .threat__label b{ color:var(--red); }
 
-/* ============================================================
-   SECTIONS
-   ============================================================ */
 .block{
   position: relative;
   z-index: 2;
@@ -736,9 +714,48 @@ body.ready { opacity: 1; }
   white-space: nowrap;
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
+/* ---- Empty state when nothing is unlocked (safety) ---- */
+.no-suspects{
+  display: none;
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 50px 30px;
+  text-align: center;
+  color: #93a7b3;
+  background: rgba(15,42,63,.4);
+  border: 1px solid rgba(182,139,92,.35);
+  border-radius: 14px;
+}
+.no-suspects.visible{ display: block; }
+.no-suspects .icon{ font-size: 3rem; opacity: .4; margin-bottom: 18px; }
+.no-suspects h2{
+  font-family: 'Cinzel', serif;
+  color: #eace9f;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+.no-suspects p{
+  font-size: .82rem;
+  line-height: 1.7;
+  margin-bottom: 22px;
+}
+.no-suspects a{
+  display: inline-block;
+  padding: 11px 30px;
+  background: linear-gradient(180deg, #d99a1a, #a37812);
+  border: 1px solid #ffd066;
+  border-radius: 40px;
+  color: #1a1006;
+  font-family: 'Courier New', monospace;
+  font-size: .72rem;
+  font-weight: bold;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
 @media (max-width: 640px){
   body{ padding: 0 12px 40px; }
   .desk-header{ padding: 26px 4px 16px; }
@@ -758,12 +775,9 @@ body.ready { opacity: 1; }
   .sheet.active.from-left{ animation: none; }
 }
 
-/* ============================================================
-   PRINT
-   ============================================================ */
 @media print{
   body{ background: #fff; padding: 0; }
-  .desk-header, .dots, .nav-btn, .back-to-desk{ display: none !important; }
+  .desk-header, .dots, .nav-btn, .back-to-casefile{ display: none !important; }
   .viewer{ display: block; max-width: none; }
   .sheet{ display: block !important; transform: none !important; box-shadow: none; border: 1px solid #999; margin-bottom: 18mm; page-break-inside: avoid; }
   .sheet::before, .coffee-stain{ display: none; }
@@ -774,12 +788,12 @@ body.ready { opacity: 1; }
 
 <body>
 
-<a class="back-to-desk" href="desk.html">← Desk</a>
+<a class="back-to-casefile" href="casefile.html">← Case File</a>
 
 <header class="desk-header">
   <p class="eyebrow">Lincolnshire Constabulary</p>
   <h1>Suspect Dossier</h1>
-  <p class="sub">Case <b>WHIT/2026/01</b> &nbsp;·&nbsp; Operation <b>LIGHTHOUSE</b> &nbsp;·&nbsp; 3 persons of interest</p>
+  <p class="sub">Case <b>WHIT/2026/01</b> &nbsp;·&nbsp; Operation <b>LIGHTHOUSE</b> &nbsp;·&nbsp; <span id="suspectCount">1</span> person<span id="suspectPlural">s</span> of interest</p>
 </header>
 
 <div class="viewer">
@@ -788,9 +802,9 @@ body.ready { opacity: 1; }
   <div class="stage">
 
     <!-- ==========================================================
-         SHEET 1 — NEIL DOWN
+         SHEET 1 — NEIL DOWN  (always unlocked)
          ========================================================== -->
-    <article class="sheet sheet--1" data-idx="0" data-sheet="s1" aria-labelledby="s1-name">
+    <article class="sheet sheet--1" data-idx="0" data-sheet="s1" data-unlock="" aria-labelledby="s1-name">
 
       <svg class="paperclip" viewBox="0 0 24 62" aria-hidden="true">
         <path d="M7 16 v30 a5 5 0 0 0 10 0 V12 a8.5 8.5 0 0 0 -17 0 v36"
@@ -897,9 +911,9 @@ body.ready { opacity: 1; }
 
 
     <!-- ==========================================================
-         SHEET 2 — SIENNA CLARKE
+         SHEET 2 — SIENNA CLARKE  (unlocked after Scale Room)
          ========================================================== -->
-    <article class="sheet sheet--2" data-idx="1" data-sheet="s2" aria-labelledby="s2-name">
+    <article class="sheet sheet--2" data-idx="1" data-sheet="s2" data-unlock="whitby_scale_solved" aria-labelledby="s2-name">
 
       <svg class="paperclip" viewBox="0 0 24 62" aria-hidden="true">
         <path d="M7 16 v30 a5 5 0 0 0 10 0 V12 a8.5 8.5 0 0 0 -17 0 v36"
@@ -1005,9 +1019,9 @@ body.ready { opacity: 1; }
 
 
     <!-- ==========================================================
-         SHEET 3 — VINCENT HALE
+         SHEET 3 — VINCENT HALE  (unlocked after Scale Room)
          ========================================================== -->
-    <article class="sheet sheet--3" data-idx="2" data-sheet="s3" aria-labelledby="s3-name">
+    <article class="sheet sheet--3" data-idx="2" data-sheet="s3" data-unlock="whitby_scale_solved" aria-labelledby="s3-name">
 
       <svg class="paperclip" viewBox="0 0 24 62" aria-hidden="true">
         <path d="M7 16 v30 a5 5 0 0 0 10 0 V12 a8.5 8.5 0 0 0 -17 0 v36"
@@ -1122,43 +1136,77 @@ body.ready { opacity: 1; }
   <button class="dot"        data-idx="2" aria-label="Suspect 3"></button>
 </div>
 
+<!-- Empty state (should never show since Neil is always unlocked) -->
+<div class="no-suspects" id="noSuspects">
+  <div class="icon">🔒</div>
+  <h2>No Suspects Available</h2>
+  <p>No one has been brought in for questioning yet.<br>Continue the investigation and check back later.</p>
+  <a href="casefile.html">← Back to Case File</a>
+</div>
+
 <script>
 (function () {
   'use strict';
 
   /* ==================================================================
+     FILTER LOCKED SUSPECTS
+     ------------------------------------------------------------
+     Each sheet has data-unlock="flagName" (or empty for always shown).
+     Sheets whose flag isn't set are removed before building charts.
+     ================================================================== */
+  function hasFlag(k) {
+    if (!k) return true;
+    try { return localStorage.getItem(k) === '1'; } catch (e) { return false; }
+  }
+
+  const allSheets = Array.from(document.querySelectorAll('.sheet'));
+  let removedAny = false;
+
+  allSheets.forEach(function(sheet) {
+    const key = sheet.dataset.unlock;
+    if (!hasFlag(key)) {
+      sheet.remove();
+      removedAny = true;
+    }
+  });
+
+  /* Reassign data-idx and renumber dots after filtering */
+  const remainingSheets = Array.from(document.querySelectorAll('.sheet'));
+  remainingSheets.forEach(function(sheet, i) {
+    sheet.dataset.idx = String(i);
+  });
+
+  const dotsContainer = document.querySelector('.dots');
+  if (dotsContainer) {
+    dotsContainer.innerHTML = '';
+    remainingSheets.forEach(function(_, i) {
+      const b = document.createElement('button');
+      b.className = 'dot' + (i === 0 ? ' active' : '');
+      b.dataset.idx = String(i);
+      b.setAttribute('aria-label', 'Suspect ' + (i + 1));
+      dotsContainer.appendChild(b);
+    });
+  }
+
+  /* Update the header count */
+  const countEl = document.getElementById('suspectCount');
+  const pluralEl = document.getElementById('suspectPlural');
+  if (countEl) countEl.textContent = String(remainingSheets.length);
+  if (pluralEl) pluralEl.textContent = remainingSheets.length === 1 ? '' : 's';
+
+  /* If nothing at all is unlocked, show the empty state and hide the viewer */
+  if (remainingSheets.length === 0) {
+    const viewer = document.querySelector('.viewer');
+    const dots = document.querySelector('.dots');
+    if (viewer) viewer.style.display = 'none';
+    if (dots) dots.style.display = 'none';
+    const empty = document.getElementById('noSuspects');
+    if (empty) empty.classList.add('visible');
+    return;   /* Nothing else to build */
+  }
+
+  /* ==================================================================
      🎛️  SUSPECT_LAYOUT — EDIT EVERYTHING HERE
-     ==================================================================
-     For each suspect you have three sections:
-
-     ─── frame ──────────────────────────────────────────────────────
-       Moves and scales the WHOLE mugshot (the white polaroid frame
-       around the photo). You usually want this left at 0,0,1 — it's
-       here for nudging the frame if the layout looks off.
-
-       x      : pixels right (+) / left (-)
-       y      : pixels down  (+) / up   (-)
-       scale  : 1 = normal, 1.2 = 20% bigger, 0.9 = 10% smaller
-
-     ─── photo ──────────────────────────────────────────────────────
-       Moves and scales just the mug PNG INSIDE the frame.
-       This is what you'll use most — to zoom in or shift the face.
-
-       x      : pixels right (+) / left (-)
-       y      : pixels down  (+) / up   (-)
-       zoom   : 1 = normal, 1.2 = zoom in, 0.9 = zoom out
-
-     ─── heightChart ────────────────────────────────────────────────
-       Numbers shown on the police lineup lines.
-       The lines are evenly spaced from top to bottom.
-       Change the numbers to make each suspect shorter or taller.
-
-       majors   : array of labels from TOP to BOTTOM
-       showMinor: true  = add thin lines between the labelled ones
-                  false = only show the labelled lines
-
-     Example for a short suspect:   ["5'6\"", "5'3\"", "5'0\"", "4'9\""]
-     Example for a tall suspect:    ["6'6\"", "6'3\"", "6'0\"", "5'9\"", "5'6\""]
      ================================================================== */
   const SUSPECT_LAYOUT = {
 
@@ -1193,12 +1241,8 @@ body.ready { opacity: 1; }
     }
 
   };
-  /* ==================================================================
-     END OF CONFIG
-     ================================================================== */
 
-
-  const sheets = Array.from(document.querySelectorAll('.sheet'));
+  const sheets = remainingSheets;
   const dots   = Array.from(document.querySelectorAll('.dot'));
   const stage  = document.querySelector('.stage');
   const viewer = document.querySelector('.viewer');
@@ -1207,21 +1251,18 @@ body.ready { opacity: 1; }
 
   let current = 0;
 
-  /* ---------- Build height charts from config ---------- */
+  /* ---------- Build height charts ---------- */
   function buildHeightChart(el, cfg) {
     if (!el || !cfg || !Array.isArray(cfg.majors) || cfg.majors.length < 2) return;
 
     const labels = cfg.majors;
     const n = labels.length;
-
-    /* Even spacing top (5%) → bottom (95%) */
     const TOP = 5;
     const BOTTOM = 95;
     const step = (BOTTOM - TOP) / (n - 1);
 
     el.innerHTML = '';
 
-    /* Major lines with matching label on each side */
     for (let i = 0; i < n; i++) {
       const y = TOP + step * i;
       const row = document.createElement('div');
@@ -1241,7 +1282,6 @@ body.ready { opacity: 1; }
       el.appendChild(row);
     }
 
-    /* Minor lines between / above / below the major ones */
     if (cfg.showMinor !== false) {
       for (let i = 0; i < n - 1; i++) {
         const y = TOP + step * i + step / 2;
@@ -1267,7 +1307,6 @@ body.ready { opacity: 1; }
     }
   }
 
-  /* ---------- Apply frame + photo transforms ---------- */
   function applyLayout(idx) {
     const sheet = sheets[idx];
     if (!sheet) return;
@@ -1289,7 +1328,6 @@ body.ready { opacity: 1; }
     }
   }
 
-  /* ---------- Build every chart once on load ---------- */
   function buildAllCharts() {
     Object.keys(SUSPECT_LAYOUT).forEach(key => {
       const cfg = SUSPECT_LAYOUT[key].heightChart;
@@ -1302,7 +1340,6 @@ body.ready { opacity: 1; }
     sheets.forEach((_, i) => applyLayout(i));
   }
 
-  /* ---------- Page navigation ---------- */
   function showSheet(i, dir) {
     if (i < 0 || i >= sheets.length) return;
     if (i === current && sheets[i].classList.contains('active')) return;
@@ -1345,7 +1382,6 @@ body.ready { opacity: 1; }
     if (e.key === 'ArrowRight') { showSheet(current + 1,  1); }
   });
 
-  /* ---------- Swipe gestures ---------- */
   (function setupSwipe() {
     const SWIPE_MIN = 50;
     const RATIO     = 1.5;
@@ -1389,7 +1425,7 @@ body.ready { opacity: 1; }
 
   sheets[0].classList.add('active');
   current = 0;
-  dots[0].classList.add('active');
+  if (dots[0]) dots[0].classList.add('active');
   prevBtn.disabled = true;
   nextBtn.disabled = (sheets.length <= 1);
 
@@ -1400,4 +1436,4 @@ if (document.readyState === 'complete') { document.body.classList.add('ready'); 
 </script>
 
 </body>
-        </html>
+</html>
