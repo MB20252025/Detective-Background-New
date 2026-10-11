@@ -7,12 +7,23 @@
 <link rel="preload" as="image" href="p3.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
+  /* ═══════════════════════════════════════════════════════════════
+     SECTION POSITION & SCALE CONTROLS
+     ═══════════════════════════════════════════════════════════════ */
   :root {
-    --title-x: 25;  --title-y: 30;  --title-scale: 0.5;
-    --desc-x: 25;   --desc-y: 40;   --desc-scale: 0.5;
-    --options-x: 25; --options-y: 50; --options-scale: 0.5;
-    --hint-x: 25;   --hint-y: 60;   --hint-scale: 0.5;
+    --title-x: 25;   --title-y: 30;   --title-scale: 1.0;   --title-width: 680px;
+    --desc-x: 26;    --desc-y: 40;    --desc-scale: 0.58;    --desc-width: 680px;
+    --options-x: 25; --options-y: 50; --options-scale: 0.65; --options-width: 680px;
+    --opt-a-x: 0px;  --opt-a-y: 0px;  --opt-a-scale: 1;
+    --opt-b-x: 0px;  --opt-b-y: 0px;  --opt-b-scale: 1;
+    --opt-c-x: 0px;  --opt-c-y: 0px;  --opt-c-scale: 1;
+    --hint-x: 76;    --hint-y: 30;    --hint-scale: 0.7;    --hint-width: 680px;
+    --hintlist-x: 76.0; --hintlist-y: 40; --hintlist-scale: 0.55; --hintlist-width: 680px;
+    --zoom-font-size: 1.6rem;
+    --zoom-max-width: 800px;
+    --zoom-line-height: 1.75;
   }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden;
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -21,21 +32,75 @@
   body.ready { opacity: 1; }
   .photo-bg { position: fixed; inset: 0;
     background: url('p3.jpg') center center / cover no-repeat; z-index: 0; }
-  .block { position: fixed; transform-origin: center center; z-index: 10; }
-  .title-block { left: calc(var(--title-x) * 1%); top: calc(var(--title-y) * 1%);
-    transform: translate(-50%, -50%) scale(var(--title-scale)); width: min(680px, 85vw); }
+
+  .block { position: fixed; transform-origin: center center; z-index: 10;
+    pointer-events: none; }
+  .block > * { pointer-events: auto; }
+
+  /* ---- TITLE ---- */
+  .title-block {
+    left: calc(var(--title-x) * 1%);
+    top: calc(var(--title-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--title-scale));
+    width: min(var(--title-width), 85vw);
+  }
   .puzzle-title { font-family: 'Cinzel', serif; font-size: 1.35rem;
     font-weight: 600; color: #fff; line-height: 1.3; text-align: center;
     text-shadow: 0 2px 12px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,1); }
-  .desc-block { left: calc(var(--desc-x) * 1%); top: calc(var(--desc-y) * 1%);
-    transform: translate(-50%, -50%) scale(var(--desc-scale)); width: min(680px, 85vw); }
+
+  /* ---- DESCRIPTION ---- */
+  .desc-block {
+    left: calc(var(--desc-x) * 1%);
+    top: calc(var(--desc-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--desc-scale));
+    width: min(var(--desc-width), 85vw);
+  }
   .puzzle-desc { font-size: 1rem; line-height: 1.6; color: #f5efdf;
     padding: 12px 16px; background: rgba(0,0,0,0.5); border-radius: 14px;
     border-left: 3px solid #b68b5c; backdrop-filter: blur(2px);
-    text-shadow: 0 1px 6px rgba(0,0,0,0.7); }
-  .options-block { left: calc(var(--options-x) * 1%); top: calc(var(--options-y) * 1%);
-    transform: translate(-50%, -50%) scale(var(--options-scale)); width: min(680px, 85vw); }
+    text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+    cursor: zoom-in; position: relative;
+    transition: background .18s, border-color .18s, transform .15s; }
+  .puzzle-desc:hover {
+    background: rgba(0,0,0,0.65);
+    border-left-color: #eace9f;
+    transform: scale(1.01);
+  }
+
+  /* ---- "CLICK TO ENLARGE" LABEL ABOVE DESCRIPTION ---- */
+  .puzzle-desc-hint {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #cdba92;
+    opacity: 0.55;
+    text-align: right;
+    margin-bottom: 4px;
+    padding-right: 4px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    transition: opacity .18s;
+    pointer-events: none;
+    user-select: none;
+  }
+  .desc-block:hover .puzzle-desc-hint { opacity: 0.9; }
+
+  /* ---- OPTIONS — GROUP CONTAINER ---- */
+  .options-block {
+    left: calc(var(--options-x) * 1%);
+    top: calc(var(--options-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--options-scale));
+    width: min(var(--options-width), 85vw);
+  }
   .options { display: flex; flex-wrap: wrap; gap: 12px 20px; justify-content: center; }
+
+  /* ---- OPTIONS — INDIVIDUAL WRAPPERS ---- */
+  .option-wrap { transform-origin: center center; display: inline-block; }
+  .option-wrap.opt-a { transform: translate(var(--opt-a-x), var(--opt-a-y)) scale(var(--opt-a-scale)); }
+  .option-wrap.opt-b { transform: translate(var(--opt-b-x), var(--opt-b-y)) scale(var(--opt-b-scale)); }
+  .option-wrap.opt-c { transform: translate(var(--opt-c-x), var(--opt-c-y)) scale(var(--opt-c-scale)); }
+
+  /* ---- THE OPTION ITSELF ---- */
   .option { display: flex; align-items: center; gap: 10px;
     font-size: 0.95rem; color: #f5efdf;
     padding: 6px 14px 6px 10px; border-radius: 40px;
@@ -43,7 +108,7 @@
     backdrop-filter: blur(2px);
     text-shadow: 0 1px 4px rgba(0,0,0,0.6); cursor: pointer;
     transition: background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
-    user-select: none; }
+    user-select: none; pointer-events: auto; }
   .option:hover { background: rgba(182,139,92,0.25);
     border-color: rgba(182,139,92,0.6); transform: translateX(2px); }
   .option.correct { background: rgba(40,120,70,0.6);
@@ -64,26 +129,43 @@
     background: #1e3d4a; color: #eace9f; font-weight: 700; font-size: 0.8rem;
     flex-shrink: 0; border: 1px solid rgba(182,139,92,0.3);
     transition: background 0.15s, color 0.15s, border-color 0.15s; }
-  .hint-block { left: calc(var(--hint-x) * 1%); top: calc(var(--hint-y) * 1%);
-    transform: translate(-50%, -50%) scale(var(--hint-scale)); width: min(680px, 85vw);
-    display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+  /* ---- HINT BUTTON ---- */
+  .hint-btn-block {
+    left: calc(var(--hint-x) * 1%);
+    top: calc(var(--hint-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--hint-scale));
+    width: min(var(--hint-width), 85vw);
+    display: flex; flex-direction: column; align-items: center;
+  }
   .hint-btn { background: rgba(15,42,63,0.9);
     border: 1px solid #b68b5c; border-radius: 40px;
     padding: 6px 20px; font-family: 'Inter', sans-serif;
     font-weight: 600; font-size: 0.85rem; color: #ece3d0;
-    cursor: pointer; backdrop-filter: blur(2px); }
+    cursor: pointer; backdrop-filter: blur(2px); pointer-events: auto; }
   .hint-btn:hover:not(:disabled) { background: #2a5a6a; border-color: #eace9f; }
   .hint-btn:active:not(:disabled) { transform: scale(0.96); }
   .hint-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ---- HINT ANSWERS ---- */
+  .hint-list-block {
+    left: calc(var(--hintlist-x) * 1%);
+    top: calc(var(--hintlist-y) * 1%);
+    transform: translate(-50%, -50%) scale(var(--hintlist-scale));
+    width: min(var(--hintlist-width), 85vw);
+  }
   .hint-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .hint-list:empty { display: none; }
   .hint-item { font-size: 0.9rem; color: #f5efdf;
     background: rgba(0,0,0,0.65); padding: 8px 16px; border-radius: 20px;
     border-left: 3px solid #b68b5c; backdrop-filter: blur(2px);
-    text-shadow: 0 1px 4px rgba(0,0,0,0.6); animation: fadeIn 0.3s ease; }
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6); animation: fadeIn 0.3s ease;
+    pointer-events: auto; }
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-4px); }
     to { opacity: 1; transform: translateY(0); } }
 
+  /* ---- MISC UI ---- */
   .nav-indicator { position: fixed; bottom: 20px; left: 50%;
     transform: translateX(-50%); padding: 8px 22px;
     background: rgba(15,42,63,0.85);
@@ -102,11 +184,105 @@
     backdrop-filter: blur(6px); z-index: 30; }
   .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
 
+  /* ═══════════════════════════════════════════════════════════════
+     ENLARGED DESCRIPTION OVERLAY
+     ═══════════════════════════════════════════════════════════════ */
+  .zoom-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99998;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    opacity: 0;
+    transition: opacity .28s ease;
+  }
+  .zoom-overlay.active { display: flex; opacity: 1; }
+
+  .zoom-card {
+    position: relative;
+    max-width: var(--zoom-max-width);
+    width: 100%;
+    background: linear-gradient(160deg, #16283a 0%, #0a1520 100%);
+    border: 2px solid #b68b5c;
+    border-radius: 18px;
+    padding: 40px 44px 36px;
+    box-shadow:
+      0 30px 80px rgba(0, 0, 0, 0.85),
+      0 0 40px rgba(234, 206, 159, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transform: translateY(12px) scale(0.96);
+    transition: transform .35s cubic-bezier(0.2, 0.9, 0.3, 1.05);
+  }
+  .zoom-overlay.active .zoom-card {
+    transform: translateY(0) scale(1);
+  }
+
+  .zoom-card .zoom-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: #eace9f;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(234, 206, 159, 0.2);
+  }
+
+  .zoom-card .zoom-text {
+    font-size: var(--zoom-font-size);
+    line-height: var(--zoom-line-height);
+    color: #f5efdf;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    white-space: pre-wrap;
+  }
+
+  .zoom-close {
+    position: absolute;
+    top: -16px;
+    right: -16px;
+    width: 46px;
+    height: 46px;
+    background: linear-gradient(180deg, #d94a3a, #a83025);
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .12s ease, background .18s ease;
+    z-index: 10;
+  }
+  .zoom-close:hover {
+    transform: scale(1.10);
+    background: linear-gradient(180deg, #f0563f, #c53a2a);
+  }
+  .zoom-close:active { transform: scale(0.92); }
+
   @media (max-width: 640px) {
     .puzzle-title { font-size: 1.1rem; }
     .puzzle-desc { font-size: 0.9rem; padding: 10px 12px; }
+    .puzzle-desc-hint { font-size: 0.6rem; }
     .option { font-size: 0.85rem; padding: 4px 10px 4px 8px; }
-    .option .letter { width: 22px; height: 22px; font-size: 0.7rem; } }
+    .option .letter { width: 22px; height: 22px; font-size: 0.7rem; }
+
+    .zoom-overlay { padding: 16px; }
+    .zoom-card { padding: 30px 22px 26px; border-radius: 14px; }
+    .zoom-card .zoom-text { font-size: 1.15rem; }
+    .zoom-close { top: -12px; right: -12px; width: 40px; height: 40px; font-size: 19px; }
+  }
 </style>
 </head>
 <body>
@@ -114,28 +290,52 @@
   <div class="photo-bg"></div>
   <a class="back-to-desk" href="desk.html">← Desk</a>
 
+  <!-- ═══════════ TITLE ═══════════ -->
   <div class="block title-block">
     <div class="puzzle-title">Street of Shining Metal</div>
   </div>
 
+  <!-- ═══════════ DESCRIPTION (click to enlarge) ═══════════ -->
   <div class="block desc-block">
-    <div class="puzzle-desc">I walked a street that gleams like polished metal – perhaps tin or silver. There, a saint's name still echoes in memory, carved or named long ago. Find that saint, and you'll know where I passed. Which saint's name remains on that metallic street?</div>
+    <div class="puzzle-desc-hint">🔍 Click to enlarge</div>
+    <div class="puzzle-desc" id="puzzleDesc" role="button" tabindex="0" aria-label="Click to enlarge description">I walked a street that gleams like polished metal – perhaps tin or silver. There, a saint's name still echoes in memory, carved or named long ago. Find that saint, and you'll know where I passed. Which saint's name remains on that metallic street?</div>
   </div>
 
+  <!-- ═══════════ OPTIONS (group + individual) ═══════════ -->
   <div class="block options-block">
     <div class="options">
-      <div class="option" data-value="A"><span class="letter">A</span><span class="text">St Hugh</span></div>
-      <div class="option" data-value="B"><span class="letter">B</span><span class="text">St Benedict</span></div>
-      <div class="option" data-value="C"><span class="letter">C</span><span class="text">St Paul</span></div>
+      <div class="option-wrap opt-a">
+        <div class="option" data-value="A"><span class="letter">A</span><span class="text">St Hugh</span></div>
+      </div>
+      <div class="option-wrap opt-b">
+        <div class="option" data-value="B"><span class="letter">B</span><span class="text">St Benedict</span></div>
+      </div>
+      <div class="option-wrap opt-c">
+        <div class="option" data-value="C"><span class="letter">C</span><span class="text">St Paul</span></div>
+      </div>
     </div>
   </div>
 
-  <div class="block hint-block">
+  <!-- ═══════════ HINT BUTTON ═══════════ -->
+  <div class="block hint-btn-block">
     <button class="hint-btn">💡 Hint (3 left)</button>
+  </div>
+
+  <!-- ═══════════ HINT ANSWERS ═══════════ -->
+  <div class="block hint-list-block">
     <div class="hint-list"></div>
   </div>
 
   <div class="nav-indicator"><span>3</span> of 7</div>
+
+  <!-- ═══════════ ENLARGED DESCRIPTION OVERLAY ═══════════ -->
+  <div class="zoom-overlay" id="zoomOverlay" role="dialog" aria-modal="true" aria-labelledby="zoomLabel">
+    <div class="zoom-card">
+      <button class="zoom-close" id="zoomClose" aria-label="Close enlarged view">✕</button>
+      <div class="zoom-label" id="zoomLabel">The Clue</div>
+      <div class="zoom-text" id="zoomText"></div>
+    </div>
+  </div>
 
   <script>
     var SAVE_KEY = 'whitby_p3_solved';
@@ -159,6 +359,49 @@
       if (remaining > 0) hintBtn.textContent = '💡 Hint (' + remaining + ' left)';
       else { hintBtn.disabled = true; hintBtn.textContent = '💡 No hints left'; }
     });
+
+    /* =============================================================
+       ENLARGED DESCRIPTION
+       ============================================================= */
+    (function setupZoom() {
+      var descEl = document.getElementById('puzzleDesc');
+      var overlay = document.getElementById('zoomOverlay');
+      var zoomText = document.getElementById('zoomText');
+      var closeBtn = document.getElementById('zoomClose');
+
+      if (!descEl || !overlay || !zoomText || !closeBtn) return;
+
+      function openZoom() {
+        zoomText.textContent = descEl.textContent.trim();
+        overlay.classList.add('active');
+        setTimeout(function () { closeBtn.focus(); }, 60);
+      }
+
+      function closeZoom() {
+        overlay.classList.remove('active');
+        descEl.focus();
+      }
+
+      descEl.addEventListener('click', openZoom);
+      descEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openZoom();
+        }
+      });
+
+      closeBtn.addEventListener('click', closeZoom);
+
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeZoom();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('active')) {
+          closeZoom();
+        }
+      });
+    })();
 
     /* Restore solved state on load */
     function markSolved() {
@@ -192,13 +435,9 @@
           });
           this.classList.add('correct');
 
-          /* ---- Save solved flag for the story step system ---- */
           try { localStorage.setItem(SAVE_KEY, '1'); } catch (e) {}
 
-          /* Give the player a moment to see the green highlight,
-             then head back to the desk where the next step triggers. */
           setTimeout(redirectToDesk, 1400);
-
         } else {
           this.classList.add('wrong');
           var self = this;
