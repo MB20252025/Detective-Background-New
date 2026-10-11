@@ -11,7 +11,7 @@
      SECTION POSITION & SCALE CONTROLS
      ═══════════════════════════════════════════════════════════════ */
   :root {
-    --title-x: 25;   --title-y: 30;   --title-scale: 1.0;   --title-width: 680px;
+    --title-x: 25;   --title-y: 30;   --title-scale: 0.65;   --title-width: 680px;
     --desc-x: 26;    --desc-y: 40;    --desc-scale: 0.58;    --desc-width: 680px;
     --options-x: 25; --options-y: 50; --options-scale: 0.65; --options-width: 680px;
     --opt-a-x: 0px;  --opt-a-y: 0px;  --opt-a-scale: 1;
@@ -166,15 +166,6 @@
     to { opacity: 1; transform: translateY(0); } }
 
   /* ---- MISC UI ---- */
-  .nav-indicator { position: fixed; bottom: 20px; left: 50%;
-    transform: translateX(-50%); padding: 8px 22px;
-    background: rgba(15,42,63,0.85);
-    border: 1px solid rgba(182,139,92,0.3); border-radius: 60px;
-    backdrop-filter: blur(6px); z-index: 20;
-    font-family: 'Cinzel', serif; font-size: 0.85rem;
-    color: #cdba92; font-weight: 500; letter-spacing: 0.5px; }
-  .nav-indicator span { color: #eace9f; font-weight: 700; }
-
   .back-to-desk { position: fixed; top: 14px; left: 14px;
     padding: 9px 20px; background: rgba(15,42,63,0.85);
     border: 1px solid rgba(182,139,92,0.4); border-radius: 40px;
@@ -326,7 +317,6 @@
     <div class="hint-list"></div>
   </div>
 
-  <div class="nav-indicator"><span>5</span> of 7</div>
 
   <!-- ═══════════ ENLARGED DESCRIPTION OVERLAY ═══════════ -->
   <div class="zoom-overlay" id="zoomOverlay" role="dialog" aria-modal="true" aria-labelledby="zoomLabel">
