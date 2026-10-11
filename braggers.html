@@ -37,12 +37,11 @@
 
     .screen[hidden] { display: none !important; }
 
-    .back-to-puzzles,
     .back-to-desk {
         position: fixed;
         top: 14px;
+        left: 14px;
         padding: 10px 22px;
-        border-radius: 4px;
         font-family: 'Courier New', monospace;
         font-size: .78rem;
         font-weight: bold;
@@ -52,23 +51,6 @@
         z-index: 99999;
         transition: all .18s ease;
         cursor: pointer;
-        border: none;
-    }
-    .back-to-puzzles {
-        left: 14px;
-        background: rgba(15, 12, 8, 0.88);
-        color: #eace9f;
-        border: 1px solid #8a6e42;
-        box-shadow: 0 4px 12px rgba(0,0,0,.55);
-    }
-    .back-to-puzzles:hover {
-        background: rgba(60, 40, 15, .95);
-        color: #fff;
-        border-color: #d8ab6a;
-        transform: translateY(-1px);
-    }
-    .back-to-desk {
-        right: 14px;
         background: rgba(15, 42, 63, 0.85);
         color: #eace9f;
         border: 1px solid rgba(182, 139, 92, 0.4);
@@ -76,7 +58,11 @@
         backdrop-filter: blur(6px);
         -webkit-backdrop-filter: blur(6px);
     }
-    .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+    .back-to-desk:hover {
+        background: #2a5a6a;
+        border-color: #eace9f;
+        transform: translateY(-1px);
+    }
 
     .screen-room {
         position: relative;
@@ -349,7 +335,7 @@
         #submitGuess { font-size: 1.2rem; padding: 12px 16px; }
         #shopGuess { font-size: 1rem; padding: 12px 16px; }
         .control-panel { padding: 1rem 0.8rem; }
-        .back-to-puzzles, .back-to-desk { font-size: .68rem; padding: 8px 14px; letter-spacing: .18em; }
+        .back-to-desk { font-size: .68rem; padding: 8px 14px; letter-spacing: .18em; }
     }
 
     .success-overlay {
@@ -404,8 +390,7 @@
 </head>
 <body>
 
-<a class="back-to-puzzles" href="puzzles.html">← Puzzles</a>
-<a class="back-to-desk"    href="desk.html">← Desk</a>
+<a class="back-to-desk" href="desk.html">← Desk</a>
 
 <div class="screen screen-room" id="screenRoom">
     <img class="room-hotspot"
@@ -598,7 +583,6 @@
             return str.trim().toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
         }
 
-        /* Track redirect so we don't fire twice */
         var redirecting = false;
         function redirectToDesk() {
             if (redirecting) return;
@@ -614,19 +598,7 @@
             solved = true;
             deactivateUV();
 
-            /* =========================================================
-               🔑 Award the evidence flag — unlocks Walker's
-               "Present: Bragger's Note" confrontation in the
-               interrogation dashboard.
-               ========================================================= */
             try { localStorage.setItem('evidence_braggersNote', '1'); } catch (e) {}
-
-            /* =========================================================
-               📜 Mark this puzzle solved for the desk story-step system.
-               The desk STEPS array advances past the braggers step
-               automatically and shows the "Archive log found at
-               Walker's" popup next.
-               ========================================================= */
             try { localStorage.setItem('whitby_braggers_solved', '1'); } catch (e) {}
 
             resultMsg.textContent = '✅ CORRECT! Well done, detective.';
