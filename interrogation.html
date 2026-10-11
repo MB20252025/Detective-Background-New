@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Interrogation Dashboard</title>
     <link rel="preload" as="image" href="prycecalm.png">
     <link rel="preload" as="image" href="walkercalm.png">
@@ -46,12 +49,12 @@
         }
         .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
 
-        /* Session banner (notification only, no button) */
+        /* Session banner — centred on screen */
         .session-banner {
             position: fixed;
-            top: 14px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%) translateY(-100px);
+            transform: translate(-50%, -50%) translateY(-40px);
             display: flex;
             align-items: center;
             gap: 18px;
@@ -73,17 +76,30 @@
             -webkit-backdrop-filter: blur(8px);
             opacity: 0;
             visibility: hidden;
-            transition: opacity .4s ease, transform .4s cubic-bezier(.2,.9,.3,1.05),
+            transition: opacity .4s ease,
+                        transform .4s cubic-bezier(.2,.9,.3,1.05),
                         visibility 0s linear .4s;
             pointer-events: none;
         }
         .session-banner.active {
             opacity: 1;
             visibility: visible;
-            transform: translateX(-50%) translateY(0);
-            transition: opacity .4s ease, transform .4s cubic-bezier(.2,.9,.3,1.05),
+            transform: translate(-50%, -50%) translateY(0);
+            transition: opacity .4s ease,
+                        transform .4s cubic-bezier(.2,.9,.3,1.05),
                         visibility 0s linear 0s;
         }
+        .session-banner::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 8, 12, 0.55);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity .4s ease;
+            pointer-events: none;
+        }
+        .session-banner.active::before { opacity: 1; }
         .session-banner .msg {
             display: inline-flex;
             align-items: center;
@@ -102,6 +118,7 @@
                 padding: 10px 16px;
                 font-size: .68rem;
                 width: calc(100% - 28px);
+                max-width: 340px;
                 text-align: center;
             }
             .session-banner .msg { white-space: normal; }
@@ -640,7 +657,12 @@
                 sessionEnded = true;
                 try { localStorage.setItem('whitby_interview_complete', '1'); } catch (e) {}
                 const banner = document.getElementById('sessionBanner');
-                if (banner) banner.classList.add('active');
+                if (banner) {
+                    banner.classList.add('active');
+                    setTimeout(function () {
+                        banner.classList.remove('active');
+                    }, 4000);
+                }
             }
         }
 
@@ -1517,7 +1539,7 @@
                 sessionEnded = true;
                 questionsAsked = SESSION_QUESTION_LIMIT;
                 const banner = document.getElementById('sessionBanner');
-                if (banner) banner.classList.add('active');
+                if (banner) banner.classList.remove('active');
             } else {
                 questionsAsked = 0;
                 sessionEnded = false;
@@ -1535,6 +1557,14 @@
             init();
         }
 
+    })();
+    </script>
+    <script>
+    (function () {
+        function reveal() { document.body.classList.add('ready'); }
+        if (document.readyState === 'complete') reveal();
+        else window.addEventListener('load', reveal);
+        setTimeout(reveal, 2000);
     })();
     </script>
 </body>
