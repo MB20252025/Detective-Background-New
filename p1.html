@@ -9,40 +9,16 @@
 <style>
   /* ═══════════════════════════════════════════════════════════════
      SECTION POSITION & SCALE CONTROLS
-
-       -x:     horizontal position (0 = left edge, 50 = centre, 100 = right)
-       -y:     vertical position   (0 = top edge,  50 = middle, 100 = bottom)
-       -scale: size  (1 = default,  0.5 = half size,  1.5 = 50% bigger)
-       -width: max width of the block (in px)
-
-     OPTIONS have TWO levels of control:
-       1. Group  (--options-x/y/scale/width) — moves all 3 together
-       2. Each individual option (--opt-a-x/y/scale, etc.)
-          These nudge the option on top of the group layout.
-          Offsets are in px (e.g. -40px, 20px), scale is 1 = default.
      ═══════════════════════════════════════════════════════════════ */
   :root {
-    /* ---- TITLE ---- */
     --title-x: 25;   --title-y: 30;   --title-scale: 1.0;   --title-width: 680px;
-
-    /* ---- DESCRIPTION ---- */
     --desc-x: 26;    --desc-y: 40;    --desc-scale: 0.58;    --desc-width: 680px;
-
-    /* ---- 3 OPTIONS — GROUP ---- */
     --options-x: 25; --options-y: 50; --options-scale: 0.65; --options-width: 680px;
-
-    /* ---- 3 OPTIONS — INDIVIDUAL (nudge on top of the group) ---- */
     --opt-a-x: 0px;  --opt-a-y: 0px;  --opt-a-scale: 1;
     --opt-b-x: 0px;  --opt-b-y: 0px;  --opt-b-scale: 1;
     --opt-c-x: 0px;  --opt-c-y: 0px;  --opt-c-scale: 1;
-
-    /* ---- HINT BUTTON ---- */
     --hint-x: 76;    --hint-y: 30;    --hint-scale: 0.7;    --hint-width: 680px;
-
-    /* ---- HINT ANSWERS ---- */
     --hintlist-x: 76.0; --hintlist-y: 40; --hintlist-scale: 0.55; --hintlist-width: 680px;
-
-    /* ---- ENLARGED DESCRIPTION OVERLAY ---- */
     --zoom-font-size: 1.6rem;
     --zoom-max-width: 800px;
     --zoom-line-height: 1.75;
@@ -90,17 +66,6 @@
     border-left-color: #eace9f;
     transform: scale(1.01);
   }
-  /* Little magnifier hint in the top-right corner of the description */
-  .puzzle-desc::after {
-    content: '🔍';
-    position: absolute;
-    top: 8px; right: 10px;
-    font-size: 0.9rem;
-    opacity: 0.55;
-    transition: opacity .18s;
-    pointer-events: none;
-  }
-  .puzzle-desc:hover::after { opacity: 1; }
 
   /* ---- "CLICK TO ENLARGE" LABEL ABOVE DESCRIPTION ---- */
   .puzzle-desc-hint {
@@ -397,7 +362,6 @@
 
     /* =============================================================
        ENLARGED DESCRIPTION
-       Clicking the description opens a centred, readable overlay.
        ============================================================= */
     (function setupZoom() {
       var descEl = document.getElementById('puzzleDesc');
