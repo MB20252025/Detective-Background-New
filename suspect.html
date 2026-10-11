@@ -9,9 +9,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Special+Elite&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <style>
-/* ============================================================
-   BASE
-   ============================================================ */
 *,
 *::before,
 *::after { box-sizing: border-box; }
@@ -50,9 +47,6 @@ body{
 }
 body.ready { opacity: 1; }
 
-/* ============================================================
-   BACK TO CASE FILE
-   ============================================================ */
 .back-to-casefile {
   position: fixed;
   top: 14px;
@@ -75,9 +69,6 @@ body.ready { opacity: 1; }
 }
 .back-to-casefile:hover { background: #2a5a6a; border-color: #eace9f; }
 
-/* ============================================================
-   PAGE HEADER
-   ============================================================ */
 .desk-header{
   max-width: 820px;
   margin: 0 auto;
@@ -109,9 +100,6 @@ body.ready { opacity: 1; }
 }
 .desk-header .sub b{ color: #d8c093; font-weight: 400; }
 
-/* ============================================================
-   VIEWER (pagination)
-   ============================================================ */
 .viewer{
   max-width: 860px;
   margin: 0 auto;
@@ -121,8 +109,6 @@ body.ready { opacity: 1; }
   gap: 10px;
   touch-action: pan-y;
 }
-
-/* When only one sheet is showing, hide the nav buttons entirely */
 .viewer.single .nav-btn { display: none; }
 .viewer.single { justify-content: center; }
 
@@ -160,16 +146,12 @@ body.ready { opacity: 1; }
   .nav-btn{ width: 38px; height: 38px; font-size: 1.35rem; }
 }
 
-/* ============================================================
-   DOTS
-   ============================================================ */
 .dots{
   display: flex;
   justify-content: center;
   gap: 12px;
   padding: 22px 0 6px;
 }
-/* Hide dots when there's only one sheet */
 .dots.single { display: none; }
 
 .dot{
@@ -187,9 +169,6 @@ body.ready { opacity: 1; }
   box-shadow: 0 0 12px rgba(234,206,159,.6);
 }
 
-/* ============================================================
-   PAPER SHEET
-   ============================================================ */
 .sheet{
   position: relative;
   padding: 26px 24px 22px;
@@ -721,7 +700,6 @@ body.ready { opacity: 1; }
   white-space: nowrap;
 }
 
-/* ---- Empty state when nothing is unlocked (safety) ---- */
 .no-suspects{
   display: none;
   max-width: 480px;
@@ -809,7 +787,7 @@ body.ready { opacity: 1; }
   <div class="stage">
 
     <!-- ==========================================================
-         SHEET 1 — NEIL DOWN
+         SHEET 1 — NEIL DOWN  → mug1.png
          ========================================================== -->
     <article class="sheet sheet--1"
              data-idx="0"
@@ -817,7 +795,6 @@ body.ready { opacity: 1; }
              data-suspect-id="neil"
              data-unlock=""
              aria-labelledby="s1-name">
-      <!-- (unchanged content) -->
       <svg class="paperclip" viewBox="0 0 24 62" aria-hidden="true">
         <path d="M7 16 v30 a5 5 0 0 0 10 0 V12 a8.5 8.5 0 0 0 -17 0 v36"
               fill="none" stroke="#b9bcc2" stroke-width="2.4"
@@ -919,7 +896,7 @@ body.ready { opacity: 1; }
 
 
     <!-- ==========================================================
-         SHEET 2 — SIENNA CLARKE
+         SHEET 2 — SIENNA CLARKE  → mug2.png
          ========================================================== -->
     <article class="sheet sheet--2"
              data-idx="1"
@@ -958,9 +935,9 @@ body.ready { opacity: 1; }
               <div class="photo">
                 <div class="photo-window">
                   <div class="height-chart" data-chart="s2" aria-hidden="true"></div>
-                  <img src="mug3.png" alt="Mugshot of Sienna Clarke"
+                  <img src="mug2.png" alt="Mugshot of Sienna Clarke"
                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                  <div class="photo-fallback" aria-hidden="true">👩🏻‍🦰<span>MUG3.PNG</span></div>
+                  <div class="photo-fallback" aria-hidden="true">👩🏻‍🦰<span>MUG2.PNG</span></div>
                 </div>
               </div>
             </div>
@@ -1027,7 +1004,7 @@ body.ready { opacity: 1; }
 
 
     <!-- ==========================================================
-         SHEET 3 — VINCENT HALE
+         SHEET 3 — VINCENT HALE  → mug3.png
          ========================================================== -->
     <article class="sheet sheet--3"
              data-idx="2"
@@ -1140,7 +1117,6 @@ body.ready { opacity: 1; }
 
 <div class="dots" role="tablist" aria-label="Suspect pages"></div>
 
-<!-- Empty state (should never show since Neil is always unlocked) -->
 <div class="no-suspects" id="noSuspects">
   <div class="icon">🔒</div>
   <h2>No Suspects Available</h2>
@@ -1152,19 +1128,11 @@ body.ready { opacity: 1; }
 (function () {
   'use strict';
 
-  /* ==================================================================
-     FILTER LOGIC
-     ------------------------------------------------------------
-     1. If ?suspect=id is in the URL → show ONLY that suspect.
-     2. Otherwise → show every suspect whose unlock flag is set.
-     Either way, if the flag isn't set, the sheet is removed.
-     ================================================================== */
   function hasFlag(k) {
     if (!k) return true;
     try { return localStorage.getItem(k) === '1'; } catch (e) { return false; }
   }
 
-  /* Read ?suspect= from URL */
   let requestedSuspect = null;
   try {
     const params = new URLSearchParams(location.search);
@@ -1177,25 +1145,21 @@ body.ready { opacity: 1; }
     const id = sheet.dataset.suspectId || '';
     const key = sheet.dataset.unlock;
 
-    /* If a specific suspect was requested, hide anyone else */
     if (requestedSuspect && id !== requestedSuspect) {
       sheet.remove();
       return;
     }
 
-    /* Filter out locked suspects */
     if (!hasFlag(key)) {
       sheet.remove();
     }
   });
 
-  /* Reassign data-idx after filtering */
   const remainingSheets = Array.from(document.querySelectorAll('.sheet'));
   remainingSheets.forEach(function(sheet, i) {
     sheet.dataset.idx = String(i);
   });
 
-  /* Build dots (only if more than 1 sheet is visible) */
   const dotsContainer = document.querySelector('.dots');
   if (dotsContainer) {
     dotsContainer.innerHTML = '';
@@ -1212,7 +1176,6 @@ body.ready { opacity: 1; }
     }
   }
 
-  /* If nothing unlocked → show the empty state */
   if (remainingSheets.length === 0) {
     const viewer = document.querySelector('.viewer');
     const dots = document.querySelector('.dots');
@@ -1223,9 +1186,6 @@ body.ready { opacity: 1; }
     return;
   }
 
-  /* ==================================================================
-     🎛️  SUSPECT_LAYOUT — EDIT EVERYTHING HERE
-     ================================================================== */
   const SUSPECT_LAYOUT = {
     s1: {
       frame: { x: 0, y: 0, scale: 1.00 },
@@ -1251,7 +1211,6 @@ body.ready { opacity: 1; }
   const prevBtn  = document.querySelector('.nav-prev');
   const nextBtn  = document.querySelector('.nav-next');
 
-  /* When only one sheet, hide nav buttons */
   if (sheets.length <= 1 && viewer) {
     viewer.classList.add('single');
   }
@@ -1361,14 +1320,13 @@ body.ready { opacity: 1; }
   });
 
   document.addEventListener('keydown', (e) => {
-    if (sheets.length <= 1) return;   /* no pagination when single */
+    if (sheets.length <= 1) return;
     const tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
     if (e.key === 'ArrowLeft')  { showSheet(current - 1, -1); }
     if (e.key === 'ArrowRight') { showSheet(current + 1,  1); }
   });
 
-  /* Swipe — only when more than one sheet */
   (function setupSwipe() {
     if (sheets.length <= 1) return;
     const SWIPE_MIN = 50, RATIO = 1.5;
@@ -1404,7 +1362,6 @@ body.ready { opacity: 1; }
     viewer.addEventListener('touchcancel', () => { tracking = false; }, { passive: true });
   })();
 
-  /* ---------- Init ---------- */
   buildAllCharts();
   applyAll();
 
