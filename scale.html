@@ -98,9 +98,10 @@
     .screen[hidden] { display: none !important; }
 
     /* =========================================================
-       BACK TO DESK (top-left only — Puzzles button removed)
+       FIXED TOP-LEFT NAV — Desk (room) or Room (puzzles)
        ========================================================= */
-    .back-to-desk {
+    .back-to-desk,
+    .back-to-room {
         position: fixed;
         top: 14px;
         left: 14px;
@@ -117,12 +118,15 @@
         z-index: 99999;
         transition: background .18s ease, border-color .18s ease;
         cursor: pointer;
-        border: none;
-        background: rgba(15,42,63,.85);
         border: 1px solid rgba(182,139,92,.4);
+        background: rgba(15,42,63,.85);
         color: #eace9f;
+        display: none;
     }
-    .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
+    .back-to-desk.visible,
+    .back-to-room.visible { display: block; }
+    .back-to-desk:hover,
+    .back-to-room:hover { background: #2a5a6a; border-color: #eace9f; }
 
     /* =========================================================
        ROOM SCREEN
@@ -504,7 +508,7 @@
         .screen-scale .tray { gap: 8px; padding: 11px 10px; }
         .screen-scale .btn { font-size: 0.76rem; padding: 13px 10px; letter-spacing: 0.09em; }
         .screen-scale .ui-body { padding: 16px 14px 32px; }
-        .back-to-desk { font-size: .68rem; padding: 8px 14px; letter-spacing: .18em; }
+        .back-to-desk, .back-to-room { font-size: .68rem; padding: 8px 14px; letter-spacing: .18em; }
     }
     @media (max-width: 360px) {
         .screen-scale h1 { font-size: 1.1rem; }
@@ -517,7 +521,8 @@
 </head>
 <body>
 
-<a class="back-to-desk" href="desk.html">← Desk</a>
+<button class="back-to-desk" id="navDesk">← Desk</button>
+<button class="back-to-room" id="navRoom">← Room</button>
 
 <div class="screen screen-room" id="screenRoom">
     <img class="room-bg" src="scalebookpuzzlebackground.png" alt="">
@@ -540,7 +545,6 @@
     <div>Moves <b id="bkMv">0</b> · Par 22</div>
     <button id="bkRs">Reset</button>
     <button id="bkAs">Auto Solve</button>
-    <button id="bkBack">← Room</button>
   </div>
 </div>
 
@@ -554,7 +558,6 @@
     <h2>The scale is whole</h2>
     <p id="wt"></p>
     <button id="bkAgain">Shelve it again</button>
-    <button id="bkBackToRoom" style="margin-left:6px">← Back to Room</button>
   </div>
 </div>
 
@@ -623,8 +626,6 @@
             <button class="btn btn-primary" id="checkBtn">Check</button>
         </div>
 
-        <button class="btn scale-back-btn" id="scaleBack">← Back to Room</button>
-
         <button class="btn" id="returnToDeskBtn">→ Return to Desk</button>
 
         <div class="message" id="messageDisplay"></div>
@@ -669,6 +670,9 @@
         scale: document.getElementById('screenScale')
     };
 
+    var deskBtn = document.getElementById('navDesk');
+    var roomBtn = document.getElementById('navRoom');
+
     function applyPartsState(locked) {
         var ids = ['beamPart', 'leftPan', 'rightPan', 'tray'];
         var classes = ['tray-label', 'action-row', 'pan-string'];
@@ -693,6 +697,10 @@
     function showScreen(name) {
         for (var k in screens) if (screens[k]) screens[k].hidden = (k !== name);
 
+        /* Toggle top-left button: Desk on the room, Room on the puzzles */
+        if (deskBtn) deskBtn.classList.toggle('visible', name === 'room');
+        if (roomBtn) roomBtn.classList.toggle('visible', name !== 'room');
+
         if (name === 'book') {
             requestAnimationFrame(function () {
                 requestAnimationFrame(function () {
@@ -715,18 +723,18 @@
         window.scrollTo(0, 0);
     }
 
+    if (deskBtn) deskBtn.addEventListener('click', function () {
+        location.href = 'desk.html';
+    });
+    if (roomBtn) roomBtn.addEventListener('click', function () {
+        showScreen('room');
+    });
+
     document.getElementById('bookOverlay').addEventListener('click', function () {
         showScreen('book');
     });
     document.getElementById('scalePart').addEventListener('click', function () {
         showScreen('scale');
-    });
-
-    document.getElementById('bkBack').addEventListener('click', function () {
-        showScreen('room');
-    });
-    document.getElementById('bkBackToRoom').addEventListener('click', function () {
-        showScreen('room');
     });
 
     /* =========================================================
@@ -889,7 +897,13 @@
 
         function init(){
             solveGen++; solving=false; drag=null;
-            var bd=$('bkBd'); bd.innerHTML=''; $('win').classList.remove('on');
+            var bd=$('bkBd');
+
+            /* Hide the board while we rebuild it — prevents the pieces
+               from briefly flashing at their collection positions. */
+            bd.style.visibility = 'hidden';
+
+            bd.innerHTML=''; $('win').classList.remove('on');
             pos=B.map(function(b){return [b[2],b[3]]});
             moves=0; got=[0,0,0]; $('bkMv').textContent=0; els=[]; pcs=[];
             $('bkTray').innerHTML=T.map(function(t,k){
@@ -910,6 +924,9 @@
             });
             var btn=$('bkAs'); btn.disabled=false; btn.textContent='Auto Solve';
             layout();
+
+            /* Reveal the board now that everything is positioned */
+            bd.style.visibility = '';
         }
 
         function check(){
@@ -1444,10 +1461,6 @@
         leftPan.addEventListener('click',  function () { addToSide('left');  });
         rightPan.addEventListener('click', function () { addToSide('right'); });
         resetBtn.addEventListener('click', resetAll);
-
-        document.getElementById('scaleBack').addEventListener('click', function () {
-            showScreen('room');
-        });
 
         checkBtn.addEventListener('click', function () {
             if (isCodeCorrect()) {
