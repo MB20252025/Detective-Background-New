@@ -92,7 +92,8 @@
                 flex: 1 1 0; width: 100%; }
             .decor-container { display: flex; flex: 1 1 0; } }
 
-        .back-to-desk { position: fixed; top: 14px; left: 14px;
+        /* ── Back to Desk (top-right) ── */
+        .back-to-desk { position: fixed; top: 14px; right: 14px;
             padding: 9px 20px; background: rgba(15, 42, 63, 0.85);
             border: 1px solid rgba(182, 139, 92, 0.4); border-radius: 40px;
             color: #eace9f; font-family: 'Courier New', monospace;
@@ -102,9 +103,10 @@
             z-index: 9999; transition: background .18s ease, border-color .18s ease; }
         .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
 
-        /* Return to Desk button — shown only once all 4 boxes are solved */
+        /* Return to Desk button — bottom-right so it doesn't clash with the
+           always-visible ← Desk button in the top-right */
         #returnToDeskBtn {
-            position: fixed; top: 14px; right: 14px;
+            position: fixed; bottom: 20px; right: 14px;
             padding: 11px 26px;
             background: linear-gradient(180deg, #5cd88a, #2e8b57);
             color: #062a1a;
