@@ -16,6 +16,7 @@
     --text: #c8dae5;
     --text-dim: #8aa8ba;
     --green: #5cd88a;
+    --red: #d94a3a;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { height: 100%; overflow: hidden; }
@@ -119,7 +120,8 @@
   .tab-content::-webkit-scrollbar-track { background: #0a1218; }
   .tab-content::-webkit-scrollbar-thumb { background: #2a5a6a; border-radius: 10px; }
 
-  .puzzle-list { display: flex; flex-direction: column; gap: 10px; }
+  .puzzle-list,
+  .suspect-list { display: flex; flex-direction: column; gap: 10px; }
 
   .puzzle-card {
     background: linear-gradient(160deg, var(--panel-light), var(--panel));
@@ -164,21 +166,49 @@
     font-weight: 700;
   }
 
-  .puzzle-info { flex: 1; min-width: 0; }
-  .puzzle-name {
+  /* ---------- SUSPECT CARDS ---------- */
+  .suspect-card {
+    background: linear-gradient(160deg, #241a2e, var(--panel));
+    border: 1px solid var(--border);
+    border-left: 4px solid #8a5fc4;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 16px;
+    transition: transform .12s ease, border-color .15s, box-shadow .15s;
+  }
+  .suspect-card:hover {
+    transform: translateX(4px);
+    border-color: #b088e0;
+    box-shadow: 0 0 0 1px rgba(176,136,224,.25), 0 8px 22px -6px rgba(176,136,224,.4);
+  }
+  .suspect-icon {
+    width: 42px; height: 42px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: rgba(176,136,224,.15);
+    border: 1px solid rgba(176,136,224,.4);
+    font-size: 1.3rem;
+  }
+
+  .puzzle-info,
+  .suspect-info { flex: 1; min-width: 0; }
+  .puzzle-name,
+  .suspect-name {
     font-size: .95rem; font-weight: 700;
     color: #eaf2f8;
     letter-spacing: .02em;
     margin-bottom: 3px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .puzzle-meta {
+  .puzzle-meta,
+  .suspect-meta {
     font-size: .68rem;
     color: var(--text-dim);
     letter-spacing: .14em; text-transform: uppercase;
   }
   .puzzle-card.available .puzzle-meta { color: var(--gold); }
   .puzzle-card.completed .puzzle-meta { color: var(--green); }
+  .suspect-card .suspect-meta { color: #b088e0; }
 
   .puzzle-action {
     flex-shrink: 0;
@@ -210,6 +240,27 @@
     border-color: var(--gold-lo);
     color: var(--gold);
   }
+
+  /* Suspect action button — purple accent */
+  .suspect-action {
+    flex-shrink: 0;
+    padding: 8px 18px;
+    background: linear-gradient(180deg, #b088e0, #7a4fa8);
+    border: 1px solid #c8a5f0;
+    border-radius: 40px;
+    color: #1a0830;
+    font-family: 'Courier Prime', monospace;
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .16em; text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 4px 12px -4px rgba(176,136,224,.6);
+    transition: transform .08s, box-shadow .15s;
+  }
+  .suspect-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px -4px rgba(176,136,224,.9);
+  }
+  .suspect-action:active { transform: translateY(1px); }
 
   .empty-state {
     text-align: center;
@@ -251,10 +302,10 @@
     .casefile-header .subtitle { display: none; }
     .tab { font-size: .68rem; letter-spacing: .12em; padding: 10px 4px 8px; }
     .tab .count { display: none; }
-    .puzzle-card { padding: 12px 14px; gap: 12px; }
-    .puzzle-icon { width: 36px; height: 36px; font-size: 1.1rem; }
-    .puzzle-name { font-size: .85rem; }
-    .puzzle-action { padding: 6px 14px; font-size: .62rem; }
+    .puzzle-card, .suspect-card { padding: 12px 14px; gap: 12px; }
+    .puzzle-icon, .suspect-icon { width: 36px; height: 36px; font-size: 1.1rem; }
+    .puzzle-name, .suspect-name { font-size: .85rem; }
+    .puzzle-action, .suspect-action { padding: 6px 14px; font-size: .62rem; }
   }
 </style>
 </head>
@@ -292,14 +343,6 @@
 
   /* =========================================================
      PUZZLE CATALOGUE
-     ------------------------------------------------------------
-     `deskOnly: true` = launched from a specific desk icon (D5/D7/D9),
-     so it never appears in "Available" — but it DOES appear in
-     "Completed" once solved.
-
-       - p1–p6   → D7 (blue folder)
-       - coffee  → D9 (coffee cup)
-       - hanoi   → D5 (tower)
      ========================================================= */
   const PUZZLES = [
     { id:'p1',        file:'p1.html',        name:'The Escape Route',           flag:'whitby_p1_solved',         step:1,  icon:'🗺️', deskOnly:true },
@@ -318,7 +361,37 @@
     { id:'vault',     file:'vault.html',     name:'The Vault',                  flag:'whitby_vault_solved',      step:39, icon:'🏦' }
   ];
 
-  const TOTAL_SUSPECTS = 3;
+  /* =========================================================
+     SUSPECT CATALOGUE
+     ------------------------------------------------------------
+     Neil Down is available from the start.
+     Vincent Hall + Sienna Clarke unlock once The Scale Room is solved.
+     ========================================================= */
+  const SUSPECTS = [
+    {
+      id: 'neil',
+      name: 'Neil Down',
+      emoji: '📁',
+      role: 'Night Archivist, Lincoln Record Office',
+      unlockKey: null                            /* always available */
+    },
+    {
+      id: 'vincent',
+      name: 'Vincent Hall',
+      emoji: '💎',
+      role: "Owner, Hall's Jewellery Store, Stamford",
+      unlockKey: 'whitby_scale_solved'
+    },
+    {
+      id: 'sienna',
+      name: 'Sienna Clarke',
+      emoji: '📚',
+      role: "Vale's niece and research assistant",
+      unlockKey: 'whitby_scale_solved'
+    }
+  ];
+
+  const TOTAL_SUSPECTS = SUSPECTS.length;
 
   function hasFlag(k) {
     try { return localStorage.getItem(k) === '1'; } catch(e) { return false; }
@@ -337,11 +410,12 @@
   function getCompletedPuzzles() {
     return PUZZLES.filter(p => hasFlag(p.flag));
   }
-  function unlockedSuspects() {
-    var c = 0;
-    if (hasFlag('whitby_braggers_solved')) c++;
-    if (hasFlag('whitby_scale_solved')) c += 2;
-    return c;
+  /* Suspects = those whose unlock key is null or whose flag is set */
+  function getUnlockedSuspects() {
+    return SUSPECTS.filter(s => !s.unlockKey || hasFlag(s.unlockKey));
+  }
+  function unlockedSuspectCount() {
+    return getUnlockedSuspects().length;
   }
 
   var currentTab = 'available';
@@ -382,12 +456,20 @@
   }
 
   function renderSuspects() {
-    var c = unlockedSuspects();
-    return '<div class="empty-state">' +
-      '<div class="icon">🔎</div>' +
-      '<h3>Suspect Dossiers</h3>' +
-      '<p>' + c + ' of ' + TOTAL_SUSPECTS + ' suspects available for interrogation.<br>' +
-      'Opening the suspect database…</p></div>';
+    const list = getUnlockedSuspects();
+    if (list.length === 0) {
+      return '<div class="empty-state"><div class="icon">🔒</div>' +
+             '<h3>No Suspects Available</h3>' +
+             '<p>No one has been brought in for questioning yet.</p></div>';
+    }
+    return '<div class="suspect-list">' + list.map(s =>
+      '<div class="suspect-card">' +
+        '<div class="suspect-icon">' + s.emoji + '</div>' +
+        '<div class="suspect-info"><div class="suspect-name">' + s.name + '</div>' +
+        '<div class="suspect-meta">' + s.role + '</div></div>' +
+        '<button class="suspect-action" data-suspect="' + s.id + '">View Dossier →</button>' +
+      '</div>'
+    ).join('') + '</div>';
   }
 
   function renderTab() {
@@ -395,12 +477,22 @@
     else if (currentTab === 'completed') contentEl.innerHTML = renderCompleted();
     else contentEl.innerHTML = renderSuspects();
 
+    /* Puzzle action buttons */
     contentEl.querySelectorAll('[data-file]').forEach(el => {
       el.addEventListener('click', function(e) {
         e.stopPropagation();
         e.preventDefault();
         var file = this.dataset.file;
         if (file) openPuzzle(file);
+      });
+    });
+
+    /* Suspect action buttons */
+    contentEl.querySelectorAll('[data-suspect]').forEach(el => {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        openSuspect(this.dataset.suspect);
       });
     });
   }
@@ -411,15 +503,16 @@
     setTimeout(function() { window.location.href = file; }, 240);
   }
 
+  function openSuspect(id) {
+    /* Pass the suspect id via query string so suspect.html can focus on that person */
+    document.body.style.transition = 'opacity .25s ease';
+    document.body.style.opacity = '0';
+    setTimeout(function() { window.location.href = 'suspect.html?suspect=' + id; }, 240);
+  }
+
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', function() {
       var name = this.dataset.tab;
-      if (name === 'suspects') {
-        document.body.style.transition = 'opacity .25s ease';
-        document.body.style.opacity = '0';
-        setTimeout(function() { window.location.href = 'suspect.html'; }, 240);
-        return;
-      }
       currentTab = name;
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       this.classList.add('active');
@@ -430,7 +523,7 @@
   function updateCounts() {
     document.getElementById('countAvailable').textContent = getAvailablePuzzles().length;
     document.getElementById('countCompleted').textContent = getCompletedPuzzles().length;
-    document.getElementById('countSuspects').textContent  = unlockedSuspects();
+    document.getElementById('countSuspects').textContent  = unlockedSuspectCount();
     document.getElementById('progressBadge').textContent  = getCompletedPuzzles().length + ' / ' + PUZZLES.length;
     document.getElementById('debugFooter').textContent    = 'Story step: ' + getStep() + ' / 40';
   }
