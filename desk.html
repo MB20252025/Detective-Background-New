@@ -98,6 +98,9 @@
   }
   .item.hidden-item.revealed { opacity: 1; }
 
+  /* ============================================================
+     POPUP OVERLAY
+     ============================================================ */
   .popup-overlay {
     position: fixed;
     inset: 0;
@@ -108,22 +111,22 @@
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 30px;
     opacity: 0;
     transition: opacity .3s ease;
   }
   .popup-overlay.active { display: flex; opacity: 1; }
 
   .popup-card {
-    max-width: 440px;
+    max-width: 720px;
     width: 100%;
-    padding: 34px 28px 26px;
+    padding: 48px 44px 40px;
     background: linear-gradient(160deg, #1e3040 0%, #0f1d29 100%);
-    border: 2px solid #b68b5c;
-    border-radius: 16px;
+    border: 3px solid #b68b5c;
+    border-radius: 20px;
     box-shadow:
-      0 24px 60px rgba(0, 0, 0, 0.8),
-      0 0 40px rgba(240, 180, 41, 0.15),
+      0 30px 80px rgba(0, 0, 0, 0.85),
+      0 0 50px rgba(240, 180, 41, 0.18),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
     text-align: center;
     transform: translateY(14px) scale(0.96);
@@ -132,48 +135,52 @@
   .popup-overlay.active .popup-card { transform: translateY(0) scale(1); }
 
   .popup-icon {
-    font-size: 2.4rem;
-    margin-bottom: 12px;
-    filter: drop-shadow(0 0 14px rgba(240, 180, 41, 0.55));
+    font-size: 3.4rem;
+    margin-bottom: 18px;
+    filter: drop-shadow(0 0 18px rgba(240, 180, 41, 0.6));
   }
   .popup-card h2 {
     font-family: 'Cinzel', serif;
-    font-size: 1.1rem;
+    font-size: 1.65rem;
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: #eace9f;
-    margin: 0 0 16px;
+    margin: 0 0 22px;
+    line-height: 1.35;
   }
   .popup-card p {
-    font-size: 0.95rem;
-    line-height: 1.65;
-    color: #cdba92;
-    margin: 0 0 24px;
+    font-size: 1.22rem;
+    line-height: 1.75;
+    color: #e0cba3;
+    margin: 0 0 32px;
     letter-spacing: 0.01em;
   }
   .popup-continue-btn {
     display: inline-block;
-    padding: 14px 40px;
+    padding: 18px 52px;
     background: linear-gradient(180deg, #d99a1a, #a37812);
-    border: 1px solid #ffd066;
-    border-radius: 12px;
+    border: 2px solid #ffd066;
+    border-radius: 14px;
     color: #1a1006;
     font-family: 'Courier New', monospace;
-    font-size: 0.86rem;
+    font-size: 1.05rem;
     font-weight: bold;
     letter-spacing: 0.20em;
     text-transform: uppercase;
     cursor: pointer;
     box-shadow:
-      0 8px 22px rgba(240, 180, 41, 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      0 10px 26px rgba(240, 180, 41, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
     transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease;
     white-space: nowrap;
   }
   .popup-continue-btn:hover { background: linear-gradient(180deg, #ffd066, #d99a1a); }
-  .popup-continue-btn:active { transform: translateY(2px); box-shadow: 0 3px 12px rgba(240, 180, 41, 0.35); }
+  .popup-continue-btn:active { transform: translateY(2px); box-shadow: 0 4px 14px rgba(240, 180, 41, 0.4); }
 
+  /* ============================================================
+     MEMO OVERLAY
+     ============================================================ */
   .memo-overlay {
     position: fixed;
     inset: 0;
@@ -205,13 +212,13 @@
     bottom: 5%;
     left: 50%;
     transform: translateX(-50%);
-    padding: 14px 42px;
+    padding: 16px 46px;
     background: linear-gradient(180deg, #d99a1a, #a37812);
     border: 1px solid #ffd066;
     border-radius: 12px;
     color: #1a1006;
     font-family: 'Courier New', monospace;
-    font-size: 0.88rem;
+    font-size: 0.98rem;
     font-weight: bold;
     letter-spacing: 0.20em;
     text-transform: uppercase;
@@ -230,12 +237,14 @@
   .memo-desk-btn:hover { background: linear-gradient(180deg, #ffd066, #d99a1a); }
   .memo-desk-btn:active { transform: translateX(-50%) translateY(2px); box-shadow: 0 3px 12px rgba(240, 180, 41, 0.4); }
 
-  @media (max-width: 480px) {
-    .popup-card { padding: 26px 22px 20px; }
-    .popup-card h2 { font-size: 0.95rem; }
-    .popup-card p { font-size: 0.86rem; }
-    .popup-continue-btn { padding: 12px 30px; font-size: 0.78rem; }
-    .memo-desk-btn { padding: 12px 30px; font-size: 0.76rem; letter-spacing: 0.16em; }
+  @media (max-width: 640px) {
+    .popup-overlay { padding: 16px; }
+    .popup-card { padding: 34px 24px 28px; border-radius: 16px; }
+    .popup-icon { font-size: 2.6rem; margin-bottom: 14px; }
+    .popup-card h2 { font-size: 1.2rem; margin-bottom: 16px; }
+    .popup-card p { font-size: 1rem; line-height: 1.65; margin-bottom: 24px; }
+    .popup-continue-btn { padding: 14px 36px; font-size: 0.9rem; }
+    .memo-desk-btn { padding: 13px 34px; font-size: 0.85rem; letter-spacing: 0.16em; }
   }
 </style>
 </head>
@@ -304,10 +313,8 @@ const STEPS = [
   { type:'popup', icon:'☕', title:'Coffee',
     message:'You need some coffee. Go get a brew.' },
 
-  /* ---- Coffee: launched from D9 ---- */
   { type:'puzzle', file:'coffee.html', flag:'whitby_coffee_solved' },
 
-  /* ---- Hanoi: launched from D5, no popup between them ---- */
   { type:'puzzle', file:'hanoi.html', flag:'whitby_hanoi_solved' },
 
   { type:'popup', icon:'💾', title:'USB Stick',
@@ -367,13 +374,12 @@ const STEPS = [
 
 /* ============================================================
    PUZZLE → ICON ROUTING
-   Each puzzle is launched from a specific desk icon.
    ============================================================ */
-const D7_PUZZLES = ['p1.html','p2.html','p3.html','p4.html','p5.html','p6.html'];   /* D7 (blue folder) */
-const D9_PUZZLES = ['coffee.html'];                                                 /* D9 (coffee cup) */
-const D5_PUZZLES = ['hanoi.html'];                                                  /* D5 (tower) */
+const D7_PUZZLES = ['p1.html','p2.html','p3.html','p4.html','p5.html','p6.html'];
+const D9_PUZZLES = ['coffee.html'];
+const D5_PUZZLES = ['hanoi.html'];
 const D4_PUZZLES = ['braggers.html','scale.html','locker.html','bookshelf.html',
-                    'cryptogram.html','vault.html'];                                /* D4 (Case File) */
+                    'cryptogram.html','vault.html'];
 
 const DESK_ITEMS = {};
 
@@ -517,9 +523,6 @@ function advanceCompleted() {
   setStep(n);
 }
 
-/* ------------------------------------------------------------
-   Helper: is the current step a puzzle whose file is in `list`?
-   ------------------------------------------------------------ */
 function isPuzzleIn(list, cfg) {
   return cfg && cfg.type === 'puzzle' && list.indexOf(cfg.file) !== -1;
 }
@@ -543,7 +546,6 @@ function renderCurrentStep() {
 
   console.log('[desk] Step ' + n + '/' + STEPS.length, cfg.type, cfg.file || '');
 
-  /* ---------- D1 — interview (always clickable) ---------- */
   const d1 = itemEls['D1'];
   if (d1) {
     d1.classList.remove('locked');
@@ -553,27 +555,16 @@ function renderCurrentStep() {
     else d1.classList.remove('active-step');
   }
 
-  /* ---------- D7 — pX puzzles ---------- */
   setPuzzleIcon(itemEls['D7'], cfg, D7_PUZZLES);
-
-  /* ---------- D9 — coffee puzzle ---------- */
   setPuzzleIcon(itemEls['D9'], cfg, D9_PUZZLES);
-
-  /* ---------- D5 — hanoi puzzle ---------- */
   setPuzzleIcon(itemEls['D5'], cfg, D5_PUZZLES);
 
-  /* --------------------------------------------------------------
-     D4 — Case File
-     Glows only for the long-form puzzles that live inside it.
-     Never glows for coffee/hanoi (those go via D9/D5).
-     -------------------------------------------------------------- */
   const d4 = itemEls['D4'];
   if (d4) {
     if (isPuzzleIn(D4_PUZZLES, cfg)) d4.classList.add('active-step');
     else d4.classList.remove('active-step');
   }
 
-  /* ---------- D8 — always opens the main menu ---------- */
   const d8 = itemEls['D8'];
   if (d8) {
     d8.classList.remove('locked');
