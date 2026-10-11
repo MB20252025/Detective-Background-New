@@ -122,6 +122,10 @@ body.ready { opacity: 1; }
   touch-action: pan-y;
 }
 
+/* When only one sheet is showing, hide the nav buttons entirely */
+.viewer.single .nav-btn { display: none; }
+.viewer.single { justify-content: center; }
+
 .stage{
   flex: 1 1 auto;
   min-width: 0;
@@ -165,6 +169,9 @@ body.ready { opacity: 1; }
   gap: 12px;
   padding: 22px 0 6px;
 }
+/* Hide dots when there's only one sheet */
+.dots.single { display: none; }
+
 .dot{
   width: 12px; height: 12px;
   border-radius: 50%;
@@ -793,7 +800,7 @@ body.ready { opacity: 1; }
 <header class="desk-header">
   <p class="eyebrow">Lincolnshire Constabulary</p>
   <h1>Suspect Dossier</h1>
-  <p class="sub">Case <b>WHIT/2026/01</b> &nbsp;·&nbsp; Operation <b>LIGHTHOUSE</b> &nbsp;·&nbsp; <span id="suspectCount">1</span> person<span id="suspectPlural">s</span> of interest</p>
+  <p class="sub">Case <b>WHIT/2026/01</b> &nbsp;·&nbsp; Operation <b>LIGHTHOUSE</b></p>
 </header>
 
 <div class="viewer">
@@ -802,10 +809,15 @@ body.ready { opacity: 1; }
   <div class="stage">
 
     <!-- ==========================================================
-         SHEET 1 — NEIL DOWN  (always unlocked)
+         SHEET 1 — NEIL DOWN
          ========================================================== -->
-    <article class="sheet sheet--1" data-idx="0" data-sheet="s1" data-unlock="" aria-labelledby="s1-name">
-
+    <article class="sheet sheet--1"
+             data-idx="0"
+             data-sheet="s1"
+             data-suspect-id="neil"
+             data-unlock=""
+             aria-labelledby="s1-name">
+      <!-- (unchanged content) -->
       <svg class="paperclip" viewBox="0 0 24 62" aria-hidden="true">
         <path d="M7 16 v30 a5 5 0 0 0 10 0 V12 a8.5 8.5 0 0 0 -17 0 v36"
               fill="none" stroke="#b9bcc2" stroke-width="2.4"
@@ -814,7 +826,6 @@ body.ready { opacity: 1; }
               fill="none" stroke="rgba(255,255,255,.65)" stroke-width=".9"
               stroke-linecap="round" stroke-linejoin="round" transform="translate(-1,0)"/>
       </svg>
-
       <div class="coffee-stain" aria-hidden="true"></div>
       <span class="stamp stamp--tr">Suspect</span>
 
@@ -832,7 +843,6 @@ body.ready { opacity: 1; }
       <div class="sheet__rule"></div>
 
       <div class="sheet__body">
-
         <figure class="mugshot">
           <div class="frame-mover">
             <div class="mugshot__frame">
@@ -855,14 +865,12 @@ body.ready { opacity: 1; }
         <div class="bio">
           <h3 class="bio__name" id="s1-name">Neil Down</h3>
           <p class="bio__alias">Known as “Nellie” &nbsp;<span>· male · 47</span></p>
-
           <dl class="facts">
             <div><dt>Occupation</dt><dd>Former maintenance worker</dd></div>
             <div><dt>Status</dt><dd>In custody — cooperating</dd></div>
             <div><dt>Access</dt><dd>Restricted areas, service corridors</dd></div>
             <div><dt>Last seen</dt><dd>Near two affected sites</dd></div>
           </dl>
-
           <div class="threat threat--mid">
             <div class="threat__label"><span>Threat assessment</span><b>Moderate</b></div>
             <div class="threat__bar" role="img" aria-label="Threat level: 3 out of 5">
@@ -911,10 +919,14 @@ body.ready { opacity: 1; }
 
 
     <!-- ==========================================================
-         SHEET 2 — SIENNA CLARKE  (unlocked after Scale Room)
+         SHEET 2 — SIENNA CLARKE
          ========================================================== -->
-    <article class="sheet sheet--2" data-idx="1" data-sheet="s2" data-unlock="whitby_scale_solved" aria-labelledby="s2-name">
-
+    <article class="sheet sheet--2"
+             data-idx="1"
+             data-sheet="s2"
+             data-suspect-id="sienna"
+             data-unlock="whitby_scale_solved"
+             aria-labelledby="s2-name">
       <svg class="paperclip" viewBox="0 0 24 62" aria-hidden="true">
         <path d="M7 16 v30 a5 5 0 0 0 10 0 V12 a8.5 8.5 0 0 0 -17 0 v36"
               fill="none" stroke="#b9bcc2" stroke-width="2.4"
@@ -923,7 +935,6 @@ body.ready { opacity: 1; }
               fill="none" stroke="rgba(255,255,255,.65)" stroke-width=".9"
               stroke-linecap="round" stroke-linejoin="round" transform="translate(-1,0)"/>
       </svg>
-
       <div class="coffee-stain" aria-hidden="true"></div>
       <span class="stamp stamp--tr">Person of Interest</span>
 
@@ -941,7 +952,6 @@ body.ready { opacity: 1; }
       <div class="sheet__rule"></div>
 
       <div class="sheet__body">
-
         <figure class="mugshot">
           <div class="frame-mover">
             <div class="mugshot__frame">
@@ -950,7 +960,7 @@ body.ready { opacity: 1; }
                   <div class="height-chart" data-chart="s2" aria-hidden="true"></div>
                   <img src="mug3.png" alt="Mugshot of Sienna Clarke"
                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                  <div class="photo-fallback" aria-hidden="true">👩🏻‍🦰<span>MUG2.PNG</span></div>
+                  <div class="photo-fallback" aria-hidden="true">👩🏻‍🦰<span>MUG3.PNG</span></div>
                 </div>
               </div>
             </div>
@@ -964,14 +974,12 @@ body.ready { opacity: 1; }
         <div class="bio">
           <h3 class="bio__name" id="s2-name">Sienna Clarke</h3>
           <p class="bio__alias">Radio handle “VEGA” &nbsp;<span>· female · 39</span></p>
-
           <dl class="facts">
             <div><dt>Occupation</dt><dd>External security consultant</dd></div>
             <div><dt>Status</dt><dd>Released — further enquiries</dd></div>
             <div><dt>Access</dt><dd>Full audit rights, all sites</dd></div>
             <div><dt>Last seen</dt><dd>On site before &amp; after 3 incidents</dd></div>
           </dl>
-
           <div class="threat threat--low">
             <div class="threat__label"><span>Threat assessment</span><b>Low</b></div>
             <div class="threat__bar" role="img" aria-label="Threat level: 2 out of 5">
@@ -1019,10 +1027,14 @@ body.ready { opacity: 1; }
 
 
     <!-- ==========================================================
-         SHEET 3 — VINCENT HALE  (unlocked after Scale Room)
+         SHEET 3 — VINCENT HALE
          ========================================================== -->
-    <article class="sheet sheet--3" data-idx="2" data-sheet="s3" data-unlock="whitby_scale_solved" aria-labelledby="s3-name">
-
+    <article class="sheet sheet--3"
+             data-idx="2"
+             data-sheet="s3"
+             data-suspect-id="vincent"
+             data-unlock="whitby_scale_solved"
+             aria-labelledby="s3-name">
       <svg class="paperclip" viewBox="0 0 24 62" aria-hidden="true">
         <path d="M7 16 v30 a5 5 0 0 0 10 0 V12 a8.5 8.5 0 0 0 -17 0 v36"
               fill="none" stroke="#b9bcc2" stroke-width="2.4"
@@ -1031,7 +1043,6 @@ body.ready { opacity: 1; }
               fill="none" stroke="rgba(255,255,255,.65)" stroke-width=".9"
               stroke-linecap="round" stroke-linejoin="round" transform="translate(-1,0)"/>
       </svg>
-
       <div class="coffee-stain" aria-hidden="true"></div>
       <span class="stamp stamp--br">Under Review</span>
 
@@ -1049,7 +1060,6 @@ body.ready { opacity: 1; }
       <div class="sheet__rule"></div>
 
       <div class="sheet__body">
-
         <figure class="mugshot">
           <div class="frame-mover">
             <div class="mugshot__frame">
@@ -1058,7 +1068,7 @@ body.ready { opacity: 1; }
                   <div class="height-chart" data-chart="s3" aria-hidden="true"></div>
                   <img src="mug2.png" alt="Mugshot of Vincent Hale"
                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                  <div class="photo-fallback" aria-hidden="true">🧓🏼<span>MUG3.PNG</span></div>
+                  <div class="photo-fallback" aria-hidden="true">🧓🏼<span>MUG2.PNG</span></div>
                 </div>
               </div>
             </div>
@@ -1072,14 +1082,12 @@ body.ready { opacity: 1; }
         <div class="bio">
           <h3 class="bio__name" id="s3-name">Vincent Hale</h3>
           <p class="bio__alias">Known as “Vince” &nbsp;<span>· male · 56</span></p>
-
           <dl class="facts">
             <div><dt>Occupation</dt><dd>Area manager, multiple sites</dd></div>
             <div><dt>Status</dt><dd>Interviewed — no charge</dd></div>
             <div><dt>Access</dt><dd>Sensitive operational data</dd></div>
             <div><dt>Last seen</dt><dd>Office, night of second incident</dd></div>
           </dl>
-
           <div class="threat threat--high">
             <div class="threat__label"><span>Threat assessment</span><b>Elevated</b></div>
             <div class="threat__bar" role="img" aria-label="Threat level: 4 out of 5">
@@ -1130,11 +1138,7 @@ body.ready { opacity: 1; }
   <button class="nav-btn nav-next" aria-label="Next suspect">›</button>
 </div>
 
-<div class="dots" role="tablist" aria-label="Suspect pages">
-  <button class="dot active" data-idx="0" aria-label="Suspect 1"></button>
-  <button class="dot"        data-idx="1" aria-label="Suspect 2"></button>
-  <button class="dot"        data-idx="2" aria-label="Suspect 3"></button>
-</div>
+<div class="dots" role="tablist" aria-label="Suspect pages"></div>
 
 <!-- Empty state (should never show since Neil is always unlocked) -->
 <div class="no-suspects" id="noSuspects">
@@ -1149,52 +1153,66 @@ body.ready { opacity: 1; }
   'use strict';
 
   /* ==================================================================
-     FILTER LOCKED SUSPECTS
+     FILTER LOGIC
      ------------------------------------------------------------
-     Each sheet has data-unlock="flagName" (or empty for always shown).
-     Sheets whose flag isn't set are removed before building charts.
+     1. If ?suspect=id is in the URL → show ONLY that suspect.
+     2. Otherwise → show every suspect whose unlock flag is set.
+     Either way, if the flag isn't set, the sheet is removed.
      ================================================================== */
   function hasFlag(k) {
     if (!k) return true;
     try { return localStorage.getItem(k) === '1'; } catch (e) { return false; }
   }
 
+  /* Read ?suspect= from URL */
+  let requestedSuspect = null;
+  try {
+    const params = new URLSearchParams(location.search);
+    requestedSuspect = params.get('suspect');
+  } catch (e) {}
+
   const allSheets = Array.from(document.querySelectorAll('.sheet'));
-  let removedAny = false;
 
   allSheets.forEach(function(sheet) {
+    const id = sheet.dataset.suspectId || '';
     const key = sheet.dataset.unlock;
+
+    /* If a specific suspect was requested, hide anyone else */
+    if (requestedSuspect && id !== requestedSuspect) {
+      sheet.remove();
+      return;
+    }
+
+    /* Filter out locked suspects */
     if (!hasFlag(key)) {
       sheet.remove();
-      removedAny = true;
     }
   });
 
-  /* Reassign data-idx and renumber dots after filtering */
+  /* Reassign data-idx after filtering */
   const remainingSheets = Array.from(document.querySelectorAll('.sheet'));
   remainingSheets.forEach(function(sheet, i) {
     sheet.dataset.idx = String(i);
   });
 
+  /* Build dots (only if more than 1 sheet is visible) */
   const dotsContainer = document.querySelector('.dots');
   if (dotsContainer) {
     dotsContainer.innerHTML = '';
-    remainingSheets.forEach(function(_, i) {
-      const b = document.createElement('button');
-      b.className = 'dot' + (i === 0 ? ' active' : '');
-      b.dataset.idx = String(i);
-      b.setAttribute('aria-label', 'Suspect ' + (i + 1));
-      dotsContainer.appendChild(b);
-    });
+    if (remainingSheets.length > 1) {
+      remainingSheets.forEach(function(_, i) {
+        const b = document.createElement('button');
+        b.className = 'dot' + (i === 0 ? ' active' : '');
+        b.dataset.idx = String(i);
+        b.setAttribute('aria-label', 'Suspect ' + (i + 1));
+        dotsContainer.appendChild(b);
+      });
+    } else {
+      dotsContainer.classList.add('single');
+    }
   }
 
-  /* Update the header count */
-  const countEl = document.getElementById('suspectCount');
-  const pluralEl = document.getElementById('suspectPlural');
-  if (countEl) countEl.textContent = String(remainingSheets.length);
-  if (pluralEl) pluralEl.textContent = remainingSheets.length === 1 ? '' : 's';
-
-  /* If nothing at all is unlocked, show the empty state and hide the viewer */
+  /* If nothing unlocked → show the empty state */
   if (remainingSheets.length === 0) {
     const viewer = document.querySelector('.viewer');
     const dots = document.querySelector('.dots');
@@ -1202,65 +1220,50 @@ body.ready { opacity: 1; }
     if (dots) dots.style.display = 'none';
     const empty = document.getElementById('noSuspects');
     if (empty) empty.classList.add('visible');
-    return;   /* Nothing else to build */
+    return;
   }
 
   /* ==================================================================
      🎛️  SUSPECT_LAYOUT — EDIT EVERYTHING HERE
      ================================================================== */
   const SUSPECT_LAYOUT = {
-
-    /* ---------- SHEET 1: Neil Down ---------- */
     s1: {
       frame: { x: 0, y: 0, scale: 1.00 },
       photo: { x: 0, y: 0, zoom:  1.00 },
-      heightChart: {
-        majors: ["6'0\"", "5'9\"", "5'6\"", "5'3\"", "5'0\""],
-        showMinor: true
-      }
+      heightChart: { majors: ["6'0\"", "5'9\"", "5'6\"", "5'3\"", "5'0\""], showMinor: true }
     },
-
-    /* ---------- SHEET 2: Sienna Clarke ---------- */
     s2: {
       frame: { x: 0, y: 0, scale: 1.00 },
       photo: { x: 0, y: 0, zoom:  1.00 },
-      heightChart: {
-        majors: ["5'9\"", "5'6\"", "5'3\"", "5'0\"", "4'9\""],
-        showMinor: true
-      }
+      heightChart: { majors: ["5'9\"", "5'6\"", "5'3\"", "5'0\"", "4'9\""], showMinor: true }
     },
-
-    /* ---------- SHEET 3: Vincent Hale ---------- */
     s3: {
       frame: { x: 0, y: 0, scale: 1.00 },
       photo: { x: 0, y: 0, zoom:  1.00 },
-      heightChart: {
-        majors: ["6'3\"", "6'0\"", "5'9\"", "5'6\"", "5'3\""],
-        showMinor: true
-      }
+      heightChart: { majors: ["6'3\"", "6'0\"", "5'9\"", "5'6\"", "5'3\""], showMinor: true }
     }
-
   };
 
-  const sheets = remainingSheets;
-  const dots   = Array.from(document.querySelectorAll('.dot'));
-  const stage  = document.querySelector('.stage');
-  const viewer = document.querySelector('.viewer');
-  const prevBtn = document.querySelector('.nav-prev');
-  const nextBtn = document.querySelector('.nav-next');
+  const sheets   = remainingSheets;
+  const dots     = Array.from(document.querySelectorAll('.dot'));
+  const stage    = document.querySelector('.stage');
+  const viewer   = document.querySelector('.viewer');
+  const prevBtn  = document.querySelector('.nav-prev');
+  const nextBtn  = document.querySelector('.nav-next');
+
+  /* When only one sheet, hide nav buttons */
+  if (sheets.length <= 1 && viewer) {
+    viewer.classList.add('single');
+  }
 
   let current = 0;
 
-  /* ---------- Build height charts ---------- */
   function buildHeightChart(el, cfg) {
     if (!el || !cfg || !Array.isArray(cfg.majors) || cfg.majors.length < 2) return;
-
     const labels = cfg.majors;
     const n = labels.length;
-    const TOP = 5;
-    const BOTTOM = 95;
+    const TOP = 5, BOTTOM = 95;
     const step = (BOTTOM - TOP) / (n - 1);
-
     el.innerHTML = '';
 
     for (let i = 0; i < n; i++) {
@@ -1268,15 +1271,12 @@ body.ready { opacity: 1; }
       const row = document.createElement('div');
       row.className = 'h-row h-row--major';
       row.style.top = y + '%';
-
       const left = document.createElement('span');
       left.className = 'h-lbl left';
       left.textContent = labels[i];
-
       const right = document.createElement('span');
       right.className = 'h-lbl right';
       right.textContent = labels[i];
-
       row.appendChild(left);
       row.appendChild(right);
       el.appendChild(row);
@@ -1310,22 +1310,13 @@ body.ready { opacity: 1; }
   function applyLayout(idx) {
     const sheet = sheets[idx];
     if (!sheet) return;
-
     const key = sheet.dataset.sheet;
     const L = SUSPECT_LAYOUT[key];
     if (!L) return;
-
     const mover = sheet.querySelector('.frame-mover');
     const img   = sheet.querySelector('.photo-window img');
-
-    if (mover) {
-      mover.style.transform =
-        `translate(${L.frame.x}px, ${L.frame.y}px) scale(${L.frame.scale})`;
-    }
-    if (img) {
-      img.style.transform =
-        `translate(${L.photo.x}px, ${L.photo.y}px) scale(${L.photo.zoom})`;
-    }
+    if (mover) mover.style.transform = `translate(${L.frame.x}px, ${L.frame.y}px) scale(${L.frame.scale})`;
+    if (img)   img.style.transform   = `translate(${L.photo.x}px, ${L.photo.y}px) scale(${L.photo.zoom})`;
   }
 
   function buildAllCharts() {
@@ -1346,27 +1337,21 @@ body.ready { opacity: 1; }
 
     const prev = sheets[current];
     const next = sheets[i];
-
     prev.classList.remove('active', 'from-left', 'from-right');
     next.classList.remove('active', 'from-left', 'from-right');
-
     void next.offsetWidth;
-
     next.classList.add('active');
     if (dir) next.classList.add(dir < 0 ? 'from-left' : 'from-right');
-
     current = i;
-
     dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
-    prevBtn.disabled = (current === 0);
-    nextBtn.disabled = (current === sheets.length - 1);
-
+    if (prevBtn) prevBtn.disabled = (current === 0);
+    if (nextBtn) nextBtn.disabled = (current === sheets.length - 1);
     const top = stage.getBoundingClientRect().top + window.scrollY - 24;
     window.scrollTo(0, Math.max(0, top));
   }
 
-  prevBtn.addEventListener('click', () => showSheet(current - 1, -1));
-  nextBtn.addEventListener('click', () => showSheet(current + 1,  1));
+  if (prevBtn) prevBtn.addEventListener('click', () => showSheet(current - 1, -1));
+  if (nextBtn) nextBtn.addEventListener('click', () => showSheet(current + 1,  1));
 
   dots.forEach((d, i) => {
     d.addEventListener('click', () => {
@@ -1376,31 +1361,34 @@ body.ready { opacity: 1; }
   });
 
   document.addEventListener('keydown', (e) => {
+    if (sheets.length <= 1) return;   /* no pagination when single */
     const tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
     if (e.key === 'ArrowLeft')  { showSheet(current - 1, -1); }
     if (e.key === 'ArrowRight') { showSheet(current + 1,  1); }
   });
 
+  /* Swipe — only when more than one sheet */
   (function setupSwipe() {
-    const SWIPE_MIN = 50;
-    const RATIO     = 1.5;
-    let startX = 0, startY = 0;
-    let tracking = false;
+    if (sheets.length <= 1) return;
+    const SWIPE_MIN = 50, RATIO = 1.5;
+    let startX = 0, startY = 0, tracking = false;
 
-    function onStart(e) {
+    viewer.addEventListener('touchstart', (e) => {
       if (e.touches.length !== 1) return;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       tracking = true;
-    }
-    function onMove(e) {
+    }, { passive: true });
+
+    viewer.addEventListener('touchmove', (e) => {
       if (!tracking || e.touches.length !== 1) return;
       const dx = e.touches[0].clientX - startX;
       const dy = e.touches[0].clientY - startY;
       if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12) tracking = false;
-    }
-    function onEnd(e) {
+    }, { passive: true });
+
+    viewer.addEventListener('touchend', (e) => {
       if (!tracking) return;
       tracking = false;
       const t = e.changedTouches && e.changedTouches[0];
@@ -1411,11 +1399,8 @@ body.ready { opacity: 1; }
       if (Math.abs(dx) < Math.abs(dy) * RATIO) return;
       if (dx < 0) showSheet(current + 1,  1);
       else        showSheet(current - 1, -1);
-    }
+    }, { passive: true });
 
-    viewer.addEventListener('touchstart', onStart, { passive: true });
-    viewer.addEventListener('touchmove',  onMove,  { passive: true });
-    viewer.addEventListener('touchend',   onEnd,   { passive: true });
     viewer.addEventListener('touchcancel', () => { tracking = false; }, { passive: true });
   })();
 
@@ -1426,8 +1411,8 @@ body.ready { opacity: 1; }
   sheets[0].classList.add('active');
   current = 0;
   if (dots[0]) dots[0].classList.add('active');
-  prevBtn.disabled = true;
-  nextBtn.disabled = (sheets.length <= 1);
+  if (prevBtn) prevBtn.disabled = true;
+  if (nextBtn) nextBtn.disabled = (sheets.length <= 1);
 
 })();
 
