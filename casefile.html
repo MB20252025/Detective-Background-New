@@ -292,23 +292,28 @@
 
   /* =========================================================
      PUZZLE CATALOGUE
-     `deskOnly: true` = launched from a desk icon (D5/D9),
-     so it never appears in "Available" — but it does
-     appear in "Completed" once solved.
+     ------------------------------------------------------------
+     `deskOnly: true` = launched from a specific desk icon (D5/D7/D9),
+     so it never appears in "Available" — but it DOES appear in
+     "Completed" once solved.
+
+       - p1–p6   → D7 (blue folder)
+       - coffee  → D9 (coffee cup)
+       - hanoi   → D5 (tower)
      ========================================================= */
   const PUZZLES = [
-    { id:'p1',        file:'p1.html',        name:'The Escape Route',           flag:'whitby_p1_solved',         step:1,  icon:'🗺️' },
+    { id:'p1',        file:'p1.html',        name:'The Escape Route',           flag:'whitby_p1_solved',         step:1,  icon:'🗺️', deskOnly:true },
     { id:'braggers',  file:'braggers.html',  name:"The Bragger's Note",         flag:'whitby_braggers_solved',   step:4,  icon:'📜' },
-    { id:'p2',        file:'p2.html',        name:'Two Mischievous Watchers',   flag:'whitby_p2_solved',         step:7,  icon:'😈' },
+    { id:'p2',        file:'p2.html',        name:'Two Mischievous Watchers',   flag:'whitby_p2_solved',         step:7,  icon:'😈', deskOnly:true },
     { id:'scale',     file:'scale.html',     name:'The Scale Room',             flag:'whitby_scale_solved',      step:9,  icon:'⚖️' },
-    { id:'p3',        file:'p3.html',        name:'Street of Shining Metal',    flag:'whitby_p3_solved',         step:13, icon:'⛪' },
+    { id:'p3',        file:'p3.html',        name:'Street of Shining Metal',    flag:'whitby_p3_solved',         step:13, icon:'⛪', deskOnly:true },
     { id:'coffee',    file:'coffee.html',    name:'The Coffee Puzzle',          flag:'whitby_coffee_solved',     step:17, icon:'☕', deskOnly:true },
     { id:'hanoi',     file:'hanoi.html',     name:'Tower of Hanoi',             flag:'whitby_hanoi_solved',      step:18, icon:'🗼', deskOnly:true },
-    { id:'p4',        file:'p4.html',        name:'The Chase Through Lincoln',  flag:'whitby_p4_solved',         step:22, icon:'🏃' },
+    { id:'p4',        file:'p4.html',        name:'The Chase Through Lincoln',  flag:'whitby_p4_solved',         step:22, icon:'🏃', deskOnly:true },
     { id:'locker',    file:'locker.html',    name:'Locker Padlocks',            flag:'whitby_locker_solved',     step:24, icon:'🔒' },
-    { id:'p5',        file:'p5.html',        name:'The Roar of the Crowd',      flag:'whitby_p5_solved',         step:28, icon:'🏟️' },
+    { id:'p5',        file:'p5.html',        name:'The Roar of the Crowd',      flag:'whitby_p5_solved',         step:28, icon:'🏟️', deskOnly:true },
     { id:'bookshelf', file:'bookshelf.html', name:"The Archivist's Bookcase",   flag:'whitby_bookshelf_solved',  step:30, icon:'📚' },
-    { id:'p6',        file:'p6.html',        name:'Defenders of the Castle',    flag:'whitby_p6_solved',         step:33, icon:'🔫' },
+    { id:'p6',        file:'p6.html',        name:'Defenders of the Castle',    flag:'whitby_p6_solved',         step:33, icon:'🔫', deskOnly:true },
     { id:'cryptogram',file:'cryptogram.html',name:'The Whitby Cryptogram',      flag:'whitby_cryptogram_solved', step:35, icon:'🔤' },
     { id:'vault',     file:'vault.html',     name:'The Vault',                  flag:'whitby_vault_solved',      step:39, icon:'🏦' }
   ];
