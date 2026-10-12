@@ -625,10 +625,6 @@
 
         /* =========================================================
            INTERVIEW STEP NUMBERS
-           The interrogation only accepts new questions when the
-           current story step is one of these. Otherwise questions
-           are locked so the player can't ask more outside an
-           active interview.
            ========================================================= */
         const INTERVIEW_STEPS = [6, 11, 20, 26, 32];
 
@@ -1051,7 +1047,15 @@
                         ]
                     }
                 },
-                evidence: []
+                evidence: [
+                    {
+                        id: 'cctv',
+                        label: 'Present: CCTV Footage',
+                        requires: 'whitby_bookshelf_solved',
+                        stressDelta: 35,
+                        response: "...That's me. On the cameras, at the Castle. Arthur sent me to check on the bookshelf — he said he'd hidden something important behind a set of books and needed it back before anyone else got to it. I didn't know what he meant. I still don't. But yes, I was there. I can't argue with the footage."
+                    }
+                ]
             }
         ];
 
@@ -1263,8 +1267,6 @@
         function renderNodeHTML(node, depth, sid, parentAnswered, interviewActive) {
             const answered = isAnswered(sid, node.id);
             const reqMet = !node.requires || hasFlag(node.requires);
-            /* Askable only if: parent answered AND not already answered AND evidence OK
-               AND interview is active AND session not ended */
             const askable = parentAnswered && !answered && reqMet &&
                             interviewActive && !sessionEnded;
 
@@ -1346,7 +1348,6 @@
                 return render();
             }
 
-            /* Whether questions can be asked this session */
             const interviewActive = isInterviewStepActive() && !sessionEnded;
 
             const stress = getStress(sid);
@@ -1398,7 +1399,6 @@
 
             const prog = suspectProgress(sid);
 
-            /* Header counter */
             const remaining = Math.max(0, SESSION_QUESTION_LIMIT - questionsAsked);
             let counterHtml;
             if (!interviewActive) {
@@ -1533,8 +1533,6 @@
         function init() {
             loadState();
 
-            /* If the interview was already completed in a previous session
-               (and the desk hasn't cleared the flag yet), start in ended state. */
             if (hasFlag('whitby_interview_complete')) {
                 sessionEnded = true;
                 questionsAsked = SESSION_QUESTION_LIMIT;
