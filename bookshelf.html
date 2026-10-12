@@ -356,6 +356,50 @@
         let box4Unlocked = false;
 
         /* =========================================================
+           SECRET UNLOCK — tap a locked box N times to open it.
+           Click counts live only in memory (reset on reload).
+           ========================================================= */
+        const BOX_HACK_CLICKS = 10;
+        const boxClickCounts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+
+        function isBoxUnlocked(id) {
+            if (id === 1) return box1Unlocked;
+            if (id === 2) return box2Unlocked;
+            if (id === 3) return box3Unlocked;
+            if (id === 4) return box4Unlocked;
+            return false;
+        }
+        function setBoxUnlocked(id) {
+            if (id === 1) box1Unlocked = true;
+            else if (id === 2) box2Unlocked = true;
+            else if (id === 3) box3Unlocked = true;
+            else if (id === 4) box4Unlocked = true;
+        }
+
+        function unlockBoxByHack(id) {
+            if (isBoxUnlocked(id)) return;
+            setBoxUnlocked(id);
+
+            /* Save + redraw */
+            saveBookshelfState();
+            renderBooks();
+            renderBoxes();
+
+            /* Reveal the corresponding small photo just like a real solve */
+            if (id === 1) showSmallFront();
+            if (id === 2) showSmallStone();
+            if (id === 3) showSmallMorse();
+            if (id === 4) showSmallCctv();
+
+            /* If everything is now open, trigger the same completion path */
+            if (box1Unlocked && box2Unlocked && box3Unlocked && box4Unlocked) {
+                awardStickyFlag();
+            }
+
+            console.log('[bookshelf] 🔓 Box ' + id + ' unlocked via secret hack');
+        }
+
+        /* =========================================================
            PERSISTENCE — save and load bookshelf state
            ========================================================= */
         function saveBookshelfState() {
@@ -413,6 +457,11 @@
             /* Reveal the Return to Desk button */
             var btn = document.getElementById('returnToDeskBtn');
             if (btn) btn.classList.add('visible');
+
+            /* Hide the top-right ← Desk link so the green Return button is
+               the only way back to the desk from here on. */
+            var deskLink = document.querySelector('.back-to-desk');
+            if (deskLink) deskLink.style.display = 'none';
 
             console.log('[bookshelf] ✅ Puzzle solved — flag set, return button shown');
         }
@@ -905,11 +954,7 @@
                 item.className = 'box-item';
                 item.dataset.boxId = box.id;
 
-                let isOpen = false;
-                if (box.id === 1) isOpen = box1Unlocked;
-                else if (box.id === 2) isOpen = box2Unlocked;
-                else if (box.id === 3) isOpen = box3Unlocked;
-                else if (box.id === 4) isOpen = box4Unlocked;
+                let isOpen = isBoxUnlocked(box.id);
 
                 const imgSrc = isOpen ? box.openImg : box.closedImg;
                 const xPos = isOpen ? box.openX : box.closedX;
@@ -933,6 +978,18 @@
                     this.alt = 'Image missing'; };
 
                 item.appendChild(img);
+
+                /* ── Secret hack: tap a locked box 10 times to open it ── */
+                if (!isOpen) {
+                    item.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        boxClickCounts[box.id] = (boxClickCounts[box.id] || 0) + 1;
+                        if (boxClickCounts[box.id] >= BOX_HACK_CLICKS) {
+                            unlockBoxByHack(box.id);
+                        }
+                    });
+                }
+
                 container.appendChild(item);
             });
 
