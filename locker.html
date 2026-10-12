@@ -642,6 +642,19 @@
             }
 
             /* ============================================================
+               SOLVE / RETURN BUTTON
+               ------------------------------------------------------------
+               Shows the green Return to Desk button AND hides the
+               corner ← Desk link so only one way back is visible.
+               ============================================================ */
+            function markPuzzleSolved() {
+                setFlag(MASTER_KEY);
+                returnToDeskBtn.classList.add('visible');
+                var deskLink = document.querySelector('.back-to-desk');
+                if (deskLink) deskLink.style.display = 'none';
+            }
+
+            /* ============================================================
                VISUALS
                ============================================================ */
             function applyVisualForLocker(n) {
@@ -660,8 +673,7 @@
 
             /* If locker 5 is done, the puzzle is solved */
             if (isLockerDone(KEY_LOCKER)) {
-                setFlag(MASTER_KEY);
-                returnToDeskBtn.classList.add('visible');
+                markPuzzleSolved();
             }
 
             /* ============================================================
@@ -756,8 +768,7 @@
 
                 /* ---- The ONLY required locker is #5 ---- */
                 if (currentLockerNumber === KEY_LOCKER) {
-                    setFlag(MASTER_KEY);
-                    returnToDeskBtn.classList.add('visible');
+                    markPuzzleSolved();
                     console.log('[locker] ✅ Key locker unlocked — puzzle solved');
                 }
             }
