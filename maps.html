@@ -18,14 +18,14 @@
     --bg-y:     50;
     --bg-scale: 1.0;
 
-    /* ── Hotspot 1: evidence.png ── */
+    /* ── Overlay 1: evidence.png ── */
     --evidence-x:        21.4;
     --evidence-y:        34;
     --evidence-w:        30;
     --evidence-scale:    1.5;
     --evidence-rotation: 0;
 
-    /* ── Hotspot 2: bigmap.png ── */
+    /* ── Overlay 2: bigmap.png ── */
     --bigmap-x:          72;
     --bigmap-y:          31;
     --bigmap-w:          30;
@@ -55,32 +55,36 @@
     pointer-events: none;
   }
 
-  /* ── Full-screen stage for the clickable hotspots ── */
+  /* ── Full-screen stage for the clickable pictures ── */
   .stage {
     position: fixed;
     inset: 0;
     z-index: 1;
   }
 
-  /* ── Clickable hotspot — INVISIBLE but still clickable ── */
-  .hotspot {
+  /* ── Clickable picture — INVISIBLE but still clickable ── */
+  .pic {
     position: absolute;
     height: auto;
     transform-origin: 50% 50%;
     cursor: pointer;
     user-select: none;
     -webkit-user-drag: none;
+
+    /* ★ Hidden by default */
     opacity: 0;
     transition: opacity .25s ease;
-    z-index: 2;
-  }
-  .hotspot:hover,
-  .hotspot:active {
-    opacity: 0.35;   /* faint hint – delete these two rules to keep hidden */
   }
 
-  /* ── evidence.png hotspot ── */
-  .hotspot.evidence {
+  /* Optional: faint hint while pressing/hovering.
+     Delete these two rules if you want them to stay completely hidden. */
+  .pic:hover,
+  .pic:active {
+    opacity: 0.35;
+  }
+
+  /* ── evidence.png ── */
+  .pic.evidence {
     left: calc(var(--evidence-x) * 1%);
     top:  calc(var(--evidence-y) * 1%);
     width: calc(var(--evidence-w) * 1%);
@@ -89,8 +93,8 @@
                scale(var(--evidence-scale));
   }
 
-  /* ── bigmap.png hotspot ── */
-  .hotspot.bigmap {
+  /* ── bigmap.png ── */
+  .pic.bigmap {
     left: calc(var(--bigmap-x) * 1%);
     top:  calc(var(--bigmap-y) * 1%);
     width: calc(var(--bigmap-w) * 1%);
@@ -118,89 +122,6 @@
     transition: background .18s ease, border-color .18s ease;
   }
   .back-to-desk:hover { background: #2a5a6a; border-color: #eace9f; }
-
-  /* ── Thumbnail panels (one for evidence, one for bigmap) ── */
-  .panel {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(5,3,2,.92);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .3s ease;
-  }
-  .panel.open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  /* close button inside panel */
-  .panel-close {
-    position: absolute;
-    top: 18px; right: 22px;
-    background: none;
-    border: none;
-    color: #eace9f;
-    font-size: 2rem;
-    cursor: pointer;
-    font-family: 'Courier New', monospace;
-    line-height: 1;
-    opacity: .7;
-    transition: opacity .15s;
-  }
-  .panel-close:hover { opacity: 1; }
-
-  /* each thumbnail is positioned absolutely inside the panel */
-  .thumb {
-    position: absolute;
-    height: auto;
-    transform-origin: 50% 50%;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-drag: none;
-    -webkit-tap-highlight-color: transparent;
-    filter: drop-shadow(0 6px 16px rgba(0,0,0,.7));
-    transition: filter .2s ease, transform .2s ease;
-  }
-  .thumb:hover {
-    filter: drop-shadow(0 0 16px rgba(234,206,159,.9)) brightness(1.15);
-  }
-
-  /* ── Full-size lightbox ── */
-  .lightbox {
-    position: fixed;
-    inset: 0;
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(5,3,2,.95);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s ease;
-    cursor: zoom-out;
-  }
-  .lightbox.open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .lightbox img {
-    max-width: 94vw;
-    max-height: 94vh;
-    object-fit: contain;
-    border: 1px solid rgba(182,139,92,.35);
-    box-shadow: 0 24px 70px rgba(0,0,0,.85);
-    transform: scale(.95);
-    transition: transform .25s ease;
-  }
-  .lightbox.open img { transform: scale(1); }
 </style>
 </head>
 <body>
@@ -210,155 +131,31 @@
   <!-- Background: maps.png -->
   <div class="bg-layer"></div>
 
-  <!-- Clickable hotspots (invisible but active) -->
+  <!-- Clickable overlays (invisible but active) -->
   <div class="stage">
-    <img class="hotspot evidence" src="evidence.png" alt="Evidence"
-         draggable="false" id="evidenceHotspot" />
-    <img class="hotspot bigmap" src="bigmap.png" alt="Big map"
-         draggable="false" id="bigmapHotspot" />
-  </div>
 
-  <!-- Panel for evidence thumbnails -->
-  <div class="panel" id="evidencePanel">
-    <button class="panel-close" data-close="evidencePanel">✕</button>
-  </div>
+    <img class="pic evidence" src="evidence.png" alt="Evidence"
+         draggable="false" data-go="evidence.html" />
 
-  <!-- Panel for bigmap thumbnails -->
-  <div class="panel" id="bigmapPanel">
-    <button class="panel-close" data-close="bigmapPanel">✕</button>
-  </div>
+    <img class="pic bigmap" src="bigmap.png" alt="Big map"
+         draggable="false" data-go="map.html" />
 
-  <!-- Full-size lightbox -->
-  <div class="lightbox" id="lightbox">
-    <img id="lightbox-img" alt="">
   </div>
 
 <script>
-  /* ============================================================
-     👇  EDIT EACH THUMBNAIL INDIVIDUALLY HERE  👇
-     ============================================================
-     Each entry = one picture.
-       thumb : small image shown on the panel
-       full  : full-size image opened when clicked
-       x     : left/right in % of screen  (0 = far left, 50 = centre, 100 = far right)
-       y     : up/down   in % of screen  (0 = top, 50 = centre, 100 = bottom)
-       w     : width in % of screen width
-       scale : extra size multiplier (1 = normal, 1.5 = 50% bigger)
-       rot   : rotation in degrees (0 = straight)
-     ============================================================ */
-
-  /* ── Evidence panel (bige1 … bige6 → e1 … e6) ── */
-  const EVIDENCE_ITEMS = [
-    { thumb:'bige1.jpg', full:'e1.jpg', x:20, y:28, w:22, scale:1, rot:0 },
-    { thumb:'bige2.jpg', full:'e2.jpg', x:50, y:28, w:22, scale:1, rot:0 },
-    { thumb:'bige3.jpg', full:'e3.jpg', x:80, y:28, w:22, scale:1, rot:0 },
-    { thumb:'bige4.jpg', full:'e4.jpg', x:20, y:72, w:22, scale:1, rot:0 },
-    { thumb:'bige5.jpg', full:'e5.jpg', x:50, y:72, w:22, scale:1, rot:0 },
-    { thumb:'bige6.jpg', full:'e6.jpg', x:80, y:72, w:22, scale:1, rot:0 }
-  ];
-
-  /* ── Bigmap panel (bigmap1 … bigmap6 → map1 … map6) ── */
-  const BIGMAP_ITEMS = [
-    { thumb:'bigmap1.jpg', full:'map1.jpg', x:20, y:28, w:22, scale:1, rot:0 },
-    { thumb:'bigmap2.jpg', full:'map2.jpg', x:50, y:28, w:22, scale:1, rot:0 },
-    { thumb:'bigmap3.jpg', full:'map3.jpg', x:80, y:28, w:22, scale:1, rot:0 },
-    { thumb:'bigmap4.jpg', full:'map4.jpg', x:20, y:72, w:22, scale:1, rot:0 },
-    { thumb:'bigmap5.jpg', full:'map5.jpg', x:50, y:72, w:22, scale:1, rot:0 },
-    { thumb:'bigmap6.jpg', full:'map6.jpg', x:80, y:72, w:22, scale:1, rot:0 }
-  ];
-
-  /* ============================================================ */
-
-
-  /* ── Build thumbnails and wire up events ── */
-  function buildThumbnails(panelId, items) {
-    const panel = document.getElementById(panelId);
-    items.forEach(function (item) {
-      const img = document.createElement('img');
-      img.className = 'thumb';
-      img.src = item.thumb;
-      img.alt = item.thumb;
-      img.draggable = false;
-
-      // position, size, rotation – all set individually
-      img.style.left  = item.x + '%';
-      img.style.top   = item.y + '%';
-      img.style.width = item.w + '%';
-      img.style.transform =
-        'translate(-50%, -50%) rotate(' + item.rot + 'deg) scale(' + item.scale + ')';
-
-      img.addEventListener('click', function (e) {
-        e.stopPropagation();           // don't close the panel
-        openLightbox(item.full);
-      });
-
-      panel.appendChild(img);
-
-      // preload full-size image
-      const pre = new Image();
-      pre.src = item.full;
-    });
-  }
-
-  buildThumbnails('evidencePanel', EVIDENCE_ITEMS);
-  buildThumbnails('bigmapPanel', BIGMAP_ITEMS);
-
-  /* ── Panel open/close ── */
-  const evidencePanel = document.getElementById('evidencePanel');
-  const bigmapPanel   = document.getElementById('bigmapPanel');
-
-  function openPanel(panel) {
-    closeAllPanels();
-    panel.classList.add('open');
-  }
-  function closeAllPanels() {
-    evidencePanel.classList.remove('open');
-    bigmapPanel.classList.remove('open');
-  }
-
-  document.getElementById('evidenceHotspot').addEventListener('click', function () {
-    openPanel(evidencePanel);
-  });
-  document.getElementById('bigmapHotspot').addEventListener('click', function () {
-    openPanel(bigmapPanel);
-  });
-
-  // close buttons
-  document.querySelectorAll('[data-close]').forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      document.getElementById(btn.dataset.close).classList.remove('open');
+  /* Click any picture → go to its page with a quick fade */
+  document.querySelectorAll('.pic').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var url = el.dataset.go;
+      if (!url) return;
+      setTimeout(function () {
+        document.body.style.transition = 'opacity .22s ease';
+        document.body.style.opacity = '0';
+        setTimeout(function () { window.location.href = url; }, 200);
+      }, 90);
     });
   });
 
-  // click background of panel to close
-  [evidencePanel, bigmapPanel].forEach(function (panel) {
-    panel.addEventListener('click', function (e) {
-      if (e.target === panel) closeAllPanels();
-    });
-  });
-
-  /* ── Lightbox ── */
-  const lightbox    = document.getElementById('lightbox');
-  const lightboxImg = document.getElementById('lightbox-img');
-
-  function openLightbox(src) {
-    lightboxImg.src = src;
-    lightbox.classList.add('open');
-  }
-  function closeLightbox() {
-    lightbox.classList.remove('open');
-  }
-
-  lightbox.addEventListener('click', closeLightbox);
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      closeLightbox();
-      closeAllPanels();
-    }
-  });
-
-  /* ── Fade page in ── */
   window.addEventListener('load', function () { document.body.classList.add('ready'); });
   if (document.readyState === 'complete') { document.body.classList.add('ready'); }
 </script>
