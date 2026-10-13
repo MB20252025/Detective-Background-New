@@ -432,7 +432,7 @@
 
     .screen-scale .scale-back-btn { display: block; width: 100%; margin-top: 10px; flex: none; }
 
-    .screen-scale #returnToDeskBtn { display: none; width: 100%; margin-top: 10px; flex: none;
+    .screen-scale #returnToDeskBtn { display: block; visibility: hidden; pointer-events: none; width: 100%; margin-top: 10px; flex: none;
         color: #062a1a; border: 1px solid rgba(92,216,138,0.55);
         background: linear-gradient(180deg, #5cd88a, #2e8b57);
         box-shadow: 0 10px 24px -10px rgba(92,216,138,0.85),
@@ -446,7 +446,7 @@
         50%      { box-shadow: 0 10px 24px -10px rgba(92,216,138,0.95),
             0 0 32px rgba(92,216,138,0.60), inset 0 1px 0 rgba(255,255,255,0.55); }
     }
-    .screen-scale #returnToDeskBtn.visible { display: block; }
+    .screen-scale #returnToDeskBtn.visible { visibility: visible; pointer-events: auto; }
 
     .screen-scale .message { margin-top: 14px; min-height: 1.25rem; text-align: center;
         font-size: 0.82rem; font-weight: 600; letter-spacing: 0.02em;
