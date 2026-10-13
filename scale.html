@@ -336,7 +336,8 @@
     .screen-scale #beamPart { background-image: url('beam.png'); background-size: 100% 100%;
         z-index: 5; transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2);
         filter: drop-shadow(0 6px 10px rgba(0,0,0,0.55)); }
-    .screen-scale #dialLayer { position: absolute; z-index: 1; pointer-events: none; }
+    /* ★ FIX: raised z-index so all three dials sit ABOVE the pan-strings (z-index: 20) */
+    .screen-scale #dialLayer { position: absolute; z-index: 25; pointer-events: none; }
     .screen-scale .dial { position: absolute; display: flex; align-items: center; justify-content: center;
         border-radius: 50%; padding: 0; line-height: 1; font-family: inherit; font-weight: 800;
         color: #ffffff; cursor: pointer; pointer-events: auto;
@@ -899,8 +900,6 @@
             solveGen++; solving=false; drag=null;
             var bd=$('bkBd');
 
-            /* Hide the board while we rebuild it — prevents the pieces
-               from briefly flashing at their collection positions. */
             bd.style.visibility = 'hidden';
 
             bd.innerHTML=''; $('win').classList.remove('on');
@@ -925,7 +924,6 @@
             var btn=$('bkAs'); btn.disabled=false; btn.textContent='Auto Solve';
             layout();
 
-            /* Reveal the board now that everything is positioned */
             bd.style.visibility = '';
         }
 
