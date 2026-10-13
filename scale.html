@@ -454,9 +454,12 @@
     .screen-scale .message.ok  { color: var(--green); }
     .screen-scale .message.err { color: var(--red);   }
 
+    /* FIX: the drawer container is pulled up over the column with a negative
+       margin. It must NOT catch clicks itself, otherwise it blocks the dials.
+       Only the images inside it (pointer-events: auto) take clicks. */
     .screen-scale .drawer { display: grid; place-items: start center; position: relative;
         z-index: 50; margin-top: var(--drawer-top);
-        transform: translateX(var(--drawer-shift-x)); pointer-events: auto; }
+        transform: translateX(var(--drawer-shift-x)); pointer-events: none; }
     .screen-scale .drawer-img { grid-area: 1 / 1; display: block; max-width: 100%; height: auto;
         user-select: none; -webkit-user-drag: none; pointer-events: auto; }
     .screen-scale #drawerClose { width: calc(100% * var(--drawer-close-scale)); cursor: pointer; visibility: visible; }
@@ -476,7 +479,7 @@
     .screen-scale .drawer-letter, .screen-scale .drawer-letterbig {
         position: absolute; left: 50%; top: 0; display: block; max-width: none; height: auto;
         user-select: none; -webkit-user-drag: none; cursor: pointer;
-        visibility: hidden; transform-origin: top center; }
+        visibility: hidden; transform-origin: top center; pointer-events: auto; }
     .screen-scale #drawerLetter { width: calc(100% * var(--drawletter-scale));
         transform: translate(-50%, 0) translate(var(--drawletter-x), var(--drawletter-y)); z-index: 2; }
     .screen-scale #drawerLetterBig { width: calc(100% * var(--drawletterbig-scale));
@@ -1471,6 +1474,19 @@
                 dialEls.forEach(function (el) { el.classList.remove('solved'); });
             }
         });
+
+        /* FIX (backup): if the closed-drawer image's transparent area sits over a
+           dial, forward the tap to that dial instead of treating it as a drawer click.
+           Capture phase so it runs before the normal drawer click handler. */
+        drawerClose.addEventListener('click', function (e) {
+            var under = document.elementsFromPoint(e.clientX, e.clientY)
+                .find(function (el) { return el.classList && el.classList.contains('dial'); });
+            if (under) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                under.click();
+            }
+        }, true);
 
         drawerClose.addEventListener('click', function (e) {
             e.stopPropagation();
